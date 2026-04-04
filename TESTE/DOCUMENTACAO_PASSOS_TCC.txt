@@ -1,0 +1,75 @@
+================================================================================
+RELATÓRIO DETALHADO DOS PASSOS DO TCC - ANÁLISE DE MICRODADOS SAEB 2023
+================================================================================
+
+Este documento registra todas as etapas e justificativas estatísticas aplicadas aos dados do SAEB 2023 para o seu TCC. Ele servirá como base para você escrever a metodologia do seu trabalho.
+
+--------------------------------------------------------------------------------
+PASSO 1: TRATAMENTO INICIAL DOS DADOS (Script: ajeitar_dados.r)
+--------------------------------------------------------------------------------
+Objetivo: Preparar as respostas do questionário socioeconômico (que vêm em letras) para suportarem cálculos matemáticos.
+
+1. Limpeza de "Lixos" e Respostas Inválidas:
+- O banco do INEP utiliza caracteres como "." (em branco), "*" (nulo/dupla marcação), " " (espaço) e "F" (não sei/não quero responder).
+- Ação: Varremos todas as colunas que começam com "TX_RESP_Q" e transformamos esses caracteres em "NA" (Not Available / Dado Ausente).
+- Justificativa estatística: Se não fizermos isso, o algoritmo da correlação atribuiria números indevidos a essas respostas inválidas, distorcendo os resultados (ex: achar que "Não sei" tem um peso maior que "Ensino Superior").
+
+2. Transformação de Letras em Números (Ordinal Encoding):
+- Ação: Usamos a função `as.numeric(as.factor())` para transformar as letras restantes em números sequenciais (A = 1, B = 2, C = 3, D = 4...).
+- Justificativa: Modelos preditivos e correlações exigem dados numéricos. Para perguntas ordinais (ex: quantidade de bens, nível de escolaridade), essa transformação reflete perfeitamente a escadinha social/econômica.
+
+3. Exportação:
+- Ação: Salvamos essa base limpa e numérica como "dados_escola_em_numeros.csv" para não sobrescrever os microdados originais e facilitar a auditoria.
+
+--------------------------------------------------------------------------------
+PASSO 2: FILTRAGEM E SELEÇÃO DE VARIÁVEIS (Script: correlacao.r)
+--------------------------------------------------------------------------------
+Objetivo: Encontrar quais colunas realmente importam e impactam as notas de Matemática e Língua Portuguesa.
+
+1. Identificação de Variáveis Degeneradas (Near-Zero Variance):
+- Ação: Aplicamos a função `nearZeroVar` do pacote 'caret'.
+- O que é: O algoritmo rastreia o questionário da escola procurando perguntas onde quase 100% dos alunos responderam a mesma coisa (ex: todo mundo tem televisão).
+- Justificativa: Se não há variação nas respostas, a variável não tem "poder explicativo". Matematicamente, ela não consegue explicar por que o Aluno X tirou nota alta e o Aluno Y tirou nota baixa. Por isso, essas colunas são imediatamente descartadas do modelo.
+
+2. Autoescalamento (Padronização / Z-Score):
+- Ação: Aplicamos a função `scale()`. Ela realiza a operação da fórmula: (Valor - Média da Coluna) / Desvio Padrão.
+- Justificativa: A nota do SAEB varia na casa das centenas (ex: 200 a 350 pontos). Já as perguntas socioeconômicas variam de 1 a 5. Se cruzarmos isso direto, a variável com números maiores vai esmagar as menores. O autoescalamento coloca todas as variáveis (tanto notas quanto perguntas) na mesma escala de peso, permitindo comparações justas e sem viés.
+
+3. Análise de Correlação de Pearson:
+- Ação: Calculamos a matriz de correlação completa entre as variáveis do questionário e as variáveis dependentes (Y = PROFICIENCIA_MT_SAEB e PROFICIENCIA_LP_SAEB).
+- Como funciona: O R checa a tendência. Se quem tem mais bens (números altos no questionário) tira notas maiores, a correlação é positiva e caminha para +1. Se quem trabalha muitas horas (números altos) tira notas menores, a correlação é negativa e caminha para -1.
+
+4. Exportações das Tabelas de Correlações:
+- Ação: O programa gera as matrizes globais (`todas_correlacoes_calculadas.csv`) para auditoria irrestrita, e exporta em separado planilhas afuniladas contendo APENAS a "elite" que pontuou acima de 0.20 para MTM e PT (`correlacoes_mantidas_MT.csv` e `correlacoes_mantidas_LP.csv`).
+
+--------------------------------------------------------------------------------
+OBSERVAÇÃO TEÓRICA ESTATÍSTICA: O PARADOXO DA CORRELAÇÃO X DEGENERAÇÃO
+--------------------------------------------------------------------------------
+De acordo com a literatura (o paper metodológico): "Às vezes a correlação é baixa mas a variável não é degenerada e vice-versa."
+
+- Caso 1 (Degenerada, mas não calculada para correlação): Uma variável degenerada é aquela onde > 95% da base respondeu igual (Ex: Todo mundo marcou A para "Tem Fogão?"). O modelo exclui essa variável NÃO porque ela tem correlação baixa, mas porque matematicamente não há variância para uma reta de regressão ou Pearson ser traçada (divisão por zero no desvio padrão).
+- Caso 2 (Não Degenerada, mas Correlação Baixa): Uma variável pode ser incrivelmente bem dividida (Ex: 50% dos alunos têm Cabelo Curto, 50% têm Cabelo Comprido - Alta Variância / Não degenerada), mas ter correlação 0.00 com a nota. Ou seja: ela varia bastante na amostra, mas não tem impacto causal/associativo NENHUM no desempenho de matemática.
+
+O código respeitou essa dualidade ao tratar as etapas em CAIXAS SEPARADAS. O corte de variância perto de zero ocorreu ANTES do corte de correlação.
+1. Rodar os scripts na escola escolhida para descobrir quais variáveis "sobreviveram" aos filtros de Matemática e Português.
+2. Gerar os gráficos de dispersão (scatterplots / boxplots) cruzando a Nota no eixo Y contra cada Variável sobrevivente no eixo X para comprovar visualmente as correlações.
+
+================================================================================
+PASSO 3: INFERÊNCIAS VISUAIS DE DADOS - DASHBOARD INTERATIVO E TRADUÇÃO DO DICIONÁRIO (Script: graficos.r)
+================================================================================
+Objetivo: Inferir e provar graficamente a força da relação associativa entre as variáveis preditoras que sobreviveram aos filtros estatísticos e a proficiência do aluno no SAEB, apresentando os resultados por meio de um Dashboard interativo.
+
+1. Técnica Gráfica (Dashboard Shiny, Regressões OLS e Scatterplots):
+- Substituímos a geração passiva de múltiplos gráficos soltos em PNG por um Dashboard Interativo em `Shiny`.
+- Utilizamos o pacote `ggplot2` embedado na aplicação web para plotar cada aluno/observação (as bolinhas) segundo a variável avaliada (X) frente à sua nota (Y), já convertida em "Z-score".
+- Ação: Projetamos a sobreposição de uma Reta de Regressão Linear Simples (OLS - Ordinary Least Squares), comandada pelo parâmetro `geom_smooth(method = "lm")`.
+- Justificativa do Orientador Metodológico: Não basta que a correlação ateste que X se relaciona com Y; a banca examinadora precisa interagir com os dados e *ver* a linha tracejada de tendência linear subir ou descer à medida em que a escala da resposta muda, solidificando o embasamento numérico com provas empíricas visuais.
+
+2. Filtro Seletivo de Variáveis e Prevenção à Fadiga de Dados:
+- Ação: O programa desenha os layouts visuais APENAS para a "elite" das variáveis (aquelas que ultrapassaram o corte da variância - Near Zero Variance - e superaram o limiar amostral sociológico de |r| >= 0.20).
+- Justificativa: Ao invés de forçar o leitor a analisar gráficos caóticos com quase 70 perguntas sem nenhum impacto, o Dashboard restringe intelectualmente o escopo às variáveis latentes mais determinantes do rendimento educacional detectadas por PEARSON.
+
+3. Apresentação Autêntica de Dados Brutos (Codificação do INEP):
+- Ação: Optou-se por exibir transitoriamente os dados dos menus dinâmicos e eixos "X" dos gráficos valendo-se das chaves identificadoras puras do Dicionário (como `TX_RESP_Q15a` ou `TX_RESP_Q08`), isentos de tradução imposta textualmente.
+- Justificativa Operacional: Validar o cruzamento numérico dos algoritmos exatos primeiro ao comparar diretamente às matrizes do INEP. Posteriormente, caberá a transposição léxica para títulos "human-readable" dependendo da banca, preservando em prioridade o caráter algorítmico do primeiro Dashboard da pesquisa de campo.
+
