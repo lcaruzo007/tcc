@@ -1,31 +1,92 @@
-# 1. Carregar a biblioteca necessária
+# =========================================================================
+# PASSO 1: LIMPEZA E TRANSFORMAÇÃO DOS DADOS SAEB
+# =========================================================================
+
 library(tidyverse)
+source("utils_saeb.r")   # gerar_caminho_sem_sobrescrever
 
-# Supondo que você já carregou sua base de dados e ela se chama 'dados_escola'
+# -------------------------------------------------------------------------
+# Configuração — ajuste estes caminhos antes de executar
+# -------------------------------------------------------------------------
+arquivo_entrada        <- "C:/Users/Usuario/Desktop/tcc/MICRODADOS_SAEB_2023/DADOS/TS_ALUNO_34EM_escola_61432986.csv"
+arquivo_saida_geral    <- "C:/Users/Usuario/Desktop/tcc/TESTE/dados_escola_limpos.csv"
+dir_saida_por_escola   <- "C:/Users/Usuario/Desktop/tcc/TESTE/dados_por_escola"
+sobrescrever_por_escola <- FALSE
 
-# Passo 1: Separar apenas as variáveis que nos interessam
-dados_escola <- read.csv("C:/Users/Usuario/Desktop/tcc/MICRODADOS_SAEB_2023/DADOS/TS_ALUNO_34EM - Copia.csv")
+# Valores tratados como NA nas colunas TX_RESP_Q*
+VALORES_NA <- c(".", "*", " ", "F")
 
-dados_escola_limpos <- dados_escola %>%
-  # -------------------------------------------------------------------------
-  # FILTRO 1: TRATAR AS RESPOSTAS INVÁLIDAS (Branco, Nulo, etc)
-  # A função 'across' aplica a regra em todas as colunas que começam com TX_RESP_Q
-  # -------------------------------------------------------------------------
-  mutate(across(starts_with("TX_RESP_Q"), ~ na_if(., "."))) %>%  # Transforma Branco em NA
-  mutate(across(starts_with("TX_RESP_Q"), ~ na_if(., "*"))) %>%  # Transforma Nulo em NA
-  mutate(across(starts_with("TX_RESP_Q"), ~ na_if(., " "))) %>%  # Transforma Espaço em NA
-  # Se houver alguma opção "F" (Não sei responder), também tratamos como ausência de dados:
-  mutate(across(starts_with("TX_RESP_Q"), ~ na_if(., "F"))) %>%  
-  
-  # -------------------------------------------------------------------------
-  # FILTRO 2: TRANSFORMANDO LETRAS EM NÚMEROS (A=1, B=2, C=3...)
-  # -------------------------------------------------------------------------
-  mutate(across(starts_with("TX_RESP_Q"), ~ as.numeric(as.factor(.))))
+# -------------------------------------------------------------------------
+# Validações iniciais
+# -------------------------------------------------------------------------
+if (!file.exists(arquivo_entrada)) {
+  stop("Arquivo de entrada nao encontrado: ", arquivo_entrada)
+}
 
-# Salvar o resultado final limpo em um novo arquivo CSV (planilha)
-write.csv(dados_escola_limpos, "C:/Users/Usuario/Desktop/tcc/TESTE/dados_escola_em_numeros.csv", row.names = FALSE)
+# -------------------------------------------------------------------------
+# 1. Leitura
+# -------------------------------------------------------------------------
+message("Lendo arquivo de entrada...")
+dados_escola <- read.csv(arquivo_entrada, stringsAsFactors = FALSE)
 
+if (!"ID_ESCOLA" %in% names(dados_escola)) {
+  stop("A coluna ID_ESCOLA nao foi encontrada na base de entrada.")
+}
 
-# Opcional, mas recomendado:
-# Ver como ficou a estrutura de uma coluna para ter certeza que funciou:
-# table(dados_escola_limpos$TX_RESP_Q01, useNA = "always")
+message("Registros lidos: ", nrow(dados_escola))
+
+# -------------------------------------------------------------------------
+# 2. Limpeza e transformação das respostas do questionário
+# -------------------------------------------------------------------------
+dados_escola_limpos <- dados_escola |>
+  mutate(across(
+    starts_with("TX_RESP_Q"),
+    ~ as.numeric(as.factor(na_if(na_if(na_if(na_if(., VALORES_NA[1]),
+                                              VALORES_NA[2]),
+                                        VALORES_NA[3]),
+                                  VALORES_NA[4])))
+  ))
+
+# Alternativa mais legível para o passo acima (usa reduce para encadear na_if):
+# dados_escola_limpos <- dados_escola |>
+#   mutate(across(
+#     starts_with("TX_RESP_Q"),
+#     ~ {
+#       x <- .x
+#       for (v in VALORES_NA) x <- na_if(x, v)
+#       as.numeric(as.factor(x))
+#     }
+#   ))
+
+# -------------------------------------------------------------------------
+# 3. Salvar arquivo geral (usado pelo script de correlação)
+# -------------------------------------------------------------------------
+dir.create(dirname(arquivo_saida_geral), showWarnings = FALSE, recursive = TRUE)
+write.csv(dados_escola_limpos, arquivo_saida_geral, row.names = FALSE)
+message("Arquivo geral salvo em: ", arquivo_saida_geral)
+
+# -------------------------------------------------------------------------
+# 4. Salvar uma cópia filtrada por escola
+# -------------------------------------------------------------------------
+dir.create(dir_saida_por_escola, showWarnings = FALSE, recursive = TRUE)
+
+ids_escola <- sort(unique(dados_escola_limpos$ID_ESCOLA))
+ids_escola <- ids_escola[!is.na(ids_escola)]
+
+message("Escolas encontradas: ", length(ids_escola))
+
+for (id_escola in ids_escola) {
+  pasta_escola <- file.path(dir_saida_por_escola, as.character(id_escola))
+  dir.create(pasta_escola, showWarnings = FALSE, recursive = TRUE)
+
+  dados_uma_escola <- filter(dados_escola_limpos, ID_ESCOLA == id_escola)
+
+  arquivo_saida <- gerar_caminho_sem_sobrescrever(
+    file.path(pasta_escola, "dados_escola_em_numeros.csv"),
+    sobrescrever = sobrescrever_por_escola
+  )
+
+  write.csv(dados_uma_escola, arquivo_saida, row.names = FALSE)
+}
+
+message("Limpeza concluida. Arquivos por escola salvos em: ", dir_saida_por_escola)

@@ -1,0 +1,85 @@
+Diario de Desenvolvimento
+Trabalho de Conclusao de Curso
+Impacto Socioeconomico na Proficiencia SAEB
+
+
+06 de Abril de 2026
+Registro da Sessao
+
+Data
+06/04/2026
+Horario
+~20h29
+Fase
+Pre-processamento e Visualizacao
+Status
+Concluido com sucesso
+
+
+Atividades Realizadas
+- Desenvolvimento de 3 scripts para tratamento e analise dos dados.
+- Transformacao de variaveis de resposta (formato A/B/C -> numerico 1/2/3).
+- Calculo de correlacoes entre variaveis socioeconomicas e proficiencia.
+- Exclusao de variaveis com correlacao |r| < 0,3 (variaveis degeneradas).
+- Aplicacao de autoescalonamento nas variaveis mantidas.
+- Geracao de CSV consolidado com todas as correlacoes calculadas.
+- Implementacao do dashboard interativo com Shiny (graficos de dispersao + reta de regressao linear).
+
+Desafios Encontrados
+- 1a tentativa de cidade: nenhuma correlacao significativa encontrada.
+- 2a tentativa de cidade: novamente sem correlacoes validas.
+- 3a tentativa: correlacoes encontradas, porem em numero reduzido.
+
+Resultados Obtidos
+- Variavel TX_RESP_Q10b ("Pais conversam sobre escola"): correlacao positiva com Matematica.
+- Variavel TX_RESP_Q21a ("Tempo estudando"): correlacao positiva com Matematica.
+- Ambos os graficos apresentaram reta de regressao com inclinacao positiva e intervalo de confianca visivel.
+
+Proximos passos
+- Ampliar base de cidades e refinar selecao de variaveis.
+
+
+26 de Abril de 2026
+Registro da Sessao
+
+Data
+26/04/2026
+Horario
+~16h00 ate noite
+Fase
+Ajustes de robustez do pipeline e analise por escola
+Status
+Concluido com sucesso
+
+
+Atividades Realizadas
+- Reestruturacao do fluxo para processar por escola em TESTE/dados_por_escola.
+- Ajuste do script de correlacao para ler automaticamente a pasta de cada escola.
+- Inclusao de modos de execucao no script de correlacao:
+  - pendentes
+  - todas
+  - especificas
+- Ajuste do filtro de degeneracao para reduzir perda de variaveis:
+  - metodo_degeneracao configuravel (zero_variancia, near_zero, hibrido)
+  - amostra minima para aplicar nearZeroVar
+  - parametros de sensibilidade configuraveis (freq_cut_nzv e unique_cut_nzv)
+- Geracao de diagnostico por escola (diagnostico_degeneracao.csv).
+- Ajuste do dashboard Shiny para selecao de escola no menu lateral.
+- Leitura automatica do arquivo mais recente por escola (com ou sem sufixo de data/hora).
+- Criacao de script para matriz de dispersao por escola (TESTE/matriz_dispersao.r).
+
+Desafios Encontrados
+- Muitas variaveis marcadas como degeneradas em escolas com amostra pequena.
+- Risco de sobrescrita ao reprocessar a mesma escola varias vezes.
+- Necessidade de evitar recalculo de todas as escolas a cada execucao.
+
+Resultados Obtidos
+- Pipeline estabilizado por escola, com menor risco de sobrescrita.
+- Correlacao passou a executar em modo incremental (pendentes) por padrao.
+- Dashboard passou a permitir comparacao rapida entre escolas.
+- Matriz de dispersao disponivel para inspecao visual das relacoes entre variaveis e nota.
+
+Proximos passos
+- Reprocessar escolas criticas com metodo_degeneracao menos agressivo quando necessario.
+- Comparar, por escola, a quantidade de variaveis mantidas nos metodos zero_variancia e hibrido.
+- Consolidar no texto do TCC os criterios de exclusao e as evidencias visuais (matriz de dispersao + correlacoes mantidas).
