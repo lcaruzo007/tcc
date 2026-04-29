@@ -162,124 +162,19 @@ obter_colunas_validas <- function(df) {
 # -------------------------------------------------------------------------
 gerar_relatorio_diagnostico <- function(arquivo_saida, diagnostico, df_motivos,
                                         colunas_validas, usou_nzv) {
-  # Extrair valores do diagnostico
-  n_linhas         <- as.integer(diagnostico[diagnostico$metrica == "n_linhas", "valor"])
-  n_entrada        <- as.integer(diagnostico[diagnostico$metrica == "n_colunas_entrada", "valor"])
-  n_validas        <- as.integer(diagnostico[diagnostico$metrica == "n_colunas_validas", "valor"])
-  n_degen          <- as.integer(diagnostico[diagnostico$metrica == "n_degeneradas", "valor"])
-  n_somente_na     <- as.integer(diagnostico[diagnostico$metrica == "n_somente_na", "valor"])
-  n_var_zero       <- as.integer(diagnostico[diagnostico$metrica == "n_variancia_zero", "valor"])
-  n_near_zero      <- as.integer(diagnostico[diagnostico$metrica == "n_near_zero_var", "valor"])
-  nzv_aplicado     <- diagnostico[diagnostico$metrica == "nzv_aplicado", "valor"]
-
-  # Lista de variaveis descartadas por motivo
-  vars_near_zero <- df_motivos[df_motivos$Motivo == "near_zero_var", "Variavel"]
-  vars_var_zero  <- df_motivos[df_motivos$Motivo == "variancia_zero", "Variavel"]
-  vars_so_na     <- df_motivos[df_motivos$Motivo == "somente_na", "Variavel"]
-
-  # Formatacao de listas
-  format_list <- function(v) {
-    if (length(v) == 0) return("(nenhuma)")
-    paste(v, collapse = ", ")
-  }
-
-  # Criar conteudo do relatorio
-  conteudo <- sprintf(
-"================================================================================
-DIAGNÓSTICO DE DEGENERAÇÃO - ESCOLA %s
-================================================================================
-
-RESUMO EXECUTIVO:
-  • %d alunos responderam ao questionário
-  • %d variáveis (perguntas) foram coletadas
-  • %d variáveis foram descartadas (degeneradas)
-  • %d variáveis restantes para análise de correlação
-
-================================================================================
-MÉTRICAS DETALHADAS:
-================================================================================
-
-1. n_linhas = %d
-   └─ Número total de observações (alunos da escola)
-   └─ Relevância: Determina qual método de detecção de degeneração é usado
-
-2. n_colunas_entrada = %d
-   └─ Número inicial de variáveis carregadas do arquivo CSV
-   └─ Inclui: ID_ESCOLA, PROFICIENCIA_MT_SAEB, PROFICIENCIA_LP_SAEB + outras respostas
-
-3. n_colunas_validas = %d
-   └─ Variáveis que passaram em TODOS os critérios de validação
-   └─ Essas %d serão usadas para calcular correlações com as notas
-
-4. n_degeneradas = %d
-   └─ Total de variáveis removidas por falta de variação
-   └─ Cálculo: %d - %d = %d variáveis descartadas
-
-5. n_somente_na = %d
-   └─ Variáveis 100%% vazias (nenhum aluno respondeu)
-   └─ Status: %s
-   └─ Lista: %s
-
-6. n_variancia_zero = %d
-   └─ Variáveis onde TODOS os alunos deram a MESMA resposta
-   └─ Exemplo: Se todos marcassem \"Sim\" na Q01, teria var = 0
-   └─ Status: %s
-   └─ Lista: %s
-
-7. n_near_zero_var = %d
-   └─ Variáveis com variação MUITO pequena (dominadas por 1 resposta)
-   └─ Critério: freq_cut=19 (razão 95/5) e unique_cut=10%% (mínimo de valores únicos)
-   └─ Exemplo: 95 alunos marcaram \"Sim\", 5 marcaram \"Não\" → 95/5=19 → DESCARTA
-   └─ Status: %s
-   └─ Lista: %s
-
-8. nzv_aplicado = %s
-   └─ Indica que o teste nearZeroVar foi %s executado
-   └─ Condição: n_linhas (%d) >= min_linhas_para_near_zero (30) %s
-   └─ Se fosse \"nao\" significaria que havia poucos alunos para usar este método
-
-================================================================================
-INTERPRETAÇÃO:
-================================================================================
-
-%s
-
-✓ CONCLUSÃO:
-  - %d variáveis válidas é uma %s base para análise
-  - Correlações serão calculadas apenas com essas %d
-  - Variáveis descartadas não afetam a qualidade das análises
-
-================================================================================
-Gerado automaticamente pelo script correlacao.r
-================================================================================",
-  basename(dirname(arquivo_saida)),
-    n_linhas, n_entrada, n_degen, n_validas,
-    n_linhas, n_entrada, n_validas, n_validas, n_entrada, n_validas, n_entrada - n_validas,
-    n_somente_na, ifelse(n_somente_na == 0, "NENHUMA (0) neste diagnóstico", "ENCONTRADA(S)"),
-    format_list(vars_so_na),
-    n_var_zero, ifelse(n_var_zero == 0, "NENHUMA (0) neste diagnóstico", "ENCONTRADA(S)"),
-    format_list(vars_var_zero),
-    n_near_zero, ifelse(n_near_zero == 0, "NENHUMA (0) neste diagnóstico" ,
-                        sprintf("ENCONTRADA(S) (%d descartadas)", n_near_zero)),
-    format_list(vars_near_zero),
-    nzv_aplicado, ifelse(nzv_aplicado == "sim", "REALMENTE", "NÃO foi"),
-    n_linhas, ifelse(n_linhas >= 30, "✓" , "✗"),
-    # Interpretacao
-    if (n_degen == 0) {
-      "✓ PONTO FORTE:\n  - Nenhuma variável foi descartada\n  - Excelente capacidade de discriminação de todas as perguntas"
-    } else if (n_degen <= 5) {
-      sprintf("⚠ PONTO DE ATENÇÃO:\n  - %d de %d variáveis foram descartadas (%.1f%%)\n  - Essas questões não discriminaram bem os alunos desta escola\n  - Possíveis causas:\n    a) Questões muito fáceis (maioria acertou)\n    b) Questões muito difíceis (maioria errou)\n    c) Enunciados confusos ou mal interpretados",
-              n_degen, n_entrada, 100 * n_degen / n_entrada)
-    } else {
-      sprintf("⚠ ATENÇÃO:\n  - %d de %d variáveis foram descartadas (%.1f%%)\n  - Percentual elevado de questões com baixa discriminação\n  - Investigar se há padrões sistemáticos nas respostas",
-              n_degen, n_entrada, 100 * n_degen / n_entrada)
-    },
-    n_validas, if (n_validas >= 50) "excelente" else if (n_validas >= 30) "boa" else "limitada",
-    n_validas
+  linhas <- c(
+    paste0("ESCOLA: ", basename(dirname(arquivo_saida))),
+    paste0("n_linhas: ", diagnostico$valor[diagnostico$metrica == "n_linhas"]),
+    paste0("n_colunas_entrada: ", diagnostico$valor[diagnostico$metrica == "n_colunas_entrada"]),
+    paste0("n_colunas_validas: ", diagnostico$valor[diagnostico$metrica == "n_colunas_validas"]),
+    paste0("n_degeneradas: ", diagnostico$valor[diagnostico$metrica == "n_degeneradas"]),
+    paste0("n_somente_na: ", diagnostico$valor[diagnostico$metrica == "n_somente_na"]),
+    paste0("n_variancia_zero: ", diagnostico$valor[diagnostico$metrica == "n_variancia_zero"]),
+    paste0("n_near_zero_var: ", diagnostico$valor[diagnostico$metrica == "n_near_zero_var"]),
+    paste0("nzv_aplicado: ", diagnostico$valor[diagnostico$metrica == "nzv_aplicado"])
   )
 
-  # Salvar arquivo
-  writeLines(conteudo, arquivo_saida)
+  writeLines(linhas, arquivo_saida)
   invisible(arquivo_saida)
 }
 

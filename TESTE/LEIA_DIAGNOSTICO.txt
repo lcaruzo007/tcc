@@ -1,0 +1,9 @@
+ESCOLA: TESTE
+n_linhas: 138
+n_colunas_entrada: 74
+n_colunas_validas: 72
+n_degeneradas: 3
+n_somente_na: 0
+n_variancia_zero: 2
+n_near_zero_var: 1
+nzv_aplicado: sim
