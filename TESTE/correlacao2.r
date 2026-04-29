@@ -28,39 +28,22 @@ limiar_cor <- 0.30
 metodo_degeneracao        <- "hibrido"
 min_linhas_para_near_zero <- 30L
 
-# Parametros do nearZeroVar (substituto base R para survey)
+# Parametros do nearZeroVar (padrao caret para dados de survey)
+# freq_cut_nzv  : razao freq(1a categoria) / freq(2a). 19 = padrao 95/5 do caret.
+#                 Menor valor = mais rigoroso (descarta mais).
+# unique_cut_nzv: % minima de valores unicos. Menor = mais rigoroso.
 freq_cut_nzv   <- 19
 unique_cut_nzv <- 10
 
-arquivo_entrada <- file.path(base_dir, "dados_escola_limpos.csv")
-dir_saida_raiz  <- base_dir
+dir_entrada_escolas <- file.path(base_dir, "dados_por_escola")
+dir_saida_raiz      <- dir_entrada_escolas
 
-if (!file.exists(arquivo_entrada)) {
-  stop("Arquivo de entrada nao encontrado: ", arquivo_entrada)
-}
-
-inferir_id_escola <- function(df, arquivo) {
-  if ("ID_ESCOLA" %in% names(df)) {
-    id_val <- unique(na.omit(df$ID_ESCOLA))
-    if (length(id_val) > 0L) return(as.character(id_val[1]))
-  }
-
-  candidatos <- unique(unlist(lapply(df, function(col) {
-    valores <- unique(na.omit(col))
-    valores <- valores[grepl("^[0-9]+$", as.character(valores))]
-    as.character(valores)
-  })))
-  candidatos <- candidatos[nchar(candidatos) >= 6L]
-  if (length(candidatos) > 0L) {
-    return(candidatos[1])
-  }
-
-  nome_arquivo <- basename(arquivo)
-  extraido <- regmatches(nome_arquivo, regexpr("[0-9]{6,}", nome_arquivo))
-  if (length(extraido) > 0L && nzchar(extraido)) return(extraido)
-
-  "desconhecida"
-}
+# Modo de execucao:
+#   "pendentes"   - escolas sem resultados completos
+#   "todas"       - todas as escolas encontradas
+#   "especificas" - apenas as listadas em escolas_especificas
+modo_execucao       <- "pendentes"
+escolas_especificas <- character(0)
 
 # -------------------------------------------------------------------------
 # Funcoes auxiliares
@@ -90,6 +73,19 @@ detectar_near_zero_variance <- function(df, freq_cut = 19, unique_cut = 10) {
   })
 
   data.frame(nzv = vapply(resultados, function(x) as.logical(x["nzv"]), logical(1)))
+}
+
+pasta_tem_resultados_completos <- function(pasta) {
+  arquivos_esperados <- c(
+    "variaveis_degeneradas",
+    "dados_FINAL_MT_Filtrado",
+    "dados_FINAL_LP_Filtrado",
+    "todas_correlacoes_calculadas",
+    "correlacoes_mantidas_MT",
+    "correlacoes_mantidas_LP"
+  )
+  all(vapply(arquivos_esperados, arquivo_com_versao_existe,
+             logical(1), pasta = pasta))
 }
 
 # Retorna colunas validas e data frame com motivo de descarte por variavel.
@@ -160,7 +156,7 @@ obter_colunas_validas <- function(df) {
 # -------------------------------------------------------------------------
 # Funcao para gerar relatorio em TXT com comentarios do diagnostico
 # -------------------------------------------------------------------------
-gerar_relatorio_diagnostico <- function(arquivo_saida, diagnostico, df_motivos,
+gerar_relatorio_diagnostico <- function(pasta_escola, diagnostico, df_motivos,
                                         colunas_validas, usou_nzv) {
   # Extrair valores do diagnostico
   n_linhas         <- as.integer(diagnostico[diagnostico$metrica == "n_linhas", "valor"])
@@ -252,7 +248,7 @@ INTERPRETAÇÃO:
 ================================================================================
 Gerado automaticamente pelo script correlacao.r
 ================================================================================",
-  basename(dirname(arquivo_saida)),
+    basename(pasta_escola),
     n_linhas, n_entrada, n_degen, n_validas,
     n_linhas, n_entrada, n_validas, n_validas, n_entrada, n_validas, n_entrada - n_validas,
     n_somente_na, ifelse(n_somente_na == 0, "NENHUMA (0) neste diagnóstico", "ENCONTRADA(S)"),
@@ -279,114 +275,204 @@ Gerado automaticamente pelo script correlacao.r
   )
 
   # Salvar arquivo
+  arquivo_saida <- file.path(pasta_escola, "LEIA_DIAGNOSTICO.txt")
   writeLines(conteudo, arquivo_saida)
   invisible(arquivo_saida)
 }
 
 # -------------------------------------------------------------------------
-# Processamento de um unico arquivo limpo
+# Validacao de diretorios e selecao de escolas
 # -------------------------------------------------------------------------
-dados_escola <- read.csv(arquivo_entrada, stringsAsFactors = FALSE)
-
-id_escola <- inferir_id_escola(dados_escola, arquivo_entrada)
-if (!"ID_ESCOLA" %in% names(dados_escola)) {
-  dados_escola$ID_ESCOLA <- id_escola
+if (!dir.exists(dir_entrada_escolas)) {
+  stop("Diretorio nao encontrado: ", dir_entrada_escolas)
 }
 
-message("Processando arquivo limpo da escola: ", id_escola)
+pastas_escola <- list.dirs(dir_entrada_escolas, recursive = FALSE, full.names = TRUE)
 
-if (nrow(dados_escola) < 5L) {
-  stop("Poucos registros para calcular correlacao no arquivo limpo.")
+if (length(pastas_escola) == 0L) {
+  stop("Nenhuma pasta de escola encontrada em: ", dir_entrada_escolas)
 }
 
-colunas_necessarias <- intersect(c(nota_MT, nota_LP, grep("^TX_RESP_Q", names(dados_escola), value = TRUE)),
-                                 names(dados_escola))
-dados_filtrados <- dados_escola[, colunas_necessarias, drop = FALSE]
-
-resultado_filtro <- obter_colunas_validas(dados_filtrados)
-colunas_validas  <- resultado_filtro$colunas_validas
-df_motivos       <- resultado_filtro$df_motivos
-
-if (!all(c(nota_MT, nota_LP) %in% colunas_validas)) {
-  stop("Notas de proficiencia ausentes apos filtragem.")
+if (modo_execucao == "especificas") {
+  if (length(escolas_especificas) == 0L) {
+    stop("modo_execucao = 'especificas', mas escolas_especificas esta vazio.")
+  }
+  pastas_escola <- pastas_escola[basename(pastas_escola) %in% escolas_especificas]
 }
 
-if (length(colunas_validas) < 3L) {
-  stop("Variaveis insuficientes para correlacao.")
+if (modo_execucao == "pendentes") {
+  pastas_escola <- pastas_escola[
+    !vapply(pastas_escola, pasta_tem_resultados_completos, logical(1))
+  ]
+
+  if (length(pastas_escola) == 0L) {
+    message("Nenhuma escola pendente encontrada; processando todas as escolas da pasta de entrada.")
+    pastas_escola <- list.dirs(dir_entrada_escolas, recursive = FALSE, full.names = TRUE)
+  }
 }
 
-# Correlacoes
-dados_validos   <- dados_filtrados[, colunas_validas, drop = FALSE]
-matriz_cor      <- suppressWarnings(
-  cor(dados_validos, use = "pairwise.complete.obs", method = "pearson")
-)
-dados_escalados <- as.data.frame(scale(dados_validos))
+if (length(pastas_escola) == 0L) {
+  stop("Nenhuma escola para processar no modo: ", modo_execucao)
+}
 
-cor_MT <- matriz_cor[, nota_MT]
-cor_LP <- matriz_cor[, nota_LP]
+message("Modo: ", modo_execucao, " | Escolas a processar: ", length(pastas_escola))
 
-fortes_MT <- names(cor_MT)[!is.na(cor_MT) & abs(cor_MT) >= limiar_cor]
-fortes_LP <- names(cor_LP)[!is.na(cor_LP) & abs(cor_LP) >= limiar_cor]
-fortes_MT <- intersect(fortes_MT, names(dados_escalados))
-fortes_LP <- intersect(fortes_LP, names(dados_escalados))
+# -------------------------------------------------------------------------
+# Loop principal
+# -------------------------------------------------------------------------
+escolas_com_erro <- list()
+resumo_escolas   <- list()
 
-dados_finais_MT <- dados_escalados[, fortes_MT, drop = FALSE]
-dados_finais_LP <- dados_escalados[, fortes_LP, drop = FALSE]
+for (pasta_escola in sort(pastas_escola)) {
+  id_escola <- basename(pasta_escola)
+  message("\n===== ESCOLA ", id_escola, " =====")
 
-df_cor_MT <- data.frame(Variavel              = names(cor_MT),
-                        Correlacao_Matematica = as.numeric(cor_MT))
-df_cor_LP <- data.frame(Variavel             = names(cor_LP),
-                        Correlacao_Portugues = as.numeric(cor_LP))
-df_todas  <- merge(df_cor_MT, df_cor_LP, by = "Variavel")
-
-df_fortes_MT <- subset(df_cor_MT,
-                       abs(Correlacao_Matematica) >= limiar_cor & Variavel != nota_MT)
-df_fortes_LP <- subset(df_cor_LP,
-                       abs(Correlacao_Portugues)  >= limiar_cor & Variavel != nota_LP)
-
-diagnostico <- data.frame(
-  metrica = c("n_linhas", "n_colunas_entrada", "n_colunas_validas",
-              "n_degeneradas", "n_somente_na", "n_variancia_zero",
-              "n_near_zero_var", "nzv_aplicado"),
-  valor = c(
-    nrow(dados_filtrados),
-    ncol(dados_filtrados),
-    length(colunas_validas),
-    nrow(df_motivos),
-    length(resultado_filtro$colunas_somente_na),
-    length(resultado_filtro$variancia_zero),
-    sum(df_motivos$Motivo == "near_zero_var"),
-    ifelse(resultado_filtro$usou_nzv, "sim", "nao")
+  arquivo_entrada_escola <- encontrar_arquivo_mais_recente(
+    pasta_escola, "dados_escola_em_numeros"
   )
-)
+  if (is.null(arquivo_entrada_escola)) {
+    escolas_com_erro[[id_escola]] <- "dados_escola_em_numeros.csv nao encontrado"
+    next
+  }
 
-salvar <- function(df, nome) {
-  write.csv(df, file.path(dir_saida_raiz, paste0(nome, ".csv")), row.names = FALSE)
+  dados_escola <- read.csv(arquivo_entrada_escola, stringsAsFactors = FALSE)
+
+  if ("ID_ESCOLA" %in% names(dados_escola)) {
+    dados_escola <- dados_escola[dados_escola$ID_ESCOLA == as.numeric(id_escola), , drop = FALSE]
+  }
+
+  if (nrow(dados_escola) < 5L) {
+    escolas_com_erro[[id_escola]] <- "Poucos registros para calcular correlacao"
+    next
+  }
+
+  colunas_necessarias <- intersect(c(nota_MT, nota_LP, grep("^TX_RESP_Q", names(dados_escola), value = TRUE)),
+                                   names(dados_escola))
+  dados_filtrados <- dados_escola[, colunas_necessarias, drop = FALSE]
+
+  resultado_filtro <- obter_colunas_validas(dados_filtrados)
+  colunas_validas  <- resultado_filtro$colunas_validas
+  df_motivos       <- resultado_filtro$df_motivos
+
+  if (!all(c(nota_MT, nota_LP) %in% colunas_validas)) {
+    escolas_com_erro[[id_escola]] <- "Notas de proficiencia ausentes apos filtragem"
+    next
+  }
+
+  if (length(colunas_validas) < 3L) {
+    escolas_com_erro[[id_escola]] <- "Variaveis insuficientes para correlacao"
+    next
+  }
+
+  # Correlacoes
+  dados_validos   <- dados_filtrados[, colunas_validas, drop = FALSE]
+  matriz_cor      <- suppressWarnings(
+    cor(dados_validos, use = "pairwise.complete.obs", method = "pearson")
+  )
+  dados_escalados <- as.data.frame(scale(dados_validos))
+
+  cor_MT <- matriz_cor[, nota_MT]
+  cor_LP <- matriz_cor[, nota_LP]
+
+  fortes_MT <- names(cor_MT)[!is.na(cor_MT) & abs(cor_MT) >= limiar_cor]
+  fortes_LP <- names(cor_LP)[!is.na(cor_LP) & abs(cor_LP) >= limiar_cor]
+  fortes_MT <- intersect(fortes_MT, names(dados_escalados))
+  fortes_LP <- intersect(fortes_LP, names(dados_escalados))
+
+  dados_finais_MT <- dados_escalados[, fortes_MT, drop = FALSE]
+  dados_finais_LP <- dados_escalados[, fortes_LP, drop = FALSE]
+
+  df_cor_MT <- data.frame(Variavel              = names(cor_MT),
+                          Correlacao_Matematica = as.numeric(cor_MT))
+  df_cor_LP <- data.frame(Variavel             = names(cor_LP),
+                          Correlacao_Portugues = as.numeric(cor_LP))
+  df_todas  <- merge(df_cor_MT, df_cor_LP, by = "Variavel")
+
+  df_fortes_MT <- subset(df_cor_MT,
+                         abs(Correlacao_Matematica) >= limiar_cor & Variavel != nota_MT)
+  df_fortes_LP <- subset(df_cor_LP,
+                         abs(Correlacao_Portugues)  >= limiar_cor & Variavel != nota_LP)
+
+  diagnostico <- data.frame(
+    metrica = c("n_linhas", "n_colunas_entrada", "n_colunas_validas",
+                "n_degeneradas", "n_somente_na", "n_variancia_zero",
+                "n_near_zero_var", "nzv_aplicado"),
+    valor = c(
+      nrow(dados_filtrados),
+      ncol(dados_filtrados),
+      length(colunas_validas),
+      nrow(df_motivos),
+      length(resultado_filtro$colunas_somente_na),
+      length(resultado_filtro$variancia_zero),
+      sum(df_motivos$Motivo == "near_zero_var"),
+      ifelse(resultado_filtro$usou_nzv, "sim", "nao")
+    )
+  )
+
+  # Acumula resumo consolidado
+  resumo_escolas[[id_escola]] <- data.frame(
+    ID_ESCOLA         = id_escola,
+    n_alunos          = nrow(dados_filtrados),
+    n_variaveis_total = ncol(dados_filtrados),
+    n_validas         = length(colunas_validas),
+    n_degeneradas     = nrow(df_motivos),
+    n_cor_MT          = nrow(df_fortes_MT),
+    n_cor_LP          = nrow(df_fortes_LP),
+    stringsAsFactors  = FALSE
+  )
+
+  # Gravar resultados
+  salvar <- function(df, nome) {
+    write.csv(df, file.path(pasta_escola, paste0(nome, ".csv")), row.names = FALSE)
+  }
+
+  salvar(df_motivos,      "variaveis_degeneradas")   # agora inclui coluna Motivo
+  salvar(diagnostico,     "diagnostico_degeneracao")
+
+  # Gerar relatorio em TXT com explicacoes
+  tryCatch(
+    gerar_relatorio_diagnostico(pasta_escola, diagnostico, df_motivos,
+                                colunas_validas, resultado_filtro$usou_nzv),
+    error = function(e) message("  Falha ao gerar relatorio: ", e$message)
+  )
+  salvar(dados_finais_MT, "dados_FINAL_MT_Filtrado")
+  salvar(dados_finais_LP, "dados_FINAL_LP_Filtrado")
+  salvar(df_todas,        "todas_correlacoes_calculadas")
+  salvar(df_fortes_MT,    "correlacoes_mantidas_MT")
+  salvar(df_fortes_LP,    "correlacoes_mantidas_LP")
+
+  message("  n_alunos=",     nrow(dados_filtrados),
+          " | validas=",     length(colunas_validas),
+          " | degeneradas=", nrow(df_motivos),
+          " | cor_MT=",      nrow(df_fortes_MT),
+          " | cor_LP=",      nrow(df_fortes_LP))
 }
 
-salvar(df_motivos,      "variaveis_degeneradas")
-salvar(diagnostico,     "diagnostico_degeneracao")
-tryCatch(
-  gerar_relatorio_diagnostico(file.path(dir_saida_raiz, "LEIA_DIAGNOSTICO.txt"),
-                              diagnostico, df_motivos, colunas_validas, resultado_filtro$usou_nzv),
-  error = function(e) message("Falha ao gerar relatorio: ", e$message)
-)
-salvar(dados_finais_MT, "dados_FINAL_MT_Filtrado")
-salvar(dados_finais_LP, "dados_FINAL_LP_Filtrado")
-salvar(df_todas,        "todas_correlacoes_calculadas")
-salvar(df_fortes_MT,    "correlacoes_mantidas_MT")
-salvar(df_fortes_LP,    "correlacoes_mantidas_LP")
+# -------------------------------------------------------------------------
+# Relatorio consolidado de todas as escolas
+# -------------------------------------------------------------------------
+if (length(resumo_escolas) > 0L) {
+  df_resumo      <- do.call(rbind, resumo_escolas)
+  rownames(df_resumo) <- NULL
+  caminho_resumo <- file.path(dir_saida_raiz, "resumo_processamento.csv")
+  write.csv(df_resumo, caminho_resumo, row.names = FALSE)
+  message("\nResumo consolidado salvo em: ", caminho_resumo)
+  print(df_resumo, row.names = FALSE)
+}
 
-df_resumo <- data.frame(
-  ID_ESCOLA         = id_escola,
-  n_alunos          = nrow(dados_filtrados),
-  n_variaveis_total = ncol(dados_filtrados),
-  n_validas         = length(colunas_validas),
-  n_degeneradas     = nrow(df_motivos),
-  n_cor_MT          = nrow(df_fortes_MT),
-  n_cor_LP          = nrow(df_fortes_LP),
-  stringsAsFactors  = FALSE
-)
+# -------------------------------------------------------------------------
+# Relatorio de erros
+# -------------------------------------------------------------------------
+if (length(escolas_com_erro) > 0L) {
+  df_erros <- data.frame(
+    ID_ESCOLA = names(escolas_com_erro),
+    Motivo    = unlist(escolas_com_erro),
+    row.names = NULL
+  )
+  caminho_erros <- file.path(dir_saida_raiz, "escolas_nao_processadas.csv")
+  write.csv(df_erros, caminho_erros, row.names = FALSE)
+  message("Escolas com erro: ", nrow(df_erros),
+          ". Detalhes em: ", caminho_erros)
+}
 
-write.csv(df_resumo, file.path(dir_saida_raiz, "resumo_processamento.csv"), row.names = FALSE)
-message("Processamento concluido para a escola ", id_escola)
+message("\nProcessamento concluido.")

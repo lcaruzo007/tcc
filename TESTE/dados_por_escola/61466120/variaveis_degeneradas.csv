@@ -1,8 +1,3 @@
-
-"Variavel_Degenerada"
-"TX_RESP_Q11a"
-"TX_RESP_Q03"
-"TX_RESP_Q05a"
-"TX_RESP_Q05b"
-"TX_RESP_Q11b"
-"TX_RESP_Q11c"
+"Variavel","Motivo"
+"TX_RESP_Q11a","variancia_zero"
+NA,"near_zero_var"
