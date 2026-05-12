@@ -1,0 +1,495 @@
+================================================================================
+LEGENDA: dados_escola_em_numeros.csv
+================================================================================
+
+Data: 12/05/2026 08:24:56
+Linhas: 306
+Colunas: 154
+
+DESCRIÇÃO DAS COLUNAS:
+--------------------------------------------------------------------------------
+
+1. ID_SAEB
+   └─ Sem descrição específica disponível
+
+2. ID_REGIAO
+   └─ Sem descrição específica disponível
+
+3. ID_UF
+   └─ Sem descrição específica disponível
+
+4. ID_MUNICIPIO
+   └─ Sem descrição específica disponível
+
+5. ID_AREA
+   └─ Sem descrição específica disponível
+
+6. ID_ESCOLA
+   └─ Sem descrição específica disponível
+
+7. IN_PUBLICA
+   └─ Sem descrição específica disponível
+
+8. ID_LOCALIZACAO
+   └─ Sem descrição específica disponível
+
+9. ID_TURMA
+   └─ Sem descrição específica disponível
+
+10. ID_SERIE
+   └─ Sem descrição específica disponível
+
+11. ID_ALUNO
+   └─ Sem descrição específica disponível
+
+12. IN_SITUACAO_CENSO
+   └─ Sem descrição específica disponível
+
+13. IN_PREENCHIMENTO_LP
+   └─ Sem descrição específica disponível
+
+14. IN_PREENCHIMENTO_MT
+   └─ Sem descrição específica disponível
+
+15. IN_PRESENCA_LP
+   └─ Sem descrição específica disponível
+
+16. IN_PRESENCA_MT
+   └─ Sem descrição específica disponível
+
+17. ID_CADERNO_LP
+   └─ Sem descrição específica disponível
+
+18. ID_BLOCO_1_LP
+   └─ Sem descrição específica disponível
+
+19. ID_BLOCO_2_LP
+   └─ Sem descrição específica disponível
+
+20. ID_CADERNO_MT
+   └─ Sem descrição específica disponível
+
+21. ID_BLOCO_1_MT
+   └─ Sem descrição específica disponível
+
+22. ID_BLOCO_2_MT
+   └─ Sem descrição específica disponível
+
+23. TX_RESP_BLOCO1_LP
+   └─ Sem descrição específica disponível
+
+24. TX_RESP_BLOCO2_LP
+   └─ Sem descrição específica disponível
+
+25. TX_RESP_BLOCO1_MT
+   └─ Sem descrição específica disponível
+
+26. TX_RESP_BLOCO2_MT
+   └─ Sem descrição específica disponível
+
+27. IN_PROFICIENCIA_LP
+   └─ Sem descrição específica disponível
+
+28. IN_PROFICIENCIA_MT
+   └─ Sem descrição específica disponível
+
+29. IN_AMOSTRA
+   └─ Sem descrição específica disponível
+
+30. ESTRATO
+   └─ Sem descrição específica disponível
+
+31. PESO_ALUNO_LP
+   └─ Sem descrição específica disponível
+
+32. PROFICIENCIA_LP
+   └─ Sem descrição específica disponível
+
+33. ERRO_PADRAO_LP
+   └─ Sem descrição específica disponível
+
+34. PROFICIENCIA_LP_SAEB
+   └─ Sem descrição específica disponível
+
+35. ERRO_PADRAO_LP_SAEB
+   └─ Sem descrição específica disponível
+
+36. PESO_ALUNO_MT
+   └─ Sem descrição específica disponível
+
+37. PROFICIENCIA_MT
+   └─ Sem descrição específica disponível
+
+38. ERRO_PADRAO_MT
+   └─ Sem descrição específica disponível
+
+39. PROFICIENCIA_MT_SAEB
+   └─ Sem descrição específica disponível
+
+40. ERRO_PADRAO_MT_SAEB
+   └─ Sem descrição específica disponível
+
+41. IN_PREENCHIMENTO_QUESTIONARIO
+   └─ Sem descrição específica disponível
+
+42. IN_INSE
+   └─ Sem descrição específica disponível
+
+43. INSE_ALUNO
+   └─ Sem descrição específica disponível
+
+44. NU_TIPO_NIVEL_INSE
+   └─ Sem descrição específica disponível
+
+45. PESO_ALUNO_INSE
+   └─ Sem descrição específica disponível
+
+46. TX_RESP_Q01
+   └─ Sem descrição específica disponível
+
+47. TX_RESP_Q02
+   └─ Sem descrição específica disponível
+
+48. TX_RESP_Q03
+   └─ Sem descrição específica disponível
+
+49. TX_RESP_Q04
+   └─ Sem descrição específica disponível
+
+50. TX_RESP_Q05a
+   └─ Sem descrição específica disponível
+
+51. TX_RESP_Q05b
+   └─ Sem descrição específica disponível
+
+52. TX_RESP_Q05c
+   └─ Sem descrição específica disponível
+
+53. TX_RESP_Q06
+   └─ Sem descrição específica disponível
+
+54. TX_RESP_Q07a
+   └─ Sem descrição específica disponível
+
+55. TX_RESP_Q07b
+   └─ Sem descrição específica disponível
+
+56. TX_RESP_Q07c
+   └─ Sem descrição específica disponível
+
+57. TX_RESP_Q07d
+   └─ Sem descrição específica disponível
+
+58. TX_RESP_Q07e
+   └─ Sem descrição específica disponível
+
+59. TX_RESP_Q08
+   └─ Sem descrição específica disponível
+
+60. TX_RESP_Q09
+   └─ Sem descrição específica disponível
+
+61. TX_RESP_Q10a
+   └─ Sem descrição específica disponível
+
+62. TX_RESP_Q10b
+   └─ Sem descrição específica disponível
+
+63. TX_RESP_Q10c
+   └─ Sem descrição específica disponível
+
+64. TX_RESP_Q10d
+   └─ Sem descrição específica disponível
+
+65. TX_RESP_Q10e
+   └─ Sem descrição específica disponível
+
+66. TX_RESP_Q10f
+   └─ Sem descrição específica disponível
+
+67. TX_RESP_Q11a
+   └─ Sem descrição específica disponível
+
+68. TX_RESP_Q11b
+   └─ Sem descrição específica disponível
+
+69. TX_RESP_Q11c
+   └─ Sem descrição específica disponível
+
+70. TX_RESP_Q12a
+   └─ Sem descrição específica disponível
+
+71. TX_RESP_Q12b
+   └─ Sem descrição específica disponível
+
+72. TX_RESP_Q12c
+   └─ Sem descrição específica disponível
+
+73. TX_RESP_Q12d
+   └─ Sem descrição específica disponível
+
+74. TX_RESP_Q12e
+   └─ Sem descrição específica disponível
+
+75. TX_RESP_Q12f
+   └─ Sem descrição específica disponível
+
+76. TX_RESP_Q12g
+   └─ Sem descrição específica disponível
+
+77. TX_RESP_Q13a
+   └─ Sem descrição específica disponível
+
+78. TX_RESP_Q13b
+   └─ Sem descrição específica disponível
+
+79. TX_RESP_Q13c
+   └─ Sem descrição específica disponível
+
+80. TX_RESP_Q13d
+   └─ Sem descrição específica disponível
+
+81. TX_RESP_Q13e
+   └─ Sem descrição específica disponível
+
+82. TX_RESP_Q13f
+   └─ Sem descrição específica disponível
+
+83. TX_RESP_Q13g
+   └─ Sem descrição específica disponível
+
+84. TX_RESP_Q13h
+   └─ Sem descrição específica disponível
+
+85. TX_RESP_Q13i
+   └─ Sem descrição específica disponível
+
+86. TX_RESP_Q14
+   └─ Sem descrição específica disponível
+
+87. TX_RESP_Q15a
+   └─ Sem descrição específica disponível
+
+88. TX_RESP_Q15b
+   └─ Sem descrição específica disponível
+
+89. TX_RESP_Q16
+   └─ Sem descrição específica disponível
+
+90. TX_RESP_Q17
+   └─ Sem descrição específica disponível
+
+91. TX_RESP_Q18
+   └─ Sem descrição específica disponível
+
+92. TX_RESP_Q19
+   └─ Sem descrição específica disponível
+
+93. TX_RESP_Q20
+   └─ Sem descrição específica disponível
+
+94. TX_RESP_Q21a
+   └─ Sem descrição específica disponível
+
+95. TX_RESP_Q21b
+   └─ Sem descrição específica disponível
+
+96. TX_RESP_Q21c
+   └─ Sem descrição específica disponível
+
+97. TX_RESP_Q21d
+   └─ Sem descrição específica disponível
+
+98. TX_RESP_Q21e
+   └─ Sem descrição específica disponível
+
+99. TX_RESP_Q22a
+   └─ Sem descrição específica disponível
+
+100. TX_RESP_Q22b
+   └─ Sem descrição específica disponível
+
+101. TX_RESP_Q22c
+   └─ Sem descrição específica disponível
+
+102. TX_RESP_Q22d
+   └─ Sem descrição específica disponível
+
+103. TX_RESP_Q22e
+   └─ Sem descrição específica disponível
+
+104. TX_RESP_Q22f
+   └─ Sem descrição específica disponível
+
+105. TX_RESP_Q22g
+   └─ Sem descrição específica disponível
+
+106. TX_RESP_Q22h
+   └─ Sem descrição específica disponível
+
+107. TX_RESP_Q23a
+   └─ Sem descrição específica disponível
+
+108. TX_RESP_Q23b
+   └─ Sem descrição específica disponível
+
+109. TX_RESP_Q23c
+   └─ Sem descrição específica disponível
+
+110. TX_RESP_Q23d
+   └─ Sem descrição específica disponível
+
+111. TX_RESP_Q23e
+   └─ Sem descrição específica disponível
+
+112. TX_RESP_Q23f
+   └─ Sem descrição específica disponível
+
+113. TX_RESP_Q23g
+   └─ Sem descrição específica disponível
+
+114. TX_RESP_Q23h
+   └─ Sem descrição específica disponível
+
+115. TX_RESP_Q23i
+   └─ Sem descrição específica disponível
+
+116. TX_RESP_Q24
+   └─ Sem descrição específica disponível
+
+117. TX_RESP_Q25
+   └─ Sem descrição específica disponível
+
+118. TX_RESP_Q10a_num
+   └─ Sem descrição específica disponível
+
+119. TX_RESP_Q10b_num
+   └─ Sem descrição específica disponível
+
+120. TX_RESP_Q10c_num
+   └─ Sem descrição específica disponível
+
+121. TX_RESP_Q10d_num
+   └─ Sem descrição específica disponível
+
+122. TX_RESP_Q10e_num
+   └─ Sem descrição específica disponível
+
+123. TX_RESP_Q10f_num
+   └─ Sem descrição específica disponível
+
+124. TX_RESP_Q21a_num
+   └─ Sem descrição específica disponível
+
+125. TX_RESP_Q21b_num
+   └─ Sem descrição específica disponível
+
+126. TX_RESP_Q21c_num
+   └─ Sem descrição específica disponível
+
+127. TX_RESP_Q21d_num
+   └─ Sem descrição específica disponível
+
+128. TX_RESP_Q21e_num
+   └─ Sem descrição específica disponível
+
+129. TX_RESP_Q22a_num
+   └─ Sem descrição específica disponível
+
+130. TX_RESP_Q22b_num
+   └─ Sem descrição específica disponível
+
+131. TX_RESP_Q22c_num
+   └─ Sem descrição específica disponível
+
+132. TX_RESP_Q22d_num
+   └─ Sem descrição específica disponível
+
+133. TX_RESP_Q22e_num
+   └─ Sem descrição específica disponível
+
+134. TX_RESP_Q22f_num
+   └─ Sem descrição específica disponível
+
+135. TX_RESP_Q22g_num
+   └─ Sem descrição específica disponível
+
+136. TX_RESP_Q22h_num
+   └─ Sem descrição específica disponível
+
+137. TX_RESP_Q23a_num
+   └─ Sem descrição específica disponível
+
+138. TX_RESP_Q23b_num
+   └─ Sem descrição específica disponível
+
+139. TX_RESP_Q23c_num
+   └─ Sem descrição específica disponível
+
+140. TX_RESP_Q23d_num
+   └─ Sem descrição específica disponível
+
+141. TX_RESP_Q23e_num
+   └─ Sem descrição específica disponível
+
+142. TX_RESP_Q23f_num
+   └─ Sem descrição específica disponível
+
+143. TX_RESP_Q23g_num
+   └─ Sem descrição específica disponível
+
+144. TX_RESP_Q23h_num
+   └─ Sem descrição específica disponível
+
+145. TX_RESP_Q23i_num
+   └─ Sem descrição específica disponível
+
+146. TX_RESP_Q19_num
+   └─ Sem descrição específica disponível
+
+147. TX_RESP_Q20_num
+   └─ Sem descrição específica disponível
+
+148. Q01_masculino
+   └─ Sem descrição específica disponível
+
+149. Q01_feminino
+   └─ Sem descrição específica disponível
+
+150. Q04_Branca
+   └─ Sem descrição específica disponível
+
+151. Q04_Preta
+   └─ Sem descrição específica disponível
+
+152. Q04_Parda
+   └─ Sem descrição específica disponível
+
+153. Q04_Amarela
+   └─ Sem descrição específica disponível
+
+154. Q04_Indigena
+   └─ Sem descrição específica disponível
+
+--------------------------------------------------------------------------------
+AMOSTRA DOS DADOS:
+--------------------------------------------------------------------------------
+Primeiras 3 linhas:
+
+   ID_SAEB  ID_REGIAO  ID_UF  ID_MUNICIPIO  ID_AREA  ID_ESCOLA  IN_PUBLICA  ID_LOCALIZACAO  ID_TURMA  ID_SERIE  ID_ALUNO  IN_SITUACAO_CENSO  IN_PREENCHIMENTO_LP  IN_PREENCHIMENTO_MT  IN_PRESENCA_LP  IN_PRESENCA_MT  ID_CADERNO_LP  ID_BLOCO_1_LP  ID_BLOCO_2_LP  ID_CADERNO_MT  ID_BLOCO_1_MT  ID_BLOCO_2_MT TX_RESP_BLOCO1_LP TX_RESP_BLOCO2_LP TX_RESP_BLOCO1_MT TX_RESP_BLOCO2_MT  IN_PROFICIENCIA_LP  IN_PROFICIENCIA_MT  IN_AMOSTRA      ESTRATO  PESO_ALUNO_LP  PROFICIENCIA_LP  ERRO_PADRAO_LP  PROFICIENCIA_LP_SAEB  ERRO_PADRAO_LP_SAEB  PESO_ALUNO_MT  PROFICIENCIA_MT  ERRO_PADRAO_MT  PROFICIENCIA_MT_SAEB  ERRO_PADRAO_MT_SAEB  IN_PREENCHIMENTO_QUESTIONARIO  IN_INSE  INSE_ALUNO  NU_TIPO_NIVEL_INSE  PESO_ALUNO_INSE TX_RESP_Q01 TX_RESP_Q02 TX_RESP_Q03 TX_RESP_Q04 TX_RESP_Q05a TX_RESP_Q05b TX_RESP_Q05c TX_RESP_Q06 TX_RESP_Q07a TX_RESP_Q07b TX_RESP_Q07c TX_RESP_Q07d TX_RESP_Q07e TX_RESP_Q08 TX_RESP_Q09 TX_RESP_Q10a TX_RESP_Q10b TX_RESP_Q10c TX_RESP_Q10d TX_RESP_Q10e TX_RESP_Q10f TX_RESP_Q11a TX_RESP_Q11b TX_RESP_Q11c TX_RESP_Q12a TX_RESP_Q12b TX_RESP_Q12c TX_RESP_Q12d TX_RESP_Q12e TX_RESP_Q12f TX_RESP_Q12g TX_RESP_Q13a TX_RESP_Q13b TX_RESP_Q13c TX_RESP_Q13d TX_RESP_Q13e TX_RESP_Q13f TX_RESP_Q13g TX_RESP_Q13h TX_RESP_Q13i TX_RESP_Q14 TX_RESP_Q15a TX_RESP_Q15b TX_RESP_Q16 TX_RESP_Q17 TX_RESP_Q18 TX_RESP_Q19 TX_RESP_Q20 TX_RESP_Q21a TX_RESP_Q21b TX_RESP_Q21c TX_RESP_Q21d TX_RESP_Q21e TX_RESP_Q22a TX_RESP_Q22b TX_RESP_Q22c TX_RESP_Q22d TX_RESP_Q22e TX_RESP_Q22f TX_RESP_Q22g TX_RESP_Q22h TX_RESP_Q23a TX_RESP_Q23b TX_RESP_Q23c TX_RESP_Q23d TX_RESP_Q23e TX_RESP_Q23f TX_RESP_Q23g TX_RESP_Q23h TX_RESP_Q23i TX_RESP_Q24 TX_RESP_Q25  TX_RESP_Q10a_num  TX_RESP_Q10b_num  TX_RESP_Q10c_num  TX_RESP_Q10d_num  TX_RESP_Q10e_num  TX_RESP_Q10f_num  TX_RESP_Q21a_num  TX_RESP_Q21b_num  TX_RESP_Q21c_num  TX_RESP_Q21d_num  TX_RESP_Q21e_num  TX_RESP_Q22a_num  TX_RESP_Q22b_num  TX_RESP_Q22c_num  TX_RESP_Q22d_num  TX_RESP_Q22e_num  TX_RESP_Q22f_num  TX_RESP_Q22g_num  TX_RESP_Q22h_num  TX_RESP_Q23a_num  TX_RESP_Q23b_num  TX_RESP_Q23c_num  TX_RESP_Q23d_num  TX_RESP_Q23e_num  TX_RESP_Q23f_num  TX_RESP_Q23g_num  TX_RESP_Q23h_num  TX_RESP_Q23i_num  TX_RESP_Q19_num  TX_RESP_Q20_num  Q01_masculino  Q01_feminino  Q04_Branca  Q04_Preta  Q04_Parda  Q04_Amarela  Q04_Indigena
+0     2023          3     31       6324479        1   61466120           1               1   1549731        12  52150860                  1                    1                    1               1               1             10              3              5             10              3              5     CCBDEAADBEBDC     EABDCBABCDBCD     ECBDCACBDAACC     DCDECABBACDEB                   1                   1           0  63244792112       1.269231        -0.469418        0.522064            224.123174            28.762261       1.269231         2.426106        0.247178            385.565093            13.815354                              1        1        4.79                   4           1375.0           A           B           A           C            A            A            A           B            B            .            .            .            B           E           D            B            A            B            B            B            A            B            B            B            B            A            C            B            B            A            D            B            B            A            A            B            A            B            B            B           C            A            A           D           B           C           A           A            C            D            C            D            B            B            C            C            C            C            C            B            C            B            C            B            C            C            B            B            C            C           C           A               2.0               1.0               2.0               2.0               2.0               1.0               3.0               4.0               3.0               4.0               2.0               3.0               2.0               2.0               2.0               2.0               2.0               3.0               2.0               3.0               2.0               3.0               2.0               2.0               3.0               3.0               2.0               2.0              1.0              1.0            1.0           0.0         0.0        0.0        1.0          0.0           0.0
+1     2023          3     31       6324479        1   61466120           1               1   1549731        12  52150861                  1                    1                    1               1               1              7              7              1              7              7              1     CDAAABBDADDCE     AADCDACDAEBAC     CCBDBCCDCBAEB     DAAECABDCCEAB                   1                   1           0  63244792112       1.269231         0.357644        0.407623            269.688801            22.457322       1.269231        -0.698685        0.693408            210.913250            38.756187                              1        1        5.43                   5           1375.0           A           C           A           C            A            A            A           B            B            A            A            A            B           E           B            C            B            C            C            C            A            B            B            B            B            C            D            C            B            A            D            B            B            B            B            B            A            B            B            B           C            A            A           D           A           A           A           A            D            D            D            A            D            A            C            B            C            D            B            A            A            C            C            A            B            B            C            D            B            A           C           A               3.0               2.0               3.0               3.0               3.0               1.0               4.0               4.0               4.0               1.0               4.0               4.0               2.0               3.0               2.0               1.0               3.0               4.0               4.0               2.0               2.0               4.0               3.0               3.0               2.0               1.0               3.0               4.0              1.0              1.0            1.0           0.0         0.0        0.0        1.0          0.0           0.0
+2     2023          3     31       6324479        1   61466120           1               1   1549731        12  52150862                  1                    0                    0               0               0              5              5              6              5              5              6     .............     .............     .............     .............                   0                   0           0  63244792112            NaN              NaN             NaN                   NaN                  NaN            NaN              NaN             NaN                   NaN                  NaN                              0        0         NaN                   1              NaN           .           .           .           .            .            .            .           .            .            .            .            .            .           .           .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .           .            .            .           .           .           .           .           .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .            .           .           .               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN               NaN              NaN              NaN            NaN           NaN         NaN        NaN        NaN          NaN           NaN
+
+--------------------------------------------------------------------------------
+ESTATÍSTICAS:
+--------------------------------------------------------------------------------
+       ID_SAEB  ID_REGIAO  ID_UF  ID_MUNICIPIO  ID_AREA   ID_ESCOLA  IN_PUBLICA  ID_LOCALIZACAO      ID_TURMA  ID_SERIE      ID_ALUNO  IN_SITUACAO_CENSO  IN_PREENCHIMENTO_LP  IN_PREENCHIMENTO_MT  IN_PRESENCA_LP  IN_PRESENCA_MT  ID_CADERNO_LP  ID_BLOCO_1_LP  ID_BLOCO_2_LP  ID_CADERNO_MT  ID_BLOCO_1_MT  ID_BLOCO_2_MT  IN_PROFICIENCIA_LP  IN_PROFICIENCIA_MT  IN_AMOSTRA       ESTRATO  PESO_ALUNO_LP  PROFICIENCIA_LP  ERRO_PADRAO_LP  PROFICIENCIA_LP_SAEB  ERRO_PADRAO_LP_SAEB  PESO_ALUNO_MT  PROFICIENCIA_MT  ERRO_PADRAO_MT  PROFICIENCIA_MT_SAEB  ERRO_PADRAO_MT_SAEB  IN_PREENCHIMENTO_QUESTIONARIO     IN_INSE  INSE_ALUNO  NU_TIPO_NIVEL_INSE  PESO_ALUNO_INSE  TX_RESP_Q10a_num  TX_RESP_Q10b_num  TX_RESP_Q10c_num  TX_RESP_Q10d_num  TX_RESP_Q10e_num  TX_RESP_Q10f_num  TX_RESP_Q21a_num  TX_RESP_Q21b_num  TX_RESP_Q21c_num  TX_RESP_Q21d_num  TX_RESP_Q21e_num  TX_RESP_Q22a_num  TX_RESP_Q22b_num  TX_RESP_Q22c_num  TX_RESP_Q22d_num  TX_RESP_Q22e_num  TX_RESP_Q22f_num  TX_RESP_Q22g_num  TX_RESP_Q22h_num  TX_RESP_Q23a_num  TX_RESP_Q23b_num  TX_RESP_Q23c_num  TX_RESP_Q23d_num  TX_RESP_Q23e_num  TX_RESP_Q23f_num  TX_RESP_Q23g_num  TX_RESP_Q23h_num  TX_RESP_Q23i_num  TX_RESP_Q19_num  TX_RESP_Q20_num  Q01_masculino  Q01_feminino  Q04_Branca   Q04_Preta   Q04_Parda  Q04_Amarela  Q04_Indigena
+count    306.0      306.0  306.0         306.0    306.0       306.0       306.0           306.0  3.060000e+02     306.0  3.060000e+02         306.000000           306.000000           306.000000      306.000000      306.000000     306.000000     306.000000     306.000000     306.000000     306.000000     306.000000          306.000000          306.000000       306.0  3.060000e+02     201.000000       204.000000      204.000000            204.000000           204.000000     201.000000       204.000000      204.000000            204.000000           204.000000                     306.000000  306.000000  194.000000          306.000000       194.000000        204.000000        205.000000        205.000000        204.000000        202.000000        205.000000        197.000000        196.000000        196.000000        196.000000        197.000000        204.000000        202.000000        203.000000        203.000000        201.000000        203.000000        202.000000        203.000000        203.000000         202.00000        203.000000        200.000000        203.000000        203.000000        203.000000        203.000000        202.000000       197.000000       196.000000     204.000000    204.000000  201.000000  201.000000  201.000000   201.000000    201.000000
+mean    2023.0        3.0   31.0     6324479.0      1.0  61466120.0         1.0             1.0  1.625475e+06      12.0  5.215361e+07           0.986928             0.666667             0.666667        0.669935        0.669935      10.941176       3.986928       3.980392      10.941176       3.986928       3.980392            0.666667            0.666667         0.0  6.324479e+10       1.437811         0.407791        2.792169            272.451579            23.248984       1.437811         0.586307        0.533375            282.734441            29.811596                       0.673203    0.643791    5.594330            3.924837       171.422680          1.799020          2.331707          2.746341          2.490196          2.782178          1.960976          2.543147          2.290816          2.923469          2.596939          3.467005          2.946078          2.351485          2.453202          2.339901          2.089552          2.236453          3.381188          2.738916          2.857143           2.39604          2.891626          3.055000          2.532020          2.743842          2.354680          3.206897          2.990099         1.121827         1.020408       0.480392      0.519608    0.452736    0.199005    0.333333     0.009950      0.004975
+std        0.0        0.0    0.0           0.0      0.0         0.0         0.0             0.0  5.657251e+04       0.0  2.758893e+03           0.113769             0.472177             0.472177        0.471007        0.471007       6.147088       2.013029       1.994979       6.147088       2.013029       1.994979            0.472177            0.472177         0.0  0.000000e+00       0.290033         0.959139       33.857351             52.842186             4.468314       0.290033         0.888199        0.150495             49.643503             8.411511                       0.469811    0.479662    0.727293            2.443641       453.395760          0.661242          0.676800          0.536920          0.739393          0.480546          0.772340          0.791805          1.168877          0.870756          1.452069          0.785830          0.757253          0.914354          0.790743          0.825182          0.794947          0.863593          0.621539          0.936505          0.767073           0.83552          0.819369          0.790633          0.924212          0.816536          1.039952          0.735622          0.840458         0.357686         0.141754       0.500844      0.500844    0.499004    0.400249    0.472582     0.099501      0.070535
+min     2023.0        3.0   31.0     6324479.0      1.0  61466120.0         1.0             1.0  1.549731e+06      12.0  5.215085e+07           0.000000             0.000000             0.000000        0.000000        0.000000       1.000000       1.000000       1.000000       1.000000       1.000000       1.000000            0.000000            0.000000         0.0  6.324479e+10       1.230769        -1.859719        0.295709            147.526816            16.291603       1.230769        -1.469684        0.233402            167.820321            13.045381                       0.000000    0.000000    3.620000            1.000000         1.230769          1.000000          1.000000          1.000000          1.000000          1.000000          1.000000          1.000000          1.000000          1.000000          1.000000          1.000000          1.000000          1.000000          1.000000          1.000000          1.000000          1.000000          1.000000          1.000000          1.000000           1.00000          1.000000          1.000000          1.000000          1.000000          1.000000          1.000000          1.000000         1.000000         1.000000       0.000000      0.000000    0.000000    0.000000    0.000000     0.000000      0.000000
+25%     2023.0        3.0   31.0     6324479.0      1.0  61466120.0         1.0             1.0  1.573631e+06      12.0  5.215116e+07           1.000000             0.000000             0.000000        0.000000        0.000000       6.000000       2.000000       2.000000       6.000000       2.000000       2.000000            0.000000            0.000000         0.0  6.324479e+10       1.259259        -0.273094        0.362671            234.939337            19.980752       1.259259        -0.023850        0.416052            248.631335            23.254087                       0.000000    0.000000    5.155000            1.000000         1.259259          1.000000          2.000000          3.000000          2.000000          3.000000          1.000000          2.000000          1.000000          2.000000          1.000000          3.000000          2.000000          2.000000          2.000000          2.000000          2.000000          2.000000          3.000000          2.000000          2.000000           2.00000          2.000000          3.000000          2.000000          2.000000          2.000000          3.000000          3.000000         1.000000         1.000000       0.000000      0.000000    0.000000    0.000000    0.000000     0.000000      0.000000
+50%     2023.0        3.0   31.0     6324479.0      1.0  61466120.0         1.0             1.0  1.605018e+06      12.0  5.215168e+07           1.000000             1.000000             1.000000        1.000000        1.000000      11.000000       4.000000       4.000000      11.000000       4.000000       4.000000            1.000000            1.000000         0.0  6.324479e+10       1.307692         0.476707        0.390997            276.248382            21.541367       1.307692         0.597260        0.529816            283.346632            29.612649                       1.000000    1.000000    5.570000            5.000000         1.360000          2.000000          2.000000          3.000000          3.000000          3.000000          2.000000          3.000000          2.000000          3.000000          3.500000          4.000000          3.000000          2.000000          2.000000          2.000000          2.000000          2.000000          3.000000          3.000000          3.000000           2.00000          3.000000          3.000000          3.000000          3.000000          2.000000          3.000000          3.000000         1.000000         1.000000       0.000000      1.000000    0.000000    0.000000    0.000000     0.000000      0.000000
+75%     2023.0        3.0   31.0     6324479.0      1.0  61466120.0         1.0             1.0  1.683622e+06      12.0  5.215697e+07           1.000000             1.000000             1.000000        1.000000        1.000000      16.000000       6.000000       6.000000      16.000000       6.000000       6.000000            1.000000            1.000000         0.0  6.324479e+10       1.590909         1.130149        0.475436            312.248713            26.193354       1.590909         1.265252        0.651685            320.682274            36.424192                       1.000000    1.000000    6.025000            6.000000         1.866667          2.000000          3.000000          3.000000          3.000000          3.000000          3.000000          3.000000          3.000000          4.000000          4.000000          4.000000          3.000000          3.000000          3.000000          3.000000          3.000000          3.000000          4.000000          3.000000          3.000000           3.00000          3.000000          4.000000          3.000000          3.000000          3.000000          4.000000          4.000000         1.000000         1.000000       1.000000      1.000000    1.000000    0.000000    1.000000     0.000000      0.000000
+max     2023.0        3.0   31.0     6324479.0      1.0  61466120.0         1.0             1.0  1.707247e+06      12.0  5.215744e+07           1.000000             1.000000             1.000000        1.000000        1.000000      22.000000       7.000000       7.000000      22.000000       7.000000       7.000000            1.000000            1.000000         0.0  6.324479e+10       2.285714         2.367542      484.000000            380.420840            37.984174       2.285714         2.938384        0.916828            414.197503            51.243651                       1.000000    1.000000    7.620000            8.000000      1375.000000          3.000000          3.000000          3.000000          3.000000          3.000000          3.000000          4.000000          4.000000          4.000000          4.000000          4.000000          4.000000          4.000000          4.000000          4.000000          4.000000          4.000000          4.000000          4.000000          4.000000           4.00000          4.000000          4.000000          4.000000          4.000000          4.000000          4.000000          4.000000         3.000000         2.000000       1.000000      1.000000    1.000000    1.000000    1.000000     1.000000      1.000000

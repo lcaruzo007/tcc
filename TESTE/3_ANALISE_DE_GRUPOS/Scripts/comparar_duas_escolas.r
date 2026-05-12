@@ -26,19 +26,35 @@ library(tidyverse)
 library(data.table)
 
 # Paths
-RAIZ <- "C:/Users/Usuario/Desktop/tcc"
+RAIZ <- "C:/Users/13756596699/tcc"
 DIR_MICRODADOS <- file.path(RAIZ, "MICRODADOS_SAEB_2023/DADOS")
 DIR_TESTE <- file.path(RAIZ, "TESTE")
-DIR_PROCESSADOS <- file.path(DIR_TESTE, "processados")
-DIR_SAIDA <- file.path(DIR_PROCESSADOS, "comparacao_duas_escolas")
-
-# Criar diretório se não existir
-if (!dir.exists(DIR_SAIDA)) {
-  dir.create(DIR_SAIDA, showWarnings = FALSE, recursive = TRUE)
-}
+DIR_ANALISE <- file.path(DIR_TESTE, "3_ANALISE_DE_GRUPOS")
+DIR_PROCESSADOS <- file.path(DIR_ANALISE, "outputs_escolas")
+DIR_COMPARACOES <- file.path(DIR_ANALISE, "outputs_comparacao")
 
 # Timestamp
 timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
+
+# ============================================================================
+# FUNÇÃO: Carregar metadados das escolas (para comparação de atributos)
+# ============================================================================
+
+carregar_metadados_escola <- function(ID) {
+  # Encontrar arquivo mais recente de metadados
+  arquivos_meta <- list.files(DIR_PROCESSADOS, 
+                               pattern = "^metadados_escolas_.*\\.csv$",
+                               full.names = TRUE)
+  if (length(arquivos_meta) == 0) return(NULL)
+  
+  arquivo_meta <- sort(arquivos_meta, decreasing = TRUE)[1]
+  metadados <- read_csv(arquivo_meta, show_col_types = FALSE)
+  
+  metadados %>%
+    filter(ID_ESCOLA == ID) %>%
+    select(ID_ESCOLA, TIPO_ESCOLA, AREA, LOCALIZACAO, GRUPO_INSE) %>%
+    slice(1)
+}
 
 # ============================================================================
 # CONFIGURAÇÃO: ESCOLHA OPÇÃO A OU B
@@ -75,10 +91,6 @@ if (USAR_IDS) {
                    encoding = "Latin-1") %>%
     as_tibble()
   
-  escolas <- fread(file.path(DIR_MICRODADOS, "TS_ESCOLA.csv"),
-                    encoding = "Latin-1") %>%
-    as_tibble()
-  
   # Filtrar Escola A
   dados_A <- alunos %>%
     filter(ID_ESCOLA == ID_ESCOLA_A) %>%
@@ -113,25 +125,21 @@ if (USAR_IDS) {
     stop(sprintf("❌ Escola B (ID=%d) não encontrada!", ID_ESCOLA_B))
   }
   
-  # Puxar nomes das escolas
-  nome_A <- escolas %>%
-    filter(ID_ESCOLA == ID_ESCOLA_A) %>%
-    pull(NO_ESCOLA)
-  
-  nome_B <- escolas %>%
-    filter(ID_ESCOLA == ID_ESCOLA_B) %>%
-    pull(NO_ESCOLA)
-  
-  tipo_A <- escolas %>%
-    filter(ID_ESCOLA == ID_ESCOLA_A) %>%
-    pull(TP_DEPENDENCIA_ADM)
-  
-  tipo_B <- escolas %>%
-    filter(ID_ESCOLA == ID_ESCOLA_B) %>%
-    pull(TP_DEPENDENCIA_ADM)
+  # Usar IDs como nomes das escolas
+  nome_A <- sprintf("Escola A (ID: %d)", ID_ESCOLA_A)
+  nome_B <- sprintf("Escola B (ID: %d)", ID_ESCOLA_B)
   
   cat(sprintf("✓ Escola A: %s (n=%d alunos)\n", nome_A, nrow(dados_A)))
   cat(sprintf("✓ Escola B: %s (n=%d alunos)\n\n", nome_B, nrow(dados_B)))
+  
+  # Criar subpasta única para esta comparação
+  DIR_SAIDA <- file.path(DIR_COMPARACOES, 
+                         sprintf("Escola_%d_vs_Escola_%d_%s", 
+                                 ID_ESCOLA_A, ID_ESCOLA_B, timestamp))
+  if (!dir.exists(DIR_SAIDA)) {
+    dir.create(DIR_SAIDA, showWarnings = FALSE, recursive = TRUE)
+  }
+  cat(sprintf("📁 Pasta de saída: %s\n\n", basename(DIR_SAIDA)))
   
 } else {
   
@@ -163,6 +171,14 @@ if (USAR_IDS) {
   
   cat(sprintf("✓ Escola A: %d alunos carregados\n", nrow(dados_A)))
   cat(sprintf("✓ Escola B: %d alunos carregados\n\n", nrow(dados_B)))
+  
+  # Criar subpasta única para esta comparação
+  DIR_SAIDA <- file.path(DIR_COMPARACOES, 
+                         sprintf("Comparacao_XLSX_%s", timestamp))
+  if (!dir.exists(DIR_SAIDA)) {
+    dir.create(DIR_SAIDA, showWarnings = FALSE, recursive = TRUE)
+  }
+  cat(sprintf("📁 Pasta de saída: %s\n\n", basename(DIR_SAIDA)))
 }
 
 # ============================================================================
@@ -220,6 +236,71 @@ agg_B <- dados_B %>%
   )
 
 cat("   ✓ Agregação completa\n\n")
+
+# ============================================================================
+# PASSO 2B: COMPARAÇÃO DE ATRIBUTOS (Tipo, Área, Localização, INSE)
+# ============================================================================
+
+cat(">>> Comparação de Atributos (Características das Escolas)\n\n")
+
+# Tentar carregar metadados para comparação de características
+meta_A <- carregar_metadados_escola(ID_ESCOLA_A)
+meta_B <- carregar_metadados_escola(ID_ESCOLA_B)
+
+if (!is.null(meta_A) && !is.null(meta_B)) {
+  
+  # Montar tabela de atributos
+  atributos <- data.frame(
+    Característica = c(
+      "Tipo de Escola",
+      "Área",
+      "Localização",
+      "Nível Socioeconômico (INSE)"
+    ),
+    Escola_A = c(
+      meta_A$TIPO_ESCOLA,
+      meta_A$AREA,
+      meta_A$LOCALIZACAO,
+      meta_A$GRUPO_INSE
+    ),
+    Escola_B = c(
+      meta_B$TIPO_ESCOLA,
+      meta_B$AREA,
+      meta_B$LOCALIZACAO,
+      meta_B$GRUPO_INSE
+    ),
+    Diferença = c(
+      if_else(meta_A$TIPO_ESCOLA == meta_B$TIPO_ESCOLA, "✓ Igual", "✗ DIFERENTE"),
+      if_else(meta_A$AREA == meta_B$AREA, "✓ Igual", "✗ DIFERENTE"),
+      if_else(meta_A$LOCALIZACAO == meta_B$LOCALIZACAO, "✓ Igual", "✗ DIFERENTE"),
+      if_else(meta_A$GRUPO_INSE == meta_B$GRUPO_INSE, "✓ Igual", "✗ DIFERENTE")
+    )
+  )
+  
+  cat("📊 RESUMO DE CARACTERÍSTICAS:\n\n")
+  print(atributos)
+  
+  # Resumo de diferenças
+  cat("\n🔍 ANÁLISE DE DIFERENÇAS:\n")
+  diferenças_encontradas <- atributos %>%
+    filter(grepl("DIFERENTE", Diferença))
+  
+  if (nrow(diferenças_encontradas) == 0) {
+    cat("   → As duas escolas têm as MESMAS características!\n\n")
+  } else {
+    cat(sprintf("   → %d característica(s) DIFERENTE(s):\n", nrow(diferenças_encontradas)))
+    for (i in 1:nrow(diferenças_encontradas)) {
+      carac <- diferenças_encontradas$Característica[i]
+      val_a <- diferenças_encontradas$Escola_A[i]
+      val_b <- diferenças_encontradas$Escola_B[i]
+      cat(sprintf("      • %s: %s vs %s\n", carac, val_a, val_b))
+    }
+    cat("\n")
+  }
+  
+} else {
+  cat("   ⚠ Metadados não disponíveis para comparação de atributos\n\n")
+}
 
 # ============================================================================
 # PASSO 3: COMPARAÇÃO LADO A LADO
@@ -388,6 +469,14 @@ nome_agg <- file.path(DIR_SAIDA,
 write_csv(dados_agg, nome_agg)
 cat(sprintf("   ✓ Perfis: %s\n", basename(nome_agg)))
 
+# Exportar tabela de atributos (se disponível)
+if (!is.null(meta_A) && !is.null(meta_B)) {
+  nome_atributos <- file.path(DIR_SAIDA,
+                              sprintf("Atributos_Escolas_%s.csv", timestamp))
+  write_csv(as_tibble(atributos), nome_atributos)
+  cat(sprintf("   ✓ Atributos: %s\n", basename(nome_atributos)))
+}
+
 # ============================================================================
 # PASSO 6: VISUALIZAÇÃO
 # ============================================================================
@@ -442,12 +531,30 @@ cat(sprintf("   ✓ Gráfico: %s\n", basename(nome_plot)))
 # RESUMO FINAL
 # ============================================================================
 
-cat("\n" %&% strrep("=", 80) %&% "\n")
+cat("\n" , strrep("=", 80) , "\n", sep="")
 cat("COMPARAÇÃO COMPLETA\n")
-cat(strrep("=", 80) %&% "\n\n")
+cat(strrep("=", 80), "\n\n", sep="")
 
 cat(sprintf("Arquivos salvos em: %s\n\n", DIR_SAIDA))
-cat("Resumo da Diferença (Escola B - Escola A):\n")
+
+# Mostrar resumo de características se disponível
+if (!is.null(meta_A) && !is.null(meta_B)) {
+  cat("📊 RESUMO DE CARACTERÍSTICAS:\n")
+  cat(sprintf("  • Tipo de Escola: %s (A) vs %s (B) %s\n",
+              meta_A$TIPO_ESCOLA, meta_B$TIPO_ESCOLA,
+              if_else(meta_A$TIPO_ESCOLA != meta_B$TIPO_ESCOLA, "← DIFERENTE", "")))
+  cat(sprintf("  • Área: %s (A) vs %s (B) %s\n",
+              meta_A$AREA, meta_B$AREA,
+              if_else(meta_A$AREA != meta_B$AREA, "← DIFERENTE", "")))
+  cat(sprintf("  • Localização: %s (A) vs %s (B) %s\n",
+              meta_A$LOCALIZACAO, meta_B$LOCALIZACAO,
+              if_else(meta_A$LOCALIZACAO != meta_B$LOCALIZACAO, "← DIFERENTE", "")))
+  cat(sprintf("  • INSE: %s (A) vs %s (B) %s\n\n",
+              meta_A$GRUPO_INSE, meta_B$GRUPO_INSE,
+              if_else(meta_A$GRUPO_INSE != meta_B$GRUPO_INSE, "← DIFERENTE", "")))
+}
+
+cat("📈 RESUMO DE DESEMPENHO (Escola B - Escola A):\n")
 cat(sprintf("  • Média MT: %.2f (diferença: %.2f)\n",
             agg_B$MEDIA_MT, agg_B$MEDIA_MT - agg_A$MEDIA_MT))
 cat(sprintf("  • Média LP: %.2f (diferença: %.2f)\n",

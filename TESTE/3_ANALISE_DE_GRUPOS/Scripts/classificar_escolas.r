@@ -22,11 +22,12 @@ library(tidyverse)
 library(data.table)
 
 # Definir raiz
-RAIZ <- "C:/Users/Usuario/Desktop/tcc"
+RAIZ <- "C:/Users/13756596699/tcc"
 DIR_MICRODADOS <- file.path(RAIZ, "MICRODADOS_SAEB_2023/DADOS")
 DIR_TESTE <- file.path(RAIZ, "TESTE")
 DIR_SAIDA <- file.path(DIR_TESTE, "dados_por_escola")
-DIR_PROCESSADOS <- file.path(DIR_TESTE, "processados")
+DIR_ANALISE <- file.path(DIR_TESTE, "3_ANALISE_DE_GRUPOS")
+DIR_PROCESSADOS <- file.path(DIR_ANALISE, "outputs_escolas")
 
 # Criar diretório de saída se não existir
 if (!dir.exists(DIR_PROCESSADOS)) {
@@ -40,30 +41,35 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
 # PASSO 1: CARREGAR DADOS BRUTOS DAS ESCOLAS
 # ============================================================================
 
-cat(">>> Carregando dados das escolas...\n")
+cat(">>> Carregando dados dos alunos...\n")
 
-# Escolas
-escolas <- fread(file.path(DIR_MICRODADOS, "TS_ESCOLA.csv"),
-                  encoding = "Latin-1") %>%
-  as_tibble()
-
-# Alunos (necessário para calcular proficiência por escola)
+# Alunos (dados brutos com informações das escolas)
 alunos <- fread(file.path(DIR_MICRODADOS, "TS_ALUNO_34EM.csv"),
                  encoding = "Latin-1") %>%
-  as_tibble() %>%
+  as_tibble()
+
+# Selecionar apenas colunas necessárias dos alunos
+alunos <- alunos %>%
   select(
     ID_ESCOLA,
+    ID_AREA,          # 1 = Capital, 2 = Interior
+    ID_LOCALIZACAO,   # 1 = Urbana, 2 = Rural
+    IN_PUBLICA,       # 1 = Público, 0 = Privado
     PROFICIENCIA_MT_SAEB,
     PROFICIENCIA_LP_SAEB,
     INSE_ALUNO,
-    NU_TIPO_NIVEL_INSE,
-    ID_AREA,          # 1 = Capital, 2 = Interior
-    ID_LOCALIZACAO    # 1 = Urbana, 2 = Rural
+    NU_TIPO_NIVEL_INSE
   )
 
+# Carregar escolas (apenas para pegar nome e tipo)
+escolas <- fread(file.path(DIR_MICRODADOS, "TS_ESCOLA.csv"),
+                  encoding = "Latin-1") %>%
+  as_tibble() %>%
+  select(ID_ESCOLA, IN_PUBLICA, ID_AREA, ID_LOCALIZACAO)
+
 cat("   ✓ Dados carregados\n")
-cat(sprintf("   • Escolas: %d\n", n_distinct(escolas$ID_ESCOLA)))
-cat(sprintf("   • Alunos: %d\n", nrow(alunos))\n")
+cat(sprintf("   • Escolas: %d\n", n_distinct(alunos$ID_ESCOLA)))
+cat(sprintf("   • Alunos: %d\n", nrow(alunos)))
 
 # ============================================================================
 # PASSO 2: AGREGAR PROFICIÊNCIA E INSE POR ESCOLA
@@ -138,20 +144,11 @@ agregados <- agregados %>%
 # PASSO 4: JUNTAR COM METADADOS DAS ESCOLAS
 # ============================================================================
 
-cat("\n>>> Juntando com metadados das escolas...\n")
+cat("\n>>> Juntando com informações das escolas...\n")
 
-# Selecionar colunas relevantes de TS_ESCOLA
-escolas_info <- escolas %>%
-  select(
-    ID_ESCOLA,
-    NO_ESCOLA,
-    TP_DEPENDENCIA_ADM,  # Tipo de escola (pública, privada, etc)
-    NU_MATRICULAS_TOTAL
-  )
-
-# Join
+# Join com TS_ESCOLA
 metadados <- agregados %>%
-  left_join(escolas_info, by = "ID_ESCOLA")
+  left_join(escolas, by = "ID_ESCOLA")
 
 # Verificar se houve perda de dados
 cat(sprintf("   ✓ Escolas no agrupamento: %d\n", nrow(agregados)))
@@ -168,37 +165,27 @@ if (nrow(metadados) < nrow(agregados)) {
 
 cat("\n>>> Criando variáveis de classificação...\n")
 
-# Classificar tipo de escola
-tipo_escola_map <- tribble(
-  ~TP_DEPENDENCIA_ADM, ~TIPO_ESCOLA,
-  1, "Federal",
-  2, "Estadual",
-  3, "Municipal",
-  4, "Privada"
-)
-
 # Classificar área (capital vs interior)
 area_map <- tribble(
-  ~ID_AREA_MODAL, ~AREA,
+  ~ID_AREA, ~AREA,
   1, "Capital",
   2, "Interior"
 )
 
 # Classificar localização (urbana vs rural)
 localizacao_map <- tribble(
-  ~ID_LOCALIZACAO_MODAL, ~LOCALIZACAO,
+  ~ID_LOCALIZACAO, ~LOCALIZACAO,
   1, "Urbana",
   2, "Rural"
 )
 
 # Aplicar mapeamentos
 metadados <- metadados %>%
-  left_join(tipo_escola_map, by = "TP_DEPENDENCIA_ADM") %>%
-  left_join(area_map, by = "ID_AREA_MODAL") %>%
-  left_join(localizacao_map, by = "ID_LOCALIZACAO_MODAL") %>%
-  # Criar variável de grupo (pública vs privada) — agregado mais importante
+  left_join(area_map, by = "ID_AREA") %>%
+  left_join(localizacao_map, by = "ID_LOCALIZACAO") %>%
+  # Criar variável de grupo (pública vs privada)
   mutate(
-    GRUPO_TIPO = if_else(TP_DEPENDENCIA_ADM == 4, "Privada", "Pública"),
+    TIPO_ESCOLA = if_else(IN_PUBLICA == 1, "Pública", "Privada"),
     
     # INSE categorizado
     GRUPO_INSE = case_when(
@@ -209,9 +196,7 @@ metadados <- metadados %>%
   ) %>%
   select(
     ID_ESCOLA,
-    NO_ESCOLA,
     TIPO_ESCOLA,
-    GRUPO_TIPO,
     AREA,
     LOCALIZACAO,
     MEDIA_MT,
@@ -223,15 +208,14 @@ metadados <- metadados %>%
     NIVEL_INSE_MODAL,
     N_ALUNOS,
     N_ALUNOS_MT_VALIDOS,
-    N_ALUNOS_LP_VALIDOS,
-    NU_MATRICULAS_TOTAL
+    N_ALUNOS_LP_VALIDOS
   ) %>%
   arrange(desc(MEDIA_MT))
 
 cat("   ✓ Classificações criadas\n")
 cat(sprintf("   • Pública: %d | Privada: %d\n",
-            sum(metadados$GRUPO_TIPO == "Pública"),
-            sum(metadados$GRUPO_TIPO == "Privada")))
+            sum(metadados$TIPO_ESCOLA == "Pública"),
+            sum(metadados$TIPO_ESCOLA == "Privada")))
 cat(sprintf("   • Urbana: %d | Rural: %d\n",
             sum(metadados$LOCALIZACAO == "Urbana"),
             sum(metadados$LOCALIZACAO == "Rural")))
@@ -264,7 +248,7 @@ cat("\n>>> Resumos por grupo:\n")
 # Por tipo de escola
 cat("\n--- PÚBLICA vs PRIVADA ---\n")
 metadados %>%
-  group_by(GRUPO_TIPO) %>%
+  group_by(TIPO_ESCOLA) %>%
   summarise(
     N_ESCOLAS = n(),
     MEDIA_MT_GRUPO = mean(MEDIA_MT, na.rm = TRUE),
@@ -301,3 +285,5 @@ metadados %>%
   print()
 
 cat("\n✅ Script finalizado com sucesso!\n")
+
+

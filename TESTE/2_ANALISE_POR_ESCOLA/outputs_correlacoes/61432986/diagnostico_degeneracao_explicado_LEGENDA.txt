@@ -1,0 +1,38 @@
+================================================================================
+LEGENDA: diagnostico_degeneracao_explicado.csv
+================================================================================
+
+Data: 12/05/2026 08:24:56
+Linhas: 8
+Colunas: 3
+
+DESCRIÇÃO DAS COLUNAS:
+--------------------------------------------------------------------------------
+
+1. metrica
+   └─ Sem descrição específica disponível
+
+2. valor
+   └─ Sem descrição específica disponível
+
+3. explicacao
+   └─ Sem descrição específica disponível
+
+--------------------------------------------------------------------------------
+AMOSTRA DOS DADOS:
+--------------------------------------------------------------------------------
+Primeiras 3 linhas:
+
+             metrica valor                                                         explicacao
+0           n_linhas   173                            Total de observacoes (alunos) na escola
+1  n_colunas_entrada    74  Total de variaveis (perguntas de questionario) lidas inicialmente
+2  n_colunas_validas    67                     Variaveis com variacao suficiente para analise
+
+--------------------------------------------------------------------------------
+ESTATÍSTICAS:
+--------------------------------------------------------------------------------
+         metrica valor                               explicacao
+count          8     8                                        8
+unique         8     6                                        8
+top     n_linhas     0  Total de observacoes (alunos) na escola
+freq           1     2                                        1

@@ -22,10 +22,12 @@ library(tidyverse)
 library(data.table)
 
 # Paths
-RAIZ <- "C:/Users/Usuario/Desktop/tcc"
+RAIZ <- "C:/Users/13756596699/tcc"
 DIR_TESTE <- file.path(RAIZ, "TESTE")
-DIR_PROCESSADOS <- file.path(DIR_TESTE, "processados")
-DIR_FIGURAS <- file.path(DIR_PROCESSADOS, "figuras_comparacao")
+DIR_ANALISE <- file.path(DIR_TESTE, "3_ANALISE_DE_GRUPOS")
+DIR_OUTPUTS_ESCOLAS <- file.path(DIR_ANALISE, "outputs_escolas")
+DIR_PROCESSADOS <- file.path(DIR_ANALISE, "outputs_escolas")
+DIR_FIGURAS <- file.path(DIR_ANALISE, "outputs_figuras")
 
 # Criar diretório de figuras se não existir
 if (!dir.exists(DIR_FIGURAS)) {
@@ -126,19 +128,19 @@ fazer_wilcoxon <- function(x, y, nome_x, nome_y, variavel) {
 cat("\n>>> COMPARAÇÃO 1: PÚBLICA vs PRIVADA\n")
 
 publica_mt <- metadados %>%
-  filter(GRUPO_TIPO == "Pública") %>%
+  filter(TIPO_ESCOLA == "Pública") %>%
   pull(MEDIA_MT)
 
 privada_mt <- metadados %>%
-  filter(GRUPO_TIPO == "Privada") %>%
+  filter(TIPO_ESCOLA == "Privada") %>%
   pull(MEDIA_MT)
 
 publica_lp <- metadados %>%
-  filter(GRUPO_TIPO == "Pública") %>%
+  filter(TIPO_ESCOLA == "Pública") %>%
   pull(MEDIA_LP)
 
 privada_lp <- metadados %>%
-  filter(GRUPO_TIPO == "Privada") %>%
+  filter(TIPO_ESCOLA == "Privada") %>%
   pull(MEDIA_LP)
 
 comparacoes <- bind_rows(
@@ -246,14 +248,14 @@ write_csv(comparacoes, nome_saida_tabela)
 cat(sprintf("   ✓ Tabela salva: resultados_comparacao_%s.csv\n", timestamp))
 
 # ============================================================================
-# PASSO 8: BOXPLOTS
+# PASSO 8: BOXPLOTS COM DESIGN APRIMORADO
 # ============================================================================
 
-cat("\n>>> Gerando boxplots...\n")
+cat("\n>>> Gerando boxplots com visual profissional...\n")
 
 # Preparar dados para ggplot
 dados_plot <- metadados %>%
-  select(ID_ESCOLA, MEDIA_MT, MEDIA_LP, GRUPO_TIPO, LOCALIZACAO, AREA, GRUPO_INSE) %>%
+  select(ID_ESCOLA, MEDIA_MT, MEDIA_LP, TIPO_ESCOLA, LOCALIZACAO, AREA, GRUPO_INSE) %>%
   pivot_longer(
     cols = c(MEDIA_MT, MEDIA_LP),
     names_to = "Disciplina",
@@ -263,107 +265,164 @@ dados_plot <- metadados %>%
                               MEDIA_MT = "Matemática",
                               MEDIA_LP = "Língua Portuguesa"))
 
+# Paleta de cores profissionais
+paleta_pública_privada <- c("Pública" = "#2E86AB", "Privada" = "#A23B72")
+paleta_localização <- c("Urbana" = "#06A77D", "Rural" = "#D5622B")
+paleta_área <- c("Capital" = "#4A90E2", "Interior" = "#F5A623")
+paleta_inse <- c("Baixo_INSE" = "#E74C3C", "Medio_INSE" = "#F39C12", "Alto_INSE" = "#27AE60")
+
 # Boxplot 1: Tipo de Escola
 p1 <- dados_plot %>%
-  ggplot(aes(x = GRUPO_TIPO, y = Proficiência, fill = GRUPO_TIPO)) +
-  geom_boxplot(alpha = 0.7, outlier.alpha = 0.5) +
-  facet_wrap(~Disciplina) +
+  ggplot(aes(x = TIPO_ESCOLA, y = Proficiência, fill = TIPO_ESCOLA)) +
+  geom_violin(alpha = 0.3, size = 0.7, color = NA) +
+  geom_boxplot(alpha = 0.7, width = 0.25, outlier.alpha = 0.4, outlier.size = 1.5) +
+  geom_jitter(width = 0.15, alpha = 0.2, size = 1) +
+  facet_wrap(~Disciplina, scales = "free_y") +
+  scale_fill_manual(values = paleta_pública_privada) +
   labs(
-    title = "Proficiência por Tipo de Escola",
-    subtitle = "Pública vs Privada",
+    title = "Distribuição de Proficiência por Tipo de Escola",
+    subtitle = "Comparação: Públicas (n=2297) vs Privadas (n=41)",
     x = "Tipo de Escola",
-    y = "Proficiência Média",
+    y = "Proficiência Média (Escala 0-500)",
     fill = "Tipo"
   ) +
   theme_minimal() +
   theme(
-    legend.position = "bottom",
-    plot.title = element_text(size = 14, face = "bold")
+    legend.position = "none",
+    plot.title = element_text(size = 14, face = "bold", color = "#1A1A1A"),
+    plot.subtitle = element_text(size = 11, color = "#666666", margin = margin(b = 10)),
+    axis.title = element_text(size = 11, face = "bold", color = "#1A1A1A"),
+    axis.text = element_text(size = 10, color = "#333333"),
+    strip.text = element_text(size = 11, face = "bold"),
+    panel.grid.major.y = element_line(color = "#E8E8E8", size = 0.3),
+    panel.grid.minor = element_blank(),
+    plot.background = element_rect(fill = "#F8F9FA", color = NA),
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.margin = margin(12, 12, 12, 12)
   )
 
 ggsave(file.path(DIR_FIGURAS, "01_boxplot_tipo_escola.png"),
-       plot = p1, width = 8, height = 5, dpi = 300)
+       plot = p1, width = 10, height = 6, dpi = 300, bg = "#F8F9FA")
 
-cat("   ✓ Boxplot 1: Tipo de Escola\n")
+cat("   ✓ Boxplot 1: Tipo de Escola (design aprimorado)\n")
 
 # Boxplot 2: Localização
 p2 <- dados_plot %>%
   ggplot(aes(x = LOCALIZACAO, y = Proficiência, fill = LOCALIZACAO)) +
-  geom_boxplot(alpha = 0.7, outlier.alpha = 0.5) +
-  facet_wrap(~Disciplina) +
+  geom_violin(alpha = 0.3, size = 0.7, color = NA) +
+  geom_boxplot(alpha = 0.7, width = 0.25, outlier.alpha = 0.4, outlier.size = 1.5) +
+  geom_jitter(width = 0.15, alpha = 0.2, size = 1) +
+  facet_wrap(~Disciplina, scales = "free_y") +
+  scale_fill_manual(values = paleta_localização) +
   labs(
-    title = "Proficiência por Localização",
-    subtitle = "Urbana vs Rural",
+    title = "Distribuição de Proficiência por Localização",
+    subtitle = "Comparação: Urbana (n=2144) vs Rural (n=153) + NA",
     x = "Localização",
-    y = "Proficiência Média",
+    y = "Proficiência Média (Escala 0-500)",
     fill = "Localização"
   ) +
   theme_minimal() +
   theme(
-    legend.position = "bottom",
-    plot.title = element_text(size = 14, face = "bold")
+    legend.position = "none",
+    plot.title = element_text(size = 14, face = "bold", color = "#1A1A1A"),
+    plot.subtitle = element_text(size = 11, color = "#666666", margin = margin(b = 10)),
+    axis.title = element_text(size = 11, face = "bold", color = "#1A1A1A"),
+    axis.text = element_text(size = 10, color = "#333333"),
+    strip.text = element_text(size = 11, face = "bold"),
+    panel.grid.major.y = element_line(color = "#E8E8E8", size = 0.3),
+    panel.grid.minor = element_blank(),
+    plot.background = element_rect(fill = "#F8F9FA", color = NA),
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.margin = margin(12, 12, 12, 12)
   )
 
 ggsave(file.path(DIR_FIGURAS, "02_boxplot_urbano_rural.png"),
-       plot = p2, width = 8, height = 5, dpi = 300)
+       plot = p2, width = 10, height = 6, dpi = 300, bg = "#F8F9FA")
 
-cat("   ✓ Boxplot 2: Localização\n")
+cat("   ✓ Boxplot 2: Localização (design aprimorado)\n")
 
 # Boxplot 3: Área
 p3 <- dados_plot %>%
+  filter(!is.na(AREA)) %>%
   ggplot(aes(x = AREA, y = Proficiência, fill = AREA)) +
-  geom_boxplot(alpha = 0.7, outlier.alpha = 0.5) +
-  facet_wrap(~Disciplina) +
+  geom_violin(alpha = 0.3, size = 0.7, color = NA) +
+  geom_boxplot(alpha = 0.7, width = 0.25, outlier.alpha = 0.4, outlier.size = 1.5) +
+  geom_jitter(width = 0.15, alpha = 0.2, size = 1) +
+  facet_wrap(~Disciplina, scales = "free_y") +
+  scale_fill_manual(values = paleta_área) +
   labs(
-    title = "Proficiência por Área",
-    subtitle = "Capital vs Interior",
+    title = "Distribuição de Proficiência por Área",
+    subtitle = "Comparação: Capital (n=132) vs Interior (n=2163)",
     x = "Área",
-    y = "Proficiência Média",
+    y = "Proficiência Média (Escala 0-500)",
     fill = "Área"
   ) +
   theme_minimal() +
   theme(
-    legend.position = "bottom",
-    plot.title = element_text(size = 14, face = "bold")
+    legend.position = "none",
+    plot.title = element_text(size = 14, face = "bold", color = "#1A1A1A"),
+    plot.subtitle = element_text(size = 11, color = "#666666", margin = margin(b = 10)),
+    axis.title = element_text(size = 11, face = "bold", color = "#1A1A1A"),
+    axis.text = element_text(size = 10, color = "#333333"),
+    strip.text = element_text(size = 11, face = "bold"),
+    panel.grid.major.y = element_line(color = "#E8E8E8", size = 0.3),
+    panel.grid.minor = element_blank(),
+    plot.background = element_rect(fill = "#F8F9FA", color = NA),
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.margin = margin(12, 12, 12, 12)
   )
 
 ggsave(file.path(DIR_FIGURAS, "03_boxplot_capital_interior.png"),
-       plot = p3, width = 8, height = 5, dpi = 300)
+       plot = p3, width = 10, height = 6, dpi = 300, bg = "#F8F9FA")
 
-cat("   ✓ Boxplot 3: Capital vs Interior\n")
+cat("   ✓ Boxplot 3: Capital vs Interior (design aprimorado)\n")
 
 # Boxplot 4: INSE
 p4 <- dados_plot %>%
   filter(!is.na(GRUPO_INSE)) %>%
   ggplot(aes(x = GRUPO_INSE, y = Proficiência, fill = GRUPO_INSE)) +
-  geom_boxplot(alpha = 0.7, outlier.alpha = 0.5) +
-  facet_wrap(~Disciplina) +
+  geom_violin(alpha = 0.3, size = 0.7, color = NA) +
+  geom_boxplot(alpha = 0.7, width = 0.25, outlier.alpha = 0.4, outlier.size = 1.5) +
+  geom_jitter(width = 0.15, alpha = 0.2, size = 1) +
+  facet_wrap(~Disciplina, scales = "free_y") +
+  scale_fill_manual(values = paleta_inse) +
   labs(
-    title = "Proficiência por Nível Socioeconômico (INSE)",
-    subtitle = "Baixo, Médio, Alto",
+    title = "Distribuição de Proficiência por Nível Socioeconômico (INSE)",
+    subtitle = "Comparação: Baixo, Médio e Alto INSE",
     x = "Grupo INSE",
-    y = "Proficiência Média",
+    y = "Proficiência Média (Escala 0-500)",
     fill = "Grupo INSE"
   ) +
   theme_minimal() +
   theme(
     legend.position = "bottom",
-    plot.title = element_text(size = 14, face = "bold"),
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    plot.title = element_text(size = 14, face = "bold", color = "#1A1A1A"),
+    plot.subtitle = element_text(size = 11, color = "#666666", margin = margin(b = 10)),
+    axis.title = element_text(size = 11, face = "bold", color = "#1A1A1A"),
+    axis.text = element_text(size = 10, color = "#333333"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.text = element_text(size = 11, face = "bold"),
+    legend.title = element_text(size = 10, face = "bold"),
+    legend.text = element_text(size = 9),
+    panel.grid.major.y = element_line(color = "#E8E8E8", size = 0.3),
+    panel.grid.minor = element_blank(),
+    plot.background = element_rect(fill = "#F8F9FA", color = NA),
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.margin = margin(12, 12, 12, 12)
   )
 
 ggsave(file.path(DIR_FIGURAS, "04_boxplot_inse.png"),
-       plot = p4, width = 8, height = 5, dpi = 300)
+       plot = p4, width = 10, height = 6, dpi = 300, bg = "#F8F9FA")
 
-cat("   ✓ Boxplot 4: INSE\n")
+cat("   ✓ Boxplot 4: INSE (design aprimorado)\n")
 
 # ============================================================================
 # PASSO 9: RESUMO FINAL
 # ============================================================================
 
-cat("\n" %&% strrep("=", 80) %&% "\n")
+cat("\n" , strrep("=", 80) , "\n", sep="")
 cat("RESUMO GERAL DA ANÁLISE\n")
-cat(strrep("=", 80) %&% "\n\n")
+cat(strrep("=", 80), "\n\n", sep="")
 
 cat("Tabela de Resultados:\n")
 print(comparacoes, n = Inf)

@@ -1,0 +1,34 @@
+================================================================================
+LEGENDA: variaveis_degeneradas.csv
+================================================================================
+
+Data: 12/05/2026 08:24:56
+Linhas: 2
+Colunas: 2
+
+DESCRIÇÃO DAS COLUNAS:
+--------------------------------------------------------------------------------
+
+1. Variavel
+   └─ Sem descrição específica disponível
+
+2. Motivo
+   └─ Razão pela qual foi degenerada (ex: variância zero, falta de dados)
+
+--------------------------------------------------------------------------------
+AMOSTRA DOS DADOS:
+--------------------------------------------------------------------------------
+Primeiras 3 linhas:
+
+       Variavel          Motivo
+0   TX_RESP_Q03  variancia_zero
+1  TX_RESP_Q13g  variancia_zero
+
+--------------------------------------------------------------------------------
+ESTATÍSTICAS:
+--------------------------------------------------------------------------------
+           Variavel          Motivo
+count             2               2
+unique            2               1
+top     TX_RESP_Q03  variancia_zero
+freq              1               2

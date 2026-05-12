@@ -10,9 +10,10 @@ library(ggdendro)
 # =========================================================================
 # Configuração de Caminhos
 # =========================================================================
-RAIZ <- "C:/Users/Usuario/Desktop/tcc"
+RAIZ <- "C:/Users/13756596699/tcc"
 DIR_TESTE <- file.path(RAIZ, "TESTE")
-DIR_RESULTADOS_POR_ESCOLA <- file.path(DIR_TESTE, "dados_por_escola")
+DIR_ANALISE_2 <- file.path(DIR_TESTE, "2_ANALISE_POR_ESCOLA")
+DIR_RESULTADOS_POR_ESCOLA <- file.path(DIR_ANALISE_2, "dados_por_escola")
 
 source(file.path(RAIZ, "DOCUMENTACAO", "utils_saeb.r"))
 

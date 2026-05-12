@@ -1,0 +1,48 @@
+================================================================================
+LEGENDA: correlacoes_mantidas_MT.csv
+================================================================================
+
+Data: 12/05/2026 08:24:56
+Linhas: 3
+Colunas: 5
+
+DESCRIÇÃO DAS COLUNAS:
+--------------------------------------------------------------------------------
+
+1. Variavel
+   └─ Sem descrição específica disponível
+
+2. Metodo
+   └─ Sem descrição específica disponível
+
+3. Correlacao_Matematica
+   └─ Sem descrição específica disponível
+
+4. Correlacao_Portugues
+   └─ Sem descrição específica disponível
+
+5. Status_Calculo
+   └─ Sem descrição específica disponível
+
+--------------------------------------------------------------------------------
+AMOSTRA DOS DADOS:
+--------------------------------------------------------------------------------
+Primeiras 3 linhas:
+
+       Variavel   Metodo  Correlacao_Matematica  Correlacao_Portugues Status_Calculo
+0  TX_RESP_Q12g  Pearson              -0.572570              0.022714             OK
+1  TX_RESP_Q13i  Pearson              -0.341926              0.027216             OK
+2   TX_RESP_Q20  Pearson               0.321439             -0.022696             OK
+
+--------------------------------------------------------------------------------
+ESTATÍSTICAS:
+--------------------------------------------------------------------------------
+       Correlacao_Matematica  Correlacao_Portugues
+count               3.000000              3.000000
+mean               -0.197686              0.009078
+std                 0.464131              0.027609
+min                -0.572570             -0.022696
+25%                -0.457248              0.000009
+50%                -0.341926              0.022714
+75%                -0.010243              0.024965
+max                 0.321439              0.027216
