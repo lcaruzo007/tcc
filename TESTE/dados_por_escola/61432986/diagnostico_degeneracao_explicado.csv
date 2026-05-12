@@ -1,0 +1,10 @@
+"metrica","valor","explicacao"
+"n_linhas","173","Total de observacoes (alunos) na escola"
+"n_colunas_entrada","74","Total de variaveis (perguntas de questionario) lidas inicialmente"
+"n_colunas_validas","67","Variaveis com variacao suficiente para analise"
+"n_degeneradas","7","Total de variaveis descartadas por falta de variacao"
+"n_somente_na","0","Variaveis 100% vazias (sem nenhuma resposta valida)"
+"n_variancia_zero","0","Variaveis onde todos alunos deram a mesma resposta"
+"n_near_zero_var","7","Variaveis com pouquissima variacao (uma resposta domina 95%+)"
+"nzv_aplicado","sim","O metodo nearZeroVar foi aplicado (n_linhas >= 30)"
+
