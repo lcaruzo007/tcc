@@ -5,22 +5,25 @@
 ║                  ANÁLISE TCC — SAEB 2023 DE MINAS GERAIS                   ║
 ║                   Impacto Socioeconômico na Proficiência                   ║
 ║                                                                             ║
+║                      ✨ ESTRUTURA REORGANIZADA ✨                          ║
+║                   (Atualizado em 11/05/2026)                               ║
+║                                                                             ║
 ╚═════════════════════════════════════════════════════════════════════════════╝
 
 
 VOCÊ TEM 3 OPÇÕES:
 
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃ 1️⃣ QUERO ENTENDER A ESTRUTURA                                             ┃
+┃ 1️⃣ QUERO ENTENDER A NOVA ESTRUTURA                                         ┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃                                                                            ┃
-┃ Abra: MAPA_DA_ESTRUTURA.txt                                               ┃
+┃ Abra: ESTRUTURA_FINAL.txt (NOVO!)                                         ┃
 ┃                                                                            ┃
 ┃ Você verá:                                                                ┃
-┃ ✓ Estrutura visual das pastas                                            ┃
-┃ ✓ Onde fica cada script                                                  ┃
-┃ ✓ O que cada script faz                                                  ┃
-┃ ✓ Resumo rápido de comandos para copiar/colar                            ┃
+┃ ✓ Estrutura visual das pastas organizadas                                ┃
+┃ ✓ Localização de CADA script (não mais duplicados)                       ┃
+┃ ✓ Caminhos corretos C:/Users/... para copiar/colar                       ┃
+┃ ✓ Resumo das mudanças implementadas                                      ┃
 ┃                                                                            ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
@@ -28,13 +31,14 @@ VOCÊ TEM 3 OPÇÕES:
 ┃ 2️⃣ QUERO EXECUTAR OS SCRIPTS AGORA                                        ┃
 ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
 ┃                                                                            ┃
-┃ Abra: ROTEIRO_EXECUCAO.txt                                                ┃
+┃ Abra: ESTRUTURA_FINAL.txt                                                 ┃
+┃ Depois: DOCUMENTACAO/ROTEIRO_EXECUCAO.txt                                  ┃
 ┃                                                                            ┃
 ┃ Você verá:                                                                ┃
-┃ ✓ Passo 1: PASSO 2: Passo 3: ... (ordem certa)                           ┃
-┃ ✓ Caminhos exatos de cada script                                         ┃
-┃ ✓ O que configurar em cada um                                            ┃
-┃ ✓ Tempo estimado                                                         ┃
+┃ ✓ Passo 1 → 7 (ordem certa)                                              ┃
+┃ ✓ Caminhos NOVOS de cada script (em subpastas)                           ┃
+┃ ✓ Comandos source() prontos para copiar/colar                            ┃
+┃ ✓ Tempo estimado por script                                              ┃
 ┃ ✓ Locais dos arquivos gerados                                            ┃
 ┃                                                                            ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
@@ -57,26 +61,50 @@ VOCÊ TEM 3 OPÇÕES:
 
 ═════════════════════════════════════════════════════════════════════════════
 
+✨ PRINCIPAIS MUDANÇAS (11 de Maio de 2026):
+
+🚀 Scripts Reorganizados:
+   ❌ Não há mais cópias duplicadas na raiz
+   ✓ Cada script está em sua pasta temática
+   ✓ 1_LIMPEZA_E_TRANSFORMACAO/ → ajeitar_dados.r
+   ✓ 2_ANALISE_POR_ESCOLA/Scripts/ → correlacao.r, graficos.r
+   ✓ 3_ANALISE_DE_GRUPOS/Scripts/ → todos os outros
+
+🔧 Caminhos Padronizados:
+   ✓ Todos os scripts usam RAIZ + file.path()
+   ✓ source() chama DOCUMENTACAO/utils_saeb.r com caminho absoluto
+   ✓ Funciona de qualquer diretório
+
+📊 Dados Mantidos Compatíveis:
+   ✓ dados_por_escola/ continua no mesmo local
+   ✓ processados/ continua gerando resultados
+   ✓ Estrutura de saída inalterada
+
+═════════════════════════════════════════════════════════════════════════════
 
 LEITURA RÁPIDA (Se está com pressa):
 
-📌 Mais importante:     ROTEIRO_EXECUCAO.txt
-📌 Para visualizar:    MAPA_DA_ESTRUTURA.txt
+📌 Mais importante:     ESTRUTURA_FINAL.txt (NOVO!)
+📌 Para copiar/colar:  Use os caminhos em ESTRUTURA_FINAL.txt
 📌 Para aprofundar:    DOCUMENTACAO/DOCUMENTACAO_PASSOS_TCC.txt
 
 
 ═════════════════════════════════════════════════════════════════════════════
 
-
 🆘 PROBLEMAS?
 
 ❌ "Script não encontrado"
-→ Confirme que você está no diretório correto
-→ Use caminhos COMPLETOS (C:\Users\...)
+→ Os scripts NÃO estão mais na raiz de TESTE/
+→ Use os caminhos completos em ESTRUTURA_FINAL.txt
+→ Exemplo: C:/Users/Usuario/Desktop/tcc/TESTE/1_LIMPEZA_E_TRANSFORMACAO/ajeitar_dados.r
+
+❌ "source("utils_saeb.r") não encontrado"
+→ Não altere os scripts, já foram corrigidos!
+→ source() agora usa caminho absoluto
 
 ❌ "Algum arquivo de saída não foi gerado"
-→ Verifique TESTE/processados/ ou TESTE/dados_por_escola/
-→ Abra ROTEIRO_EXECUCAO.txt e procure "Saída esperada"
+→ Verifique TESTE/dados_por_escola/ ou TESTE/processados/
+→ Abra ESTRUTURA_FINAL.txt e procure "Saída esperada"
 
 ❌ "Demora muito"
 → Normal! Primeira execução lê 173k registros de alunos
@@ -85,39 +113,43 @@ LEITURA RÁPIDA (Se está com pressa):
 
 ═════════════════════════════════════════════════════════════════════════════
 
-
 GLOSSÁRIO RÁPIDO:
 
 PASSO 1 (ajeitar_dados.r) = Limpeza
    Transforma respostas de letras (A, B, C...) para números (1, 2, 3...)
+   Localização: 1_LIMPEZA_E_TRANSFORMACAO/ajeitar_dados.r
 
 PASSO 2 (correlacao.r) = Correlações por Escola
    Calcula quais variáveis socioeconômicas impactam a nota do aluno
+   Localização: 2_ANALISE_POR_ESCOLA/Scripts/correlacao.r
 
 PASSO 3 (classificar_escolas.r) = Metadados
    Agrupa dados de alunos → perfil de cada escola
+   Localização: 3_ANALISE_DE_GRUPOS/Scripts/classificar_escolas.r
 
 PASSO 4 (comparar_grupos.r) = Comparações
    Testa: Pública é diferente de Privada? Urbana de Rural? etc
+   Localização: 3_ANALISE_DE_GRUPOS/Scripts/comparar_grupos.r
 
 PASSO 5 (dendrograma.r) = Clustering
    Desenha árvore mostrando quais escolas são similares
+   Localização: 3_ANALISE_DE_GRUPOS/Scripts/dendrograma.r
 
 
 ═════════════════════════════════════════════════════════════════════════════
 
-
 ✨ PRÓXIMO PASSO:
 
-1. Escolha uma opção acima (1️⃣ 2️⃣ ou 3️⃣)
-2. Abra o arquivo recomendado
-3. Siga as instruções
+1. Abra: ESTRUTURA_FINAL.txt
+2. Copie UMA das linhas source() de lá
+3. Cole no seu R e execute
+4. Assista a magia acontecer ✨
 
 
 ═════════════════════════════════════════════════════════════════════════════
 
 Data: 11 de Maio de 2026
-Última atualização: HOJE
-Status: ✅ Pronto para usar
+Última atualização: HOJE (Reorganização concluída)
+Status: ✅ Pronto para usar com caminhos organizados
 
 ═════════════════════════════════════════════════════════════════════════════
