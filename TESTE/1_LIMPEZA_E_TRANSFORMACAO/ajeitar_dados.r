@@ -25,8 +25,7 @@ continuas     <- CONTINUAS_SAEB
 # -------------------------------------------------------------------------
 # Configuração — ajuste estes caminhos antes de executar
 # -------------------------------------------------------------------------
-arquivo_entrada        <- file.path(DIR_MICRODADOS, "TS_ALUNO_34EM.csv")
-arquivo_saida_geral    <- file.path(DIR_SAIDA_RAIZ, "dados_escola_limpos.csv")
+arquivo_entrada        <- file.path(DIR_MICRODADOS, "TS_ALUNO_34EM_escola_61466120.csv")
 dir_saida_por_escola   <- DIR_SAIDA_POR_ESCOLA
 sobrescrever_por_escola <- FALSE
 
@@ -122,44 +121,13 @@ for (col in continuas) {
 # "X% dos alunos não responderam à pergunta Y"
 # =========================================================================
 
-message("Gerando relatório de dados ausentes...")
+message("Gerando relatório de dados ausentes por escola...")
 
 # Selecionar apenas colunas TX_RESP_Q* (perguntas do socioeconômico)
 cols_questoes <- names(df)[grep("^TX_RESP_Q", names(df))]
 
-# Calcular missings por coluna (ANTES das transformações)
-na_stats <- data.frame(
-  Variavel = cols_questoes,
-  N_Total = nrow(df),
-  N_NA = sapply(cols_questoes, function(x) sum(is.na(df[[x]]))),
-  Pct_NA = round(100 * sapply(cols_questoes, function(x) sum(is.na(df[[x]]))) / nrow(df), 2),
-  stringsAsFactors = FALSE
-)
-
-# Ordenar por % de missing (maior para menor)
-na_stats <- na_stats[order(na_stats$Pct_NA, decreasing = TRUE), ]
-rownames(na_stats) <- NULL
-
-# Exibir resumo
-message("\n=== RESUMO DE DADOS AUSENTES (Missing Data) ===")
-message("Variáveis com > 5% de missings:")
-print(na_stats[na_stats$Pct_NA > 5, ])
-
-message("\nArquivo completo de missings salvo em: dados_por_escola/resumo_missings.csv")
-
-# Salvar relatório de missings (geral)
-caminho_missings_geral <- file.path(dir_saida_por_escola, "resumo_missings.csv")
-write.csv(na_stats, caminho_missings_geral, row.names = FALSE)
-
 # -------------------------------------------------------------------------
-# 8. Salvar arquivo geral (usado pelo script de correlação)
-# -------------------------------------------------------------------------
-dir.create(dirname(arquivo_saida_geral), showWarnings = FALSE, recursive = TRUE)
-write.csv(as.data.frame(df), arquivo_saida_geral, row.names = FALSE)
-message("Arquivo geral salvo em: ", arquivo_saida_geral)
-
-# -------------------------------------------------------------------------
-# 9. Salvar uma cópia filtrada por escola
+# 8. Salvar uma cópia filtrada por escola
 # -------------------------------------------------------------------------
 dir.create(dir_saida_por_escola, showWarnings = FALSE, recursive = TRUE)
 
@@ -180,6 +148,18 @@ for (id_escola in ids_escola) {
   )
 
   write.csv(as.data.frame(dados_uma_escola), arquivo_saida, row.names = FALSE)
+
+  # Relatório de missings desta escola
+  na_stats_escola <- data.frame(
+    Variavel = cols_questoes,
+    N_Total  = nrow(dados_uma_escola),
+    N_NA     = sapply(cols_questoes, function(x) sum(is.na(dados_uma_escola[[x]]))),
+    Pct_NA   = round(100 * sapply(cols_questoes, function(x) sum(is.na(dados_uma_escola[[x]]))) / nrow(dados_uma_escola), 2),
+    stringsAsFactors = FALSE
+  )
+  na_stats_escola <- na_stats_escola[order(na_stats_escola$Pct_NA, decreasing = TRUE), ]
+  rownames(na_stats_escola) <- NULL
+  write.csv(na_stats_escola, file.path(pasta_escola, "resumo_missings.csv"), row.names = FALSE)
 }
 
 message("Limpeza concluida. Arquivos por escola salvos em: ", dir_saida_por_escola)
