@@ -35,6 +35,9 @@
 8. **[HISTORICO_MUDANCAS.md](HISTORICO_MUDANCAS.md)** — O que mudou e quando  
    *Rastreamento de alterações feitas na reorganização.*
 
+9. **[09_DIARIO_DE_TCC.md](09_DIARIO_DE_TCC.md)** — Seu diário de desenvolvimento  
+   *Registro de todas as sessões, atividades, desafios e resultados do TCC.*
+
 ---
 
 ## 📁 Estrutura de Uso Recomendado
