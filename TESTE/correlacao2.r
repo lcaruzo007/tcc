@@ -18,7 +18,7 @@ resolver_base_dir <- function(nome_script) {
   cwd
 }
 
-base_dir <- resolver_base_dir("correlacao.r")
+base_dir <- resolver_base_dir("correlacao2.r")
 
 source(file.path(base_dir, "utils_saeb.r"))   # encontrar_arquivo_mais_recente, arquivo_com_versao_existe
 
