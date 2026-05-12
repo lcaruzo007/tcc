@@ -3,14 +3,22 @@
 # =========================================================================
 
 # Resolve caminhos para manter a execucao dentro de TESTE.
-if (file.exists(file.path(getwd(), "correlacao.r"))) {
-  base_dir <- getwd()
-} else if (file.exists(file.path(getwd(), "TESTE", "correlacao.r"))) {
-  base_dir <- file.path(getwd(), "TESTE")
-} else {
-  arquivo_script <- tryCatch(normalizePath(sys.frame(1)$ofile), error = function(e) NA_character_)
-  base_dir <- if (!is.na(arquivo_script)) dirname(arquivo_script) else getwd()
+resolver_base_dir <- function(nome_script) {
+  cwd <- getwd()
+  if (file.exists(file.path(cwd, nome_script))) return(cwd)
+  if (file.exists(file.path(cwd, "TESTE", nome_script))) return(file.path(cwd, "TESTE"))
+
+  args <- commandArgs(trailingOnly = FALSE)
+  arg_file <- grep("^--file=", args, value = TRUE)
+  if (length(arg_file) > 0L) {
+    script_path <- sub("^--file=", "", arg_file[1])
+    return(dirname(normalizePath(script_path, winslash = "/", mustWork = FALSE)))
+  }
+
+  cwd
 }
+
+base_dir <- resolver_base_dir("correlacao.r")
 
 source(file.path(base_dir, "utils_saeb.r"))   # encontrar_arquivo_mais_recente, arquivo_com_versao_existe
 
