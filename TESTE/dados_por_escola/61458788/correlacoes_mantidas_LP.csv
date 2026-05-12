@@ -1,3 +1,2 @@
-"Variavel","Correlacao_Portugues"
-"PROFICIENCIA_MT_SAEB",0.556050371190635
-"TX_RESP_Q22b",0.328987338878863
+"Variavel","Metodo","Correlacao_Matematica","Correlacao_Portugues","Status_Calculo"
+"TX_RESP_Q22b","Pearson",0.206267985712392,0.328987338878863,"OK"

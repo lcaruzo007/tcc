@@ -1,0 +1,196 @@
+╔═════════════════════════════════════════════════════════════════════════════╗
+║                                                                             ║
+║              ✅ ESTRUTURA ORGANIZADA — PRONTA PARA USAR                     ║
+║                                                                             ║
+║                 TCC: IMPACTO SOCIOECONÔMICO NA PROFICIÊNCIA                 ║
+║                         SAEB 2023 - MINAS GERAIS                            ║
+║                                                                             ║
+╚═════════════════════════════════════════════════════════════════════════════╝
+
+
+📁 TESTE/
+│
+├─ 🏗️ 1_LIMPEZA_E_TRANSFORMACAO/        FASE 1
+│  └─ ajeitar_dados.r
+│     • Lê TS_ALUNO_34EM.csv (173k alunos)
+│     • Transforma: A→1, B→2, etc
+│     • Saída: dados_por_escola/ID_ESCOLA/dados_escola_em_numeros.csv
+│     • Tempo: 2-3 min
+│
+├─ 📊 2_ANALISE_POR_ESCOLA/            FASE 2
+│  ├─ Scripts/
+│  │  ├─ correlacao.r (Spearman/Pearson por escola)
+│  │  │  • Entrada: dados_escola_em_numeros.csv
+│  │  │  • Saída: correlacoes_mantidas_*.csv
+│  │  │  • Tempo: 5-10 min
+│  │  │
+│  │  └─ graficos.r (Dashboard Shiny — OPCIONAL)
+│  │     • Exploração interativa
+│  │     • Web app localhost
+│  │
+│  └─ Saída/ (Criada automaticamente pelos scripts)
+│     └─ dados_por_escola/
+│        ├─ 61432986/
+│        ├─ 61458788/
+│        ├─ 61466120/
+│        ├─ 61466123/
+│        └─ (+ outras escolas)
+│
+├─ 📈 3_ANALISE_DE_GRUPOS/              FASE 3 — ⭐ NOVO
+│  ├─ Scripts/
+│  │  ├─ classificar_escolas.r ⭐ EXECUTE PRIMEIRO
+│  │  │  • Agrega por escola → metadados
+│  │  │  • Saída: metadados_escolas_*.csv
+│  │  │  • Tempo: 2-3 min
+│  │  │  • ⚠️ PRÉ-REQUISITO para os próximos
+│  │  │
+│  │  ├─ comparar_grupos.r
+│  │  │  • Pública vs Privada
+│  │  │  • Urbana vs Rural
+│  │  │  • Capital vs Interior
+│  │  │  • Alto INSE vs Baixo INSE
+│  │  │  • Teste Wilcoxon + Tamanho de efeito
+│  │  │  • Saída: resultados_comparacao_*.csv + 4 boxplots
+│  │  │  • Tempo: 1-2 min
+│  │  │
+│  │  ├─ comparar_duas_escolas.r
+│  │  │  • Compare ID_ESCOLA_A vs ID_ESCOLA_B
+│  │  │  • Edite as variáveis no topo do script
+│  │  │  • Saída: tabela + visualização lado-a-lado
+│  │  │  • Tempo: 1 min
+│  │  │
+│  │  └─ dendrograma.r
+│  │     • Clustering hierárquico (Ward.D2)
+│  │     • 3 perspectivas: MT, LP, 3D
+│  │     • Saída: dendrogramas + scatterplots + clusters_escolas_*.csv
+│  │     • Tempo: 2-3 min
+│  │
+│  └─ Saída/ (Criada automaticamente pelos scripts)
+│     ├─ metadados_escolas_20260511_*.csv
+│     ├─ resultados_comparacao_*.csv
+│     ├─ clusters_escolas_*.csv
+│     ├─ figuras_comparacao/ (4 boxplots)
+│     │  ├─ 01_boxplot_tipo_escola.png
+│     │  ├─ 02_boxplot_urbano_rural.png
+│     │  ├─ 03_boxplot_capital_interior.png
+│     │  └─ 04_boxplot_inse.png
+│     │
+│     └─ figuras_dendrogramas/ (6 figuras)
+│        ├─ dendrograma_MT_*.png
+│        ├─ dendrograma_LP_*.png
+│        ├─ dendrograma_3D_*.png
+│        ├─ scatter_MT_vs_INSE.png
+│        ├─ scatter_LP_vs_INSE.png
+│        └─ scatter_MT_vs_LP.png
+│
+├─ 📚 DOCUMENTACAO/                     REFERÊNCIA
+│  ├─ MAPA_DA_ESTRUTURA.txt             ← COMECE POR AQUI!
+│  │  • Visualização rápida
+│  │  • Comandos copy-paste
+│  │  • FAQ
+│  │
+│  ├─ INDICE_DE_EXECUCAO.txt
+│  │  • Caminhos exatos de cada script
+│  │  • Inputs e outputs por script
+│  │
+│  ├─ PLANO_REORGANIZACAO.txt
+│  │  • Estrutura ANTES vs DEPOIS
+│  │
+│  ├─ DOCUMENTACAO_PASSOS_TCC.txt
+│  │  • Justificativas estatísticas
+│  │  • Para escrever Metodologia do TCC
+│  │
+│  ├─ GUIA_3_NOVOS_SCRIPTS.txt
+│  │  • Como interpretar os resultados
+│  │  • Significado das colunas
+│  │
+│  ├─ REQUIREMENTS.md
+│  │  • Versões de pacotes testados
+│  │  • Troubleshooting
+│  │
+│  └─ utils_saeb.r
+│     • Dicionários centralizados
+│     • Funções auxiliares
+│     • Importado por ajeitar_dados.r e correlacao.r
+│
+├─ dados_por_escola/                   SAÍDA INTERMEDIÁRIA
+│  └─ (Criada por ajeitar_dados.r)
+│     ├─ 61432986/
+│     ├─ 61458788/
+│     ├─ 61466120/
+│     ├─ 61466123/
+│     └─ resumo_missings.csv
+│
+├─ processados/                        SAÍDA FINAL
+│  └─ (Criada por classificar_escolas.r, comparar_grupos.r, etc)
+│     ├─ metadados_escolas_*.csv
+│     ├─ resultados_comparacao_*.csv
+│     ├─ clusters_escolas_*.csv
+│     ├─ figuras_comparacao/ (4 PNG)
+│     └─ figuras_dendrogramas/ (6 PNG)
+│
+└─ [Arquivos mantidos na raiz para compatibilidade]
+   ├─ ajeitar_dados.r (também em 1_LIMPEZA_E_TRANSFORMACAO/)
+   ├─ correlacao.r (também em 2_ANALISE_POR_ESCOLA/Scripts/)
+   ├─ graficos.r (também em 2_ANALISE_POR_ESCOLA/Scripts/)
+   ├─ classificar_escolas.r (também em 3_ANALISE_DE_GRUPOS/Scripts/)
+   ├─ comparar_grupos.r (também em 3_ANALISE_DE_GRUPOS/Scripts/)
+   ├─ comparar_duas_escolas.r (também em 3_ANALISE_DE_GRUPOS/Scripts/)
+   ├─ dendrograma.r (também em 3_ANALISE_DE_GRUPOS/Scripts/)
+   ├─ utils_saeb.r (também em DOCUMENTACAO/)
+   └─ [arquivos .txt de documentação]
+
+
+═════════════════════════════════════════════════════════════════════════════
+
+🚀 PRÓXIMO PASSO: TESTAR AS ROTAS
+
+Abra o R e execute na sequência:
+
+1️⃣ source("C:/Users/Usuario/Desktop/tcc/TESTE/ajeitar_dados.r")
+   └─ Aguarde: 2-3 minutos
+
+2️⃣ source("C:/Users/Usuario/Desktop/tcc/TESTE/1_LIMPEZA_E_TRANSFORMACAO/ajeitar_dados.r")
+   └─ Mesmo resultado! (arquivos duplicados para organização lógica)
+
+3️⃣ source("C:/Users/Usuario/Desktop/tcc/TESTE/classificar_escolas.r")
+   └─ Aguarde: 2-3 minutos
+
+4️⃣ source("C:/Users/Usuario/Desktop/tcc/TESTE/comparar_grupos.r")
+   └─ Aguarde: 1-2 minutos
+
+5️⃣ source("C:/Users/Usuario/Desktop/tcc/TESTE/dendrograma.r")
+   └─ Aguarde: 2-3 minutos
+
+═════════════════════════════════════════════════════════════════════════════
+
+✅ RESULTADO ESPERADO:
+
+✓ TESTE/dados_por_escola/
+   ├─ 61432986/dados_escola_em_numeros.csv
+   ├─ 61458788/dados_escola_em_numeros.csv
+   ├─ 61466120/dados_escola_em_numeros.csv
+   ├─ 61466123/dados_escola_em_numeros.csv
+   └─ resumo_missings.csv
+
+✓ TESTE/processados/
+   ├─ metadados_escolas_20260511_*.csv
+   ├─ resultados_comparacao_*.csv
+   ├─ clusters_escolas_*.csv
+   ├─ figuras_comparacao/
+   │  ├─ 01_boxplot_tipo_escola.png
+   │  ├─ 02_boxplot_urbano_rural.png
+   │  ├─ 03_boxplot_capital_interior.png
+   │  └─ 04_boxplot_inse.png
+   └─ figuras_dendrogramas/
+      ├─ dendrograma_MT_*.png
+      ├─ dendrograma_LP_*.png
+      ├─ dendrograma_3D_*.png
+      └─ (3 scatterplots)
+
+═════════════════════════════════════════════════════════════════════════════
+
+Data: 11 de Maio de 2026
+Status: ✅ Estrutura Finalizada e Pronta para Uso
+
+═════════════════════════════════════════════════════════════════════════════

@@ -1,4 +1,4 @@
-"Variavel","Correlacao_Portugues"
-"TX_RESP_Q07e",-0.339236133808587
-"TX_RESP_Q12a",0.389019077727678
-"TX_RESP_Q16",-0.3161413932938
+"Variavel","Metodo","Correlacao_Matematica","Correlacao_Portugues","Status_Calculo"
+"TX_RESP_Q07e","Pearson",0.0654659573384617,-0.339236133808587,"OK"
+"TX_RESP_Q12a","Pearson",-0.0440305587716585,0.389019077727678,"OK"
+"TX_RESP_Q16","Pearson",0.272438742035366,-0.3161413932938,"OK"

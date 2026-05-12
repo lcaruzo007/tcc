@@ -1,0 +1,123 @@
+╔═════════════════════════════════════════════════════════════════════════════╗
+║                                                                             ║
+║                         🚀 COMECE AQUI 🚀                                  ║
+║                                                                             ║
+║                  ANÁLISE TCC — SAEB 2023 DE MINAS GERAIS                   ║
+║                   Impacto Socioeconômico na Proficiência                   ║
+║                                                                             ║
+╚═════════════════════════════════════════════════════════════════════════════╝
+
+
+VOCÊ TEM 3 OPÇÕES:
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 1️⃣ QUERO ENTENDER A ESTRUTURA                                             ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                            ┃
+┃ Abra: MAPA_DA_ESTRUTURA.txt                                               ┃
+┃                                                                            ┃
+┃ Você verá:                                                                ┃
+┃ ✓ Estrutura visual das pastas                                            ┃
+┃ ✓ Onde fica cada script                                                  ┃
+┃ ✓ O que cada script faz                                                  ┃
+┃ ✓ Resumo rápido de comandos para copiar/colar                            ┃
+┃                                                                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 2️⃣ QUERO EXECUTAR OS SCRIPTS AGORA                                        ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                            ┃
+┃ Abra: ROTEIRO_EXECUCAO.txt                                                ┃
+┃                                                                            ┃
+┃ Você verá:                                                                ┃
+┃ ✓ Passo 1: PASSO 2: Passo 3: ... (ordem certa)                           ┃
+┃ ✓ Caminhos exatos de cada script                                         ┃
+┃ ✓ O que configurar em cada um                                            ┃
+┃ ✓ Tempo estimado                                                         ┃
+┃ ✓ Locais dos arquivos gerados                                            ┃
+┃                                                                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ 3️⃣ QUERO ENTENDER O LADO TÉCNICO (Para escrever TCC)                      ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                            ┃
+┃ Abra: DOCUMENTACAO/DOCUMENTACAO_PASSOS_TCC.txt                            ┃
+┃ Depois: DOCUMENTACAO/GUIA_3_NOVOS_SCRIPTS.txt                             ┃
+┃                                                                            ┃
+┃ Você verá:                                                                ┃
+┃ ✓ Justificativas estatísticas (Spearman vs Pearson, etc)                 ┃
+┃ ✓ Como interpretar os resultados                                         ┃
+┃ ✓ O que escrever na metodologia                                          ┃
+┃ ✓ Diagramas e explicações detalhadas                                    ┃
+┃                                                                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+═════════════════════════════════════════════════════════════════════════════
+
+
+LEITURA RÁPIDA (Se está com pressa):
+
+📌 Mais importante:     ROTEIRO_EXECUCAO.txt
+📌 Para visualizar:    MAPA_DA_ESTRUTURA.txt
+📌 Para aprofundar:    DOCUMENTACAO/DOCUMENTACAO_PASSOS_TCC.txt
+
+
+═════════════════════════════════════════════════════════════════════════════
+
+
+🆘 PROBLEMAS?
+
+❌ "Script não encontrado"
+→ Confirme que você está no diretório correto
+→ Use caminhos COMPLETOS (C:\Users\...)
+
+❌ "Algum arquivo de saída não foi gerado"
+→ Verifique TESTE/processados/ ou TESTE/dados_por_escola/
+→ Abra ROTEIRO_EXECUCAO.txt e procure "Saída esperada"
+
+❌ "Demora muito"
+→ Normal! Primeira execução lê 173k registros de alunos
+→ Paciência, não cancele a execução
+
+
+═════════════════════════════════════════════════════════════════════════════
+
+
+GLOSSÁRIO RÁPIDO:
+
+PASSO 1 (ajeitar_dados.r) = Limpeza
+   Transforma respostas de letras (A, B, C...) para números (1, 2, 3...)
+
+PASSO 2 (correlacao.r) = Correlações por Escola
+   Calcula quais variáveis socioeconômicas impactam a nota do aluno
+
+PASSO 3 (classificar_escolas.r) = Metadados
+   Agrupa dados de alunos → perfil de cada escola
+
+PASSO 4 (comparar_grupos.r) = Comparações
+   Testa: Pública é diferente de Privada? Urbana de Rural? etc
+
+PASSO 5 (dendrograma.r) = Clustering
+   Desenha árvore mostrando quais escolas são similares
+
+
+═════════════════════════════════════════════════════════════════════════════
+
+
+✨ PRÓXIMO PASSO:
+
+1. Escolha uma opção acima (1️⃣ 2️⃣ ou 3️⃣)
+2. Abra o arquivo recomendado
+3. Siga as instruções
+
+
+═════════════════════════════════════════════════════════════════════════════
+
+Data: 11 de Maio de 2026
+Última atualização: HOJE
+Status: ✅ Pronto para usar
+
+═════════════════════════════════════════════════════════════════════════════

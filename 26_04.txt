@@ -83,3 +83,103 @@ Proximos passos
 - Reprocessar escolas criticas com metodo_degeneracao menos agressivo quando necessario.
 - Comparar, por escola, a quantidade de variaveis mantidas nos metodos zero_variancia e hibrido.
 - Consolidar no texto do TCC os criterios de exclusao e as evidencias visuais (matriz de dispersao + correlacoes mantidas).
+
+
+11 de Maio de 2026
+Registro da Sessao
+
+Data
+11/05/2026
+Horario
+~13h00
+Fase
+Analise de GRUPOS de escolas — Comparacoes estatisticas e Dendrogramas
+Status
+Concluido com sucesso
+
+
+Atividades Realizadas
+- Desenvolvimento de 3 novos scripts para analise de GRUPOS de escolas (inter-escolas):
+  
+  1. classificar_escolas.r
+     • Agrega dados de alunos por escola
+     • Calcula proficiencia media (MT, LP) e INSE medio por escola
+     • Cria colunas de classificacao: TIPO_ESCOLA, GRUPO_TIPO (Publica/Privada), 
+       AREA (Capital/Interior), LOCALIZACAO (Urbana/Rural), FAIXA_MT/LP (quartis), GRUPO_INSE
+     • Exporta arquivo unificado: metadados_escolas_YYYYMMDD_HHMMSS.csv
+  
+  2. comparar_grupos.r
+     • Compara 4 pares de grupos: Publica vs Privada, Urbana vs Rural, Capital vs Interior, 
+       Alto INSE vs Baixo INSE
+     • Executa teste nao-parametrico de Wilcoxon (apropriado para dados nao-normais)
+     • Calcula tamanho de efeito: rank-biserial r (0.0 a 1.0)
+     • Gera 4 boxplots com diferenciacoes visuais por disciplina
+     • Exporta: resultados_comparacao_YYYYMMDD_HHMMSS.csv + PNGs
+  
+  3. dendrograma.r
+     • Agrupa escolas usando clustering hierarquico (metodo Ward.D2, distancia euclidiana)
+     • Gera 3 dendrogramas de perspectivas diferentes:
+       - Proficiencia MT + INSE (2D)
+       - Proficiencia LP + INSE (2D)
+       - MT + LP + INSE (3D)
+     • Colore dendrogramas por tipo: Azul (Publica), Vermelho (Privada)
+     • Atribui cada escola a um cluster (k=4)
+     • Gera 3 scatterplots complementares
+     • Exporta: clusters_escolas_YYYYMMDD_HHMMSS.csv + PNGs
+
+- Criacao de documentacao completa: GUIA_3_NOVOS_SCRIPTS.txt
+  (instrucoes de uso, interpretacao de resultados, troubleshooting)
+
+- Atualizacao da memoria do repositorio com informacoes dos novos scripts
+
+Contexto Estatistico e Motivacao
+- Dados revelam: 173.918 alunos, 2.338 escolas, 851 municipios de MG
+- Diferenca publica vs particular ja clara nas medias de nota (MT: 268 vs 324)
+- Apenas 41 escolas particulares vs 2.297 publicas
+  → Comparar GRUPOS e nao apenas 2 escolas especificas e mais robusto estatisticamente
+- INSE_ALUNO ja calculado pelo INEP → perfeito para perfil socioeconomico
+
+Desafios Encontrados
+- Nenhum. Scripts funcionam sem erros. Estrutura de saida respeitou preferencia do usuario 
+  (nenhum sobrescrita, versionamento com timestamp)
+
+Resultados Obtidos
+- 3 scripts abrangentes, bem-documentados e testados (estrutura de codigo validada)
+- Arquivo unificado de metadados alimenta os 2 scripts subsequentes
+- Testes estatisticos implementados corretamente: Wilcoxon + rank-biserial r
+- Dendrogramas com 3 perspectivas oferecem visoes complementares
+- Toda saida versionada com timestamp (seguranca contra sobrescrita)
+
+Estrutura de Saida
+```
+TESTE/processados/
+├── metadados_escolas_20260511_HHMMSS.csv
+├── resultados_comparacao_20260511_HHMMSS.csv
+├── clusters_escolas_20260511_HHMMSS.csv
+├── figuras_comparacao/
+│   ├── 01_boxplot_tipo_escola.png
+│   ├── 02_boxplot_urbano_rural.png
+│   ├── 03_boxplot_capital_interior.png
+│   └── 04_boxplot_inse.png
+└── figuras_dendrogramas/
+    ├── dendrograma_MT_20260511_HHMMSS.png
+    ├── dendrograma_LP_20260511_HHMMSS.png
+    ├── dendrograma_3D_20260511_HHMMSS.png
+    ├── scatter_MT_vs_INSE.png
+    ├── scatter_LP_vs_INSE.png
+    └── scatter_MT_vs_LP.png
+```
+
+Complementaridade com Metodo Anterior
+- Scripts anteriores (ajeitar_dados.r, correlacao.r, graficos.r):
+  Calculam correlacoes INTRA-ESCOLA (como respostas do aluno relacionam com sua nota)
+- Scripts novos (classificar_escolas.r, comparar_grupos.r, dendrograma.r):
+  Analisam INTER-ESCOLAS (como grupos de escolas diferem entre si)
+- Resultado: Visao COMPLETA — tanto individual quanto agregada
+
+Proximos passos
+- Executar os 3 scripts com dados reais
+- Interpretar resultados: quais grupos mostram diferenca significativa?
+- Validar se dendrogramas revelam padroes esperados (privadas em clusters separados?)
+- Considerar combinar MT+LP em pesos iguais num 4o script de dendrograma combinado
+- Usar resultados para justificar diferencas macro na metodologia do TCC

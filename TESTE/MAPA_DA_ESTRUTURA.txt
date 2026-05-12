@@ -1,0 +1,286 @@
+################################################################################
+#
+#  MAPA VISUAL DA ESTRUTURA REORGANIZADA
+#
+#  Esta é a estrutura FINAL proposta e implementada
+#  Todos os scripts funcionam nos seus locais originais
+#  Documentação centralizada em DOCUMENTACAO/
+#
+################################################################################
+
+TESTE/ (Raiz do Projeto)
+│
+├─────────────────────────────────────────────────────────────────────────────
+│ 📍 FASE 1: LIMPEZA E TRANSFORMAÇÃO
+├─────────────────────────────────────────────────────────────────────────────
+│
+├─ 1_LIMPEZA_E_TRANSFORMACAO/
+│  └─ 📋 (Lógica: Scripts de PASSO 1 ficariam aqui futuramente)
+│
+└─ SCRIPT: ajeitar_dados.r
+   📝 Localização: C:\Users\Usuario\Desktop\tcc\TESTE\ajeitar_dados.r
+   🎯 Objetivo: Transformar variáveis (A→1, B→2, etc)
+   📤 Saída: TESTE/dados_por_escola/ID_ESCOLA/dados_escola_em_numeros.csv
+   ⏱️ Tempo: ~2-3 min
+   
+   Execução:
+   ✓ source("C:/Users/Usuario/Desktop/tcc/TESTE/ajeitar_dados.r")
+
+
+├─────────────────────────────────────────────────────────────────────────────
+│ 📍 FASE 2: ANÁLISE POR ESCOLA (Correlações Intra-Escola)
+├─────────────────────────────────────────────────────────────────────────────
+│
+├─ 2_ANALISE_POR_ESCOLA/
+│  ├─ Scripts/
+│  │  ├─ correlacao.r
+│  │  ├─ graficos.r (Dashboard Shiny)
+│  │  └─ matriz_dispersao.r
+│  │
+│  └─ Saída/ ← Gerada automaticamente pelos scripts
+│     └─ dados_por_escola/
+│        ├─ 61432986/
+│        │  ├─ dados_escola_em_numeros.csv
+│        │  ├─ correlacoes_mantidas_MT.csv ⭐
+│        │  ├─ correlacoes_mantidas_LP.csv ⭐
+│        │  ├─ todas_correlacoes_calculadas.csv
+│        │  ├─ variaveis_degeneradas.csv
+│        │  ├─ dados_FINAL_MT_Filtrado.csv
+│        │  └─ dados_FINAL_LP_Filtrado.csv
+│        │
+│        ├─ 61458788/ (Outras escolas seguem mesmo padrão)
+│        ├─ 61466120/
+│        └─ 61466123/
+│
+├─ SCRIPT: correlacao.r
+│  📝 Localização: C:\Users\Usuario\Desktop\tcc\TESTE\correlacao.r
+│  🎯 Objetivo: Calcular correlações (Spearman/Pearson conforme tipo)
+│  📤 Saída: Ver estrutura acima
+│  ⏱️ Tempo: ~5-10 min
+│  ⚙️ Config: modo_execucao = "pendentes"
+│  
+│  Execução:
+│  ✓ source("C:/Users/Usuario/Desktop/tcc/TESTE/correlacao.r")
+│
+├─ SCRIPT: graficos.r (OPCIONAL — Dashboard Interativo)
+│  📝 Localização: C:\Users\Usuario\Desktop\tcc\TESTE\graficos.r
+│  🎯 Objetivo: Explorar dados interativamente
+│  📤 Saída: Web (localhost)
+│  ⏱️ Tempo: Enquanto estiver aberto
+│  
+│  Execução:
+│  ✓ shiny::runApp("C:/Users/Usuario/Desktop/tcc/TESTE/graficos.r")
+
+
+├─────────────────────────────────────────────────────────────────────────────
+│ 📍 FASE 3: ANÁLISE DE GRUPOS (Comparações Inter-Escolas) — ⭐ NOVO
+├─────────────────────────────────────────────────────────────────────────────
+│
+├─ 3_ANALISE_DE_GRUPOS/
+│  ├─ Scripts/
+│  │  ├─ classificar_escolas.r
+│  │  ├─ comparar_grupos.r
+│  │  ├─ comparar_duas_escolas.r
+│  │  └─ dendrograma.r
+│  │
+│  └─ Saída/ ← Gerada automaticamente pelos scripts
+│     ├─ metadados_escolas_20260511_*.csv ⭐ (ARQUIVO CHAVE)
+│     ├─ resultados_comparacao_20260511_*.csv
+│     ├─ clusters_escolas_20260511_*.csv
+│     │
+│     ├─ comparacao_duas_escolas/ (Saída de comparar_duas_escolas.r)
+│     │  ├─ Comparacao_Escola_A_vs_B_*.csv
+│     │  ├─ Perfis_Escolas_*.csv
+│     │  └─ visualizacao_comparacao_*.png
+│     │
+│     ├─ figuras_comparacao/ (Saída de comparar_grupos.r)
+│     │  ├─ 01_boxplot_tipo_escola.png
+│     │  ├─ 02_boxplot_urbano_rural.png
+│     │  ├─ 03_boxplot_capital_interior.png
+│     │  └─ 04_boxplot_inse.png
+│     │
+│     └─ figuras_dendrogramas/ (Saída de dendrograma.r)
+│        ├─ dendrograma_MT_20260511_*.png
+│        ├─ dendrograma_LP_20260511_*.png
+│        ├─ dendrograma_3D_20260511_*.png
+│        ├─ scatter_MT_vs_INSE.png
+│        ├─ scatter_LP_vs_INSE.png
+│        └─ scatter_MT_vs_LP.png
+│
+├─ SCRIPT: classificar_escolas.r ⭐ EXECUTAR PRIMEIRO
+│  📝 Localização: C:\Users\Usuario\Desktop\tcc\TESTE\classificar_escolas.r
+│  🎯 Objetivo: Agregar dados → Metadados unificados
+│  📤 Saída: processados/metadados_escolas_*.csv
+│  ⏱️ Tempo: ~2-3 min
+│  ⚠️ NECESSÁRIO para comparar_grupos.r e dendrograma.r
+│  
+│  Execução:
+│  ✓ source("C:/Users/Usuario/Desktop/tcc/TESTE/classificar_escolas.r")
+│
+├─ SCRIPT: comparar_grupos.r
+│  📝 Localização: C:\Users\Usuario\Desktop\tcc\TESTE\comparar_grupos.r
+│  🎯 Objetivo: Testar diferenças entre grupos (Wilcoxon + tamanho de efeito)
+│  📤 Saída: resultados_comparacao_*.csv + 4 boxplots
+│  ⏱️ Tempo: ~1-2 min
+│  📋 Grupos comparados: Pública vs Privada, Urbana vs Rural, Capital vs Interior, INSE
+│  
+│  Execução:
+│  ✓ source("C:/Users/Usuario/Desktop/tcc/TESTE/comparar_grupos.r")
+│
+├─ SCRIPT: comparar_duas_escolas.r
+│  📝 Localização: C:\Users\Usuario\Desktop\tcc\TESTE\comparar_duas_escolas.r
+│  🎯 Objetivo: Comparar 2 escolas específicas lado a lado
+│  📤 Saída: Tabela + Gráfico de comparação
+│  ⏱️ Tempo: ~1 min
+│  ⚙️ Config: ID_ESCOLA_A = 61432986, ID_ESCOLA_B = 61466120 (altere aqui!)
+│  
+│  Execução:
+│  ✓ [Altere IDs no topo do script]
+│  ✓ source("C:/Users/Usuario/Desktop/tcc/TESTE/comparar_duas_escolas.r")
+│
+├─ SCRIPT: dendrograma.r
+│  📝 Localização: C:\Users\Usuario\Desktop\tcc\TESTE\dendrograma.r
+│  🎯 Objetivo: Clustering hierárquico → Dendrogramas
+│  📤 Saída: 3 dendrogramas + 3 scatterplots + clusters_escolas_*.csv
+│  ⏱️ Tempo: ~2-3 min
+│  📊 Perspectivas: MT+INSE, LP+INSE, MT+LP+INSE
+│  
+│  Execução:
+│  ✓ source("C:/Users/Usuario/Desktop/tcc/TESTE/dendrograma.r")
+
+
+├─────────────────────────────────────────────────────────────────────────────
+│ 📚 DOCUMENTAÇÃO CENTRALIZADA
+├─────────────────────────────────────────────────────────────────────────────
+│
+├─ DOCUMENTACAO/
+│  ├─ DOCUMENTACAO_PASSOS_TCC.txt
+│  │  📖 Detalhamento técnico com justificativas estatísticas
+│  │  💡 Use para escrever a Metodologia do TCC
+│  │
+│  ├─ ROTEIRO_EXECUCAO.txt
+│  │  🎯 Passo a passo com ETA de tempo
+│  │  🔧 Configurações específicas
+│  │
+│  ├─ GUIA_3_NOVOS_SCRIPTS.txt
+│  │  📋 Tutorial: como interpretar os resultados
+│  │  🔍 O que cada coluna significa
+│  │
+│  ├─ REQUIREMENTS.md
+│  │  📦 Dependências R + versões testadas
+│  │  🐛 Troubleshooting
+│  │
+│  ├─ utils_saeb.r
+│  │  ⚙️ Funções auxiliares reutilizáveis
+│  │  🔧 Configurações padrão centralizadas
+│  │
+│  └─ [Colocar copias de outros documentos aqui]
+│
+
+
+├─────────────────────────────────────────────────────────────────────────────
+│ 📖 ÍNDICES E GUIAS
+├─────────────────────────────────────────────────────────────────────────────
+│
+├─ INDICE_DE_EXECUCAO.txt (👈 Você está aqui!)
+│  📌 Mapa visual + Caminho direto para cada script
+│  🚀 Copie e cole os comandos
+│
+├─ ROTEIRO_EXECUCAO.txt
+│  📋 Guia passo a passo com contexto
+│
+├─ PLANO_REORGANIZACAO.txt
+│  🗂️ Estrutura ANTES vs DEPOIS da reorganização
+│  ✨ Benefícios
+
+
+└─────────────────────────────────────────────────────────────────────────────
+
+
+╔═════════════════════════════════════════════════════════════════════════════╗
+║  🎯 RESUMO RÁPIDO — O QUE FAZER AGORA                                      ║
+╚═════════════════════════════════════════════════════════════════════════════╝
+
+1️⃣ Copie EXATAMENTE este código no R (uma vez):
+
+   source("C:/Users/Usuario/Desktop/tcc/TESTE/ajeitar_dados.r")
+   source("C:/Users/Usuario/Desktop/tcc/TESTE/correlacao.r")
+   source("C:/Users/Usuario/Desktop/tcc/TESTE/classificar_escolas.r")
+   source("C:/Users/Usuario/Desktop/tcc/TESTE/comparar_grupos.r")
+   source("C:/Users/Usuario/Desktop/tcc/TESTE/dendrograma.r")
+
+
+2️⃣ Verifique se os arquivos apareceram:
+
+   ✓ TESTE/dados_por_escola/ (deve ter subpastas com CSV)
+   ✓ TESTE/processados/ (deve ter metadados_escolas_*.csv)
+   ✓ TESTE/processados/figuras_comparacao/ (PNG dos boxplots)
+   ✓ TESTE/processados/figuras_dendrogramas/ (PNG dos dendrogramas)
+
+
+3️⃣ Abra os PNGs para ver os resultados ✨
+
+
+4️⃣ Se quiser comparar 2 escolas específicas:
+
+   [Abra comparar_duas_escolas.r no editor]
+   [Altere: ID_ESCOLA_A <- 61432986]
+   [Altere: ID_ESCOLA_B <- 61466120]
+   [Cole: source("C:/Users/Usuario/Desktop/tcc/TESTE/comparar_duas_escolas.r")]
+
+
+═════════════════════════════════════════════════════════════════════════════
+
+
+╔═════════════════════════════════════════════════════════════════════════════╗
+║  📊 TABELA: Scripts → Entrada → Saída                                      ║
+╚═════════════════════════════════════════════════════════════════════════════╝
+
+┌────────────────────┬──────────────────┬──────────────────────────────────┐
+│ Script             │ Entrada          │ Saída Principal                  │
+├────────────────────┼──────────────────┼──────────────────────────────────┤
+│ ajeitar_dados.r    │ TS_ALUNO_34EM.csv│ dados_escola_em_numeros.csv      │
+│ correlacao.r       │ dados_escola_...│ correlacoes_mantidas_MT/LP.csv   │
+│ comparar_grupos.r  │ metadados_*.csv  │ resultados_comparacao_*.csv      │
+│ comparar_duas...r  │ IDs de escolas   │ Comparacao_Escola_A_vs_B_*.csv   │
+│ dendrograma.r      │ metadados_*.csv  │ dendrograma_MT/LP/3D_*.png       │
+└────────────────────┴──────────────────┴──────────────────────────────────┘
+
+
+═════════════════════════════════════════════════════════════════════════════
+PERGUNTAS FREQUENTES
+═════════════════════════════════════════════════════════════════════════════
+
+❓ "Aonde fico sabendo os arquivos foram criados?"
+→ Procure em: TESTE/dados_por_escola/ e TESTE/processados/
+→ Cada arquivo tem TIMESTAMP (20260511_143025)
+
+❓ "Como mudo as escolas da comparação dois_escolas?"
+→ Edite no topo do script:
+   ID_ESCOLA_A <- 61432986  ← mude para outra
+   ID_ESCOLA_B <- 61466120  ← mude para outra
+
+❓ "Qual script executar PRIMEIRO?"
+→ 1. ajeitar_dados.r
+→ 2. classificar_escolas.r (⭐ necessário para os outros)
+→ 3. Depois: comparar_grupos.r ou dendrograma.r
+
+❓ "Demora muito?"
+→ Normal! TS_ALUNO_34EM.csv tem 173k registros.
+→ Primeira execução leva 1-2 min só para ler os dados.
+
+❓ "Apareceu aviso sobre ggplot2?"
+→ Normal. Não bloqueia a execução. 
+→ Se quiser sumir: reinstale com install.packages("ggplot2")
+
+❓ "Preciso rodar tudo de novo se tiver novos dados?"
+→ Sim: ajeitar_dados.r → correlacao.r (modo="pendentes" roda só novas)
+→ Depois: classificar_escolas.r → comparar_grupos.r → dendrograma.r
+
+═════════════════════════════════════════════════════════════════════════════
+
+Data: Maio 2026
+Versão: 1.0 (Estrutura Reorganizada)
+Status: Pronto para uso
+
+═════════════════════════════════════════════════════════════════════════════

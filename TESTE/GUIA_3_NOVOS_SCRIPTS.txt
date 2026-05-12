@@ -1,0 +1,242 @@
+################################################################################
+# GUIA DE USO: 3 NOVOS SCRIPTS PARA ANÁLISE DE GRUPOS
+# 
+# Data: Maio 2026
+# Objetivo: Comparação de grupos de escolas + Dendrogramas de agrupamento
+################################################################################
+
+## ARQUITETURA DOS SCRIPTS
+
+Os 3 scripts trabalham em sequência (pipeline):
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1. classificar_escolas.r                                                    │
+│    Entrada: Dados das escolas (TS_ESCOLA.csv, TS_ALUNO_34EM.csv)           │
+│    Saída:   metadados_escolas_YYYYMMDD_HHMMSS.csv (arquivo unificado)      │
+│    Função:  Agregar dados por escola e criar colunas de classificação      │
+└────────────────────────────────┬────────────────────────────────────────────┘
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 2. comparar_grupos.r                                                        │
+│    Entrada: metadados_escolas_*.csv                                        │
+│    Saída:   resultados_comparacao_YYYYMMDD_HHMMSS.csv + Boxplots (PNG)     │
+│    Função:  Comparar grupos (Wilcoxon + rank-biserial r)                   │
+└────────────────────────────────┬────────────────────────────────────────────┘
+                                  │
+                                  ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 3. dendrograma.r                                                            │
+│    Entrada: metadados_escolas_*.csv                                        │
+│    Saída:   Dendrogramas (PNG) + clusters_escolas_YYYYMMDD_HHMMSS.csv      │
+│    Função:  Agregar escolas por perfil + Dendrogramas coloridos            │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+## PASSO A PASSO PARA EXECUTAR
+
+### PASSO 1: Executar classificar_escolas.r
+```r
+source("C:/Users/Usuario/Desktop/tcc/TESTE/classificar_escolas.r")
+```
+
+**O que faz:**
+- Lê TS_ESCOLA.csv e TS_ALUNO_34EM.csv
+- Calcula proficiência média (MT, LP) por escola
+- Calcula INSE médio por escola
+- Cria colunas de classificação:
+  • TIPO_ESCOLA (Federal, Estadual, Municipal, Privada)
+  • GRUPO_TIPO (Pública vs Privada) — agregação mais importante
+  • AREA (Capital vs Interior)
+  • LOCALIZACAO (Urbana vs Rural)
+  • FAIXA_MT / FAIXA_LP (Quartis Q1-Q4)
+  • GRUPO_INSE (Baixo, Médio, Alto)
+
+**Saída:**
+- Arquivo: `processados/metadados_escolas_20260511_123456.csv`
+- Resumos por grupo exibidos no console
+
+**Tempo estimado:** 2-3 minutos
+
+
+### PASSO 2: Executar comparar_grupos.r
+```r
+source("C:/Users/Usuario/Desktop/tcc/TESTE/comparar_grupos.r")
+```
+
+**O que faz:**
+- Carrega arquivo de metadados (mais recente automaticamente)
+- Executa 4 comparações de grupos:
+  1. Pública vs Privada
+  2. Urbana vs Rural
+  3. Capital vs Interior
+  4. Alto INSE vs Baixo INSE
+
+- Para cada comparação, calcula:
+  • Teste de Wilcoxon (não-paramétrico)
+  • Valor-p com nível de significância (*, **, ***)
+  • Tamanho de efeito: rank-biserial r
+  • Mediana de cada grupo
+
+- Gera 4 boxplots coloridos (PNG)
+
+**Saída:**
+- Arquivo: `processados/resultados_comparacao_20260511_123456.csv`
+- Figuras (PNG):
+  • figuras_comparacao/01_boxplot_tipo_escola.png
+  • figuras_comparacao/02_boxplot_urbano_rural.png
+  • figuras_comparacao/03_boxplot_capital_interior.png
+  • figuras_comparacao/04_boxplot_inse.png
+
+**Tempo estimado:** 1-2 minutos
+
+
+### PASSO 3: Executar dendrograma.r
+```r
+source("C:/Users/Usuario/Desktop/tcc/TESTE/dendrograma.r")
+```
+
+**O que faz:**
+- Carrega arquivo de metadados
+- Escaliza as variáveis (z-score) para evitar dominância
+- Executa 3 tipos de clustering hierárquico (Ward.D2):
+  1. Baseado em: Proficiência MT + INSE
+  2. Baseado em: Proficiência LP + INSE
+  3. Baseado em: MT + LP + INSE (3D)
+
+- Cada dendrograma:
+  • Usa distância euclidiana
+  • Cores: Azul (Pública), Vermelho (Privada)
+  • Corta em 4 clusters
+  • Mostra claramente agrupamentos naturais por perfil
+
+- Gera 3 scatterplots para visualizar correlações
+
+**Saída:**
+- Figuras (PNG):
+  • figuras_dendrogramas/dendrograma_MT_20260511_123456.png
+  • figuras_dendrogramas/dendrograma_LP_20260511_123456.png
+  • figuras_dendrogramas/dendrograma_3D_20260511_123456.png
+  • figuras_dendrogramas/scatter_MT_vs_INSE.png
+  • figuras_dendrogramas/scatter_LP_vs_INSE.png
+  • figuras_dendrogramas/scatter_MT_vs_LP.png
+
+- Arquivo: `processados/clusters_escolas_20260511_123456.csv`
+  (atribui cada escola a um cluster)
+
+**Tempo estimado:** 2-3 minutos
+
+
+## INTERPRETAÇÃO DOS RESULTADOS
+
+### resultados_comparacao_*.csv
+
+Colunas:
+- **Variável**: Disciplina testada (PROFICIÊNCIA_MT ou PROFICIÊNCIA_LP)
+- **Grupo1, Grupo2**: Grupos comparados
+- **N1, N2**: Número de escolas em cada grupo
+- **Mediana1, Mediana2**: Mediana de proficiência (valor central)
+- **U**: Estatística Wilcoxon
+- **p_valor**: Nível de significância
+  • < 0.001 (***): Diferença altamente significativa
+  • < 0.01 (**): Significativa
+  • < 0.05 (*): Marginalmente significativa
+  • ≥ 0.05 (ns): Não significativa
+- **r_rank_biserial**: Tamanho de efeito
+  • 0.00-0.10: Negligenciável
+  • 0.10-0.30: Pequeno
+  • 0.30-0.50: Médio
+  • > 0.50: Grande
+
+### clusters_escolas_*.csv
+
+Colunas principais:
+- **ID_ESCOLA, NO_ESCOLA**: Identificadores
+- **MEDIA_MT, MEDIA_LP, INSE_MEDIO**: Valores agregados
+- **Cluster_MT, Cluster_LP, Cluster_3D**: Atribuição a clusters (1, 2, 3 ou 4)
+
+Use para:
+- Agrupar escolas por perfil similar
+- Entender como pública vs privada se distribuem entre clusters
+- Identificar outliers (escolas em clusters "errados")
+
+
+## ESTRUTURA DE ARQUIVOS
+
+Após executar os 3 scripts, você terá:
+
+```
+TESTE/
+├── processados/  (novo diretório de saída)
+│   ├── metadados_escolas_20260511_123456.csv
+│   ├── resultados_comparacao_20260511_123456.csv
+│   ├── clusters_escolas_20260511_123456.csv
+│   ├── figuras_comparacao/
+│   │   ├── 01_boxplot_tipo_escola.png
+│   │   ├── 02_boxplot_urbano_rural.png
+│   │   ├── 03_boxplot_capital_interior.png
+│   │   └── 04_boxplot_inse.png
+│   └── figuras_dendrogramas/
+│       ├── dendrograma_MT_20260511_123456.png
+│       ├── dendrograma_LP_20260511_123456.png
+│       ├── dendrograma_3D_20260511_123456.png
+│       ├── scatter_MT_vs_INSE.png
+│       ├── scatter_LP_vs_INSE.png
+│       └── scatter_MT_vs_LP.png
+```
+
+**Nenhum arquivo é sobrescrito** — cada execução cria um novo arquivo com timestamp.
+
+
+## RELAÇÃO COM O MÉTODO EXISTENTE (xlsx por escola)
+
+✅ **NÃO há conflito:**
+
+- Método antigo: Você separa cada escola em um xlsx, calcula correlações **intra-escola**
+  (como as respostas do aluno relacionam com sua nota)
+
+- Novos scripts: Agregam dados **inter-escolas**, comparam grupos
+  (como escolas diferentes se relacionam entre si por tipo, localização, INSE)
+
+Ambos são complementares! Use os xlsx para correlações e esses scripts para contexto macro.
+
+
+## DEPENDÊNCIAS NECESSÁRIAS
+
+Instalar uma única vez:
+```r
+install.packages(c("tidyverse", "data.table", "dendextend", "ggdendro", "ggplot2"))
+```
+
+Verificar versões:
+```r
+packageVersion("tidyverse")
+packageVersion("data.table")
+packageVersion("dendextend")
+packageVersion("ggdendro")
+```
+
+
+## TROUBLESHOOTING
+
+**❌ "Nenhum arquivo de metadados encontrado"**
+→ Execute classificar_escolas.r primeiro
+
+**❌ "Erro ao ler TS_ALUNO_34EM.csv"**
+→ Verifique se o arquivo existe em MICRODADOS_SAEB_2023/DADOS/
+
+**❌ Boxplots em branco/vazios**
+→ Verifique se há NAs nas colunas de proficiência (use summary(dados))
+
+**❌ Dendrograma com labels ilegíveis**
+→ Normal se houver muitas escolas — a figura PNG com 1200px de largura é adequada
+
+
+## PRÓXIMOS PASSOS (SUGESTÕES)
+
+1. **Combinar análises**: Use resultados_comparacao_*.csv para justificar diferenças vistas nos dendrogramas
+2. **Filtrar clusters**: Se um cluster tiver padrão interessante, exporte as escolas daquele cluster
+3. **Correlações por cluster**: Execute o script correlacao.r **apenas para escolas de um cluster específico**
+4. **Dendrograma com 2 disciplinas**: Crie um 4º script que combine MT+LP em pesos iguais
+
+################################################################################

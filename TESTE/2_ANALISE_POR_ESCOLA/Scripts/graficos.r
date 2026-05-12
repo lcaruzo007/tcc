@@ -4,12 +4,22 @@
 
 library(shiny)
 library(tidyverse)
-source("utils_saeb.r")   # encontrar_arquivo_mais_recente
+library(dendextend)
+library(ggdendro)
+
+# =========================================================================
+# Configuração de Caminhos
+# =========================================================================
+RAIZ <- "C:/Users/Usuario/Desktop/tcc"
+DIR_TESTE <- file.path(RAIZ, "TESTE")
+DIR_RESULTADOS_POR_ESCOLA <- file.path(DIR_TESTE, "dados_por_escola")
+
+source(file.path(RAIZ, "DOCUMENTACAO", "utils_saeb.r"))
 
 # -------------------------------------------------------------------------
 # Configuração
 # -------------------------------------------------------------------------
-dir_resultados_por_escola <- "C:/Users/Usuario/Desktop/tcc/TESTE/dados_por_escola"
+dir_resultados_por_escola <- DIR_RESULTADOS_POR_ESCOLA
 
 nota_MT <- "PROFICIENCIA_MT_SAEB"
 nota_LP <- "PROFICIENCIA_LP_SAEB"
@@ -134,9 +144,38 @@ ui <- fluidPage(
     ),
 
     mainPanel(
-      plotOutput("grafico_dispersao", height = "500px"),
-      br(),
-      uiOutput("painel_estatisticas")
+      tabsetPanel(
+        tabPanel(
+          "Dispersão",
+          plotOutput("grafico_dispersao", height = "500px"),
+          br(),
+          uiOutput("painel_estatisticas")
+        ),
+        
+        tabPanel(
+          "Dendogramas",
+          br(),
+          fluidRow(
+            column(4,
+              selectInput("metodo_ligacao", "Método de Ligação:",
+                          choices = c("ward.D2" = "ward.D2",
+                                      "complete" = "complete",
+                                      "average" = "average",
+                                      "single" = "single"),
+                          selected = "ward.D2"),
+              helpText("Método de agrupamento hierárquico para as variáveis."),
+              br(),
+              checkboxInput("colorir_dendograma", 
+                           "Colorir ramos por cluster", 
+                           value = TRUE)
+            )
+          ),
+          br(),
+          plotOutput("dendograma_variaveis", height = "600px"),
+          br(),
+          verbatimTextOutput("info_dendograma")
+        )
+      )
     )
   )
 )
@@ -153,18 +192,37 @@ server <- function(input, output, session) {
     pasta      <- file.path(dir_resultados_por_escola, input$id_escola)
     caminho_mt <- encontrar_arquivo_mais_recente(pasta, "dados_FINAL_MT_Filtrado")
     caminho_lp <- encontrar_arquivo_mais_recente(pasta, "dados_FINAL_LP_Filtrado")
+    caminho_metodos <- encontrar_arquivo_mais_recente(pasta, "todas_correlacoes_calculadas")
 
     validate(
       need(!is.null(caminho_mt), "Arquivo de Matemática não encontrado para esta escola."),
-      need(!is.null(caminho_lp), "Arquivo de Língua Portuguesa não encontrado para esta escola.")
+      need(!is.null(caminho_lp), "Arquivo de Língua Portuguesa não encontrado para esta escola."),
+      need(!is.null(caminho_metodos), "Tabela de métodos de correlação não encontrada para esta escola.")
     )
 
-    list(
-      mt         = read.csv(caminho_mt),
-      lp         = read.csv(caminho_lp),
-      arquivo_mt = basename(caminho_mt),
-      arquivo_lp = basename(caminho_lp)
-    )
+    # Carregar arquivos com validação
+    tryCatch({
+      mt <- read.csv(caminho_mt)
+      lp <- read.csv(caminho_lp)
+      metodos <- read.csv(caminho_metodos)
+      
+      # Validar que há dados
+      validate(
+        need(nrow(mt) > 0, "Arquivo de Matemática está vazio para esta escola."),
+        need(nrow(lp) > 0, "Arquivo de Português está vazio para esta escola."),
+        need(nrow(metodos) > 0, "Tabela de métodos está vazia para esta escola.")
+      )
+      
+      list(
+        mt         = mt,
+        lp         = lp,
+        metodos    = metodos,
+        arquivo_mt = basename(caminho_mt),
+        arquivo_lp = basename(caminho_lp)
+      )
+    }, error = function(e) {
+      validate(need(FALSE, paste("Erro ao ler arquivos da escola:", conditionMessage(e))))
+    })
   })
 
   # — Texto de status dos arquivos —
@@ -239,13 +297,15 @@ server <- function(input, output, session) {
         theme_minimal(base_size = 13) +
         labs(
           title    = paste(disc, "×", nome_bonito_x),
-          subtitle = paste("Escola", input$id_escola),
-          x        = paste0(nome_bonito_x, " (escalonado)"),
-          y        = "Proficiência (escalonada)"
+          subtitle = paste("Escola", input$id_escola, "| Dados Escalonados (Z-score)"),
+          x        = paste0(nome_bonito_x, " (Z-score padronizado)"),
+          y        = paste0("Proficiência ", disc, " (Z-score padronizado)"),
+          caption  = "Nota: Eixos em desvios-padrão (σ). Valores = 0 representam a média da escola."
         ) +
         theme(
           plot.title    = element_text(size = 17, face = "bold"),
           plot.subtitle = element_text(size = 11, color = "grey40"),
+          plot.caption  = element_text(size = 10, color = "grey60", hjust = 0),
           axis.title    = element_text(size = 13)
         )
 
@@ -281,12 +341,30 @@ server <- function(input, output, session) {
 
       if (nrow(df_stat) < 5L) return(NULL)
 
-      # Calcula Pearson com p-valor
+      # Obter o método correto da tabela de correlações
+      metodos_df <- d$metodos
+      metodo_var <- metodos_df$Metodo[metodos_df$Variavel == input$variavel_x]
+      
+      # Se não encontrar na tabela, usar Pearson como padrão
+      metodo_usar <- if (length(metodo_var) > 0 && metodo_var[1] == "Spearman") {
+        "spearman"
+      } else {
+        "pearson"
+      }
+      
+      # Calcula correlação com o método apropriado
       teste <- cor.test(df_stat[[input$variavel_x]], df_stat[[nota_y]],
-                        method = "pearson")
+                        method = metodo_usar)
       r_val <- round(teste$estimate, 3)
       p_val <- teste$p.value
       n_val <- nrow(df_stat)
+      
+      # Intervalo de confiança 95%
+      ic_low <- round(teste$conf.int[1], 3)
+      ic_high <- round(teste$conf.int[2], 3)
+      
+      # Label do método (maiúscula)
+      metodo_label <- if (metodo_usar == "spearman") "Spearman" else "Pearson"
 
       # Formata p-valor
       p_fmt <- if (p_val < 0.001) "p < 0,001" else paste0("p = ", format(round(p_val, 3), nsmall = 3))
@@ -313,7 +391,8 @@ server <- function(input, output, session) {
               "flex: 1; min-width: 120px; background: #F4F6FA; border-left: 4px solid ", cor_r, ";",
               "padding: 10px 14px; border-radius: 4px;"
             ),
-            tags$div(style = "font-size: 11px; color: #666; margin-bottom: 2px;", "Correlação de Pearson"),
+            tags$div(style = "font-size: 11px; color: #666; margin-bottom: 2px;", 
+                     paste0("Correlação de ", metodo_label)),
             tags$div(style = paste0("font-size: 22px; font-weight: bold; color: ", cor_r, ";"),
                      paste0("r = ", r_val)),
             tags$div(style = "font-size: 11px; color: #888; margin-top: 2px;",
@@ -332,6 +411,16 @@ server <- function(input, output, session) {
           tags$div(
             style = "flex: 1; min-width: 120px; background: #F4F6FA; border-left: 4px solid #555;
                      padding: 10px 14px; border-radius: 4px;",
+            tags$div(style = "font-size: 11px; color: #666; margin-bottom: 2px;", "IC 95%"),
+            tags$div(style = "font-size: 13px; font-weight: bold; color: #333;", 
+                     paste0("[", ic_low, " ; ", ic_high, "]")),
+            tags$div(style = "font-size: 10px; color: #888; margin-top: 2px;", 
+                     "Intervalo de confiança")
+          ),
+
+          tags$div(
+            style = "flex: 1; min-width: 120px; background: #F4F6FA; border-left: 4px solid #333;
+                     padding: 10px 14px; border-radius: 4px;",
             tags$div(style = "font-size: 11px; color: #666; margin-bottom: 2px;", "Observações"),
             tags$div(style = "font-size: 22px; font-weight: bold; color: #333;", paste0("n = ", n_val)),
             tags$div(style = "font-size: 11px; color: #888; margin-top: 2px;", "alunos com dados válidos")
@@ -339,6 +428,162 @@ server <- function(input, output, session) {
         )
       )
     }, error = function(e) NULL)
+  })
+
+  # — Dendograma de variáveis —
+  output$dendograma_variaveis <- renderPlot({
+    tryCatch({
+      d      <- dados_escola_reactive()
+      req(input$materia)
+
+      eh_mt  <- input$materia == "MT"
+      df     <- if (eh_mt) d$mt else d$lp
+      nota_y <- if (eh_mt) nota_MT else nota_LP
+      disc   <- if (eh_mt) "Matemática" else "Português"
+
+      vars <- setdiff(names(df), NOTAS)
+
+      if (length(vars) < 2L) {
+        plot.new()
+        text(0.5, 0.5, "Menos de 2 variáveis disponíveis para dendograma",
+             cex = 1, col = "firebrick")
+        return(invisible(NULL))
+      }
+
+      df_vals <- df[, c(vars, nota_y), drop = FALSE]
+      df_vals <- df_vals[complete.cases(df_vals), , drop = FALSE]
+
+      if (nrow(df_vals) < 5L) {
+        plot.new()
+        text(0.5, 0.5, "Dados insuficientes para análise de agrupamento",
+             cex = 1, col = "firebrick")
+        return(invisible(NULL))
+      }
+
+      vars_com_var <- vars[sapply(df_vals[, vars, drop = FALSE], function(x) {
+        v <- var(x, na.rm = TRUE)
+        !is.na(v) && v > 0
+      })]
+
+      if (length(vars_com_var) < 2L) {
+        plot.new()
+        text(0.5, 0.5, "Menos de 2 variáveis com variância para dendograma",
+             cex = 1, col = "firebrick")
+        return(invisible(NULL))
+      }
+
+      cor_matrix  <- cor(df_vals[, vars_com_var, drop = FALSE],
+                         use = "pairwise.complete.obs")
+      dist_matrix <- as.dist(1 - abs(cor_matrix))
+      hc          <- hclust(dist_matrix, method = input$metodo_ligacao)
+      dend        <- as.dendrogram(hc)
+
+      titulo   <- paste0("Dendograma — Clustering de Variáveis (", disc, ")")
+      subtitulo <- paste0("Escola ", input$id_escola,
+                          "  |  Método: ", input$metodo_ligacao,
+                          "  |  n = ", nrow(df_vals))
+
+      if (input$colorir_dendograma) {
+        # ── Usa dendextend::plot() — único método que colore ramos corretamente ──
+        k_clusters <- min(4L, length(vars_com_var) - 1L)
+        dend <- dendextend::color_branches(dend, k = k_clusters)
+        dend <- dendextend::color_labels(dend,  k = k_clusters)
+
+        # ── NOVO: traduz rótulos usando o dicionário ──────────────────────────
+        rotulos_originais <- labels(dend)
+        # Remove sufixo _num se existir (ordinais viram TX_RESP_Q10a_num)
+        chaves <- sub("_num$", "", rotulos_originais)
+        rotulos_traduzidos <- ifelse(
+          chaves %in% names(dicionario_perguntas),
+          paste0(dicionario_perguntas[chaves], "\n(", chaves, ")"),
+          rotulos_originais
+        )
+        labels(dend) <- rotulos_traduzidos
+        # ─────────────────────────────────────────────────────────────────────
+
+        par(mar = c(14, 4, 4, 2))   # margem inferior maior para rótulos longos
+        plot(dend,
+             main     = titulo,
+             sub      = subtitulo,
+             ylab     = "Distância (1 - |r|)",
+             cex.main = 1.1,
+             cex.sub  = 0.8,
+             cex      = 0.85)
+      } else {
+        # ── NOVO: traduz rótulos ──────────────────────────────────────────────
+        rotulos_originais <- labels(dend)
+        chaves <- sub("_num$", "", rotulos_originais)
+        rotulos_traduzidos <- ifelse(
+          chaves %in% names(dicionario_perguntas),
+          paste0(dicionario_perguntas[chaves], "\n(", chaves, ")"),
+          rotulos_originais
+        )
+        labels(dend) <- rotulos_traduzidos
+        # ─────────────────────────────────────────────────────────────────────
+
+        par(mar = c(14, 4, 4, 2))   # margem inferior maior para rótulos longos
+        plot(dend,
+             main     = titulo,
+             sub      = subtitulo,
+             ylab     = "Distância (1 - |r|)",
+             cex.main = 1.1,
+             cex.sub  = 0.8,
+             cex      = 0.85)
+      }
+
+    }, error = function(e) {
+      plot.new()
+      text(0.5, 0.5,
+           paste("Erro ao gerar dendograma:\n", conditionMessage(e)),
+           cex = 0.9, col = "firebrick")
+    })
+  })
+
+  # — Info sobre dendograma —
+  output$info_dendograma <- renderText({
+    tryCatch({
+      d      <- dados_escola_reactive()
+      req(input$materia)
+
+      eh_mt  <- input$materia == "MT"
+      df     <- if (eh_mt) d$mt else d$lp
+      nota_y <- if (eh_mt) nota_MT else nota_LP
+
+      vars <- setdiff(names(df), NOTAS)
+      
+      if (length(vars) < 2L) return("Dados insuficientes.")
+
+      df_vals <- df[, c(vars, nota_y), drop = FALSE]
+      df_vals <- df_vals[complete.cases(df_vals), , drop = FALSE]
+
+      if (nrow(df_vals) < 5L) return("Dados insuficientes.")
+      
+      # Filtrar apenas variáveis com variância > 0
+      vars_com_var <- vars[sapply(df_vals[, vars, drop = FALSE], function(x) {
+        v <- var(x, na.rm = TRUE)
+        !is.na(v) && v > 0
+      })]
+      
+      if (length(vars_com_var) < 2L) return("Menos de 2 variáveis com variância.")
+
+      cor_matrix <- cor(df_vals[, vars_com_var, drop = FALSE], use = "pairwise.complete.obs")
+      dist_matrix <- as.dist(1 - abs(cor_matrix))
+      hc <- hclust(dist_matrix, method = input$metodo_ligacao)
+
+      paste0(
+        "INFORMAÇÕES DO DENDOGRAMA\n",
+        "─────────────────────────────\n",
+        "Variáveis analisadas: ", length(vars), "\n",
+        "Observações (após limpeza): ", nrow(df_vals), "\n",
+        "Método de ligação: ", input$metodo_ligacao, "\n",
+        "Distância usada: 1 - |Correlação de Pearson|\n",
+        "\n",
+        "Interpretação:\n",
+        "• Ramos mais altos = variáveis mais dissimilares\n",
+        "• Ramos próximos = variáveis altamente correlacionadas\n",
+        "• Útil para identificar redundância de variáveis\n"
+      )
+    }, error = function(e) "Erro ao processar dados para informação.")
   })
 }
 
