@@ -25,7 +25,7 @@ continuas     <- CONTINUAS_SAEB
 # -------------------------------------------------------------------------
 # Configuração — ajuste estes caminhos antes de executar
 # -------------------------------------------------------------------------
-arquivo_entrada        <- file.path(DIR_MICRODADOS, "TS_ALUNO_34EM_escola_61432986.csv")
+arquivo_entrada        <- file.path(DIR_MICRODADOS, "TS_ALUNO_34EM.csv")
 arquivo_saida_geral    <- file.path(DIR_SAIDA_RAIZ, "dados_escola_limpos.csv")
 dir_saida_por_escola   <- DIR_SAIDA_POR_ESCOLA
 sobrescrever_por_escola <- FALSE
