@@ -1,0 +1,279 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                06_GUIA_INTERPRETAR_RESULTADOS.txt                             ║
+║            O que Significam os Outputs e Como Usar Para o TCC                ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+COMO USAR ESTE DOCUMENTO
+════════════════════════════════════════════════════════════════════════════════
+
+Este documento explica:
+  ✓ Cada coluna de cada CSV gerado
+  ✓ Cada tipo de gráfico
+  ✓ O que escrever na Metodologia do TCC
+  ✓ Como resolver problemas comuns
+
+
+📊 SAÍDAS DO PASSO 1: LIMPEZA
+════════════════════════════════════════════════════════════════════════════════
+
+Arquivo: dados_por_escola/ID_ESCOLA/dados_escola_em_numeros.csv
+
+Descrição:
+  Dados de alunos de uma escola, com variáveis categoriais convertidas
+  de letras (A, B, C) para números (1, 2, 3).
+
+Colunas principais:
+  • ID_ALUNO: Identificador do aluno
+  • ID_ESCOLA: Identificador da escola
+  • PROFICIENCIA_MT_SAEB: Nota de Matemática (contínua, 0-500)
+  • PROFICIENCIA_LP_SAEB: Nota de Língua Portuguesa (contínua, 0-500)
+  • TX_RESP_Q01, Q02, Q04, ...: Respostas do questionário (agora numéricas)
+
+Como usar no TCC:
+  → Mencione: "Os dados foram transformados de categoriais para numéricas
+               usando codificação ordinária e nominal conforme apropriado"
+  → Cite a quantidade de alunos por escola
+
+
+📊 SAÍDAS DO PASSO 2: CORRELAÇÕES
+════════════════════════════════════════════════════════════════════════════════
+
+Arquivo 1: dados_por_escola/ID_ESCOLA/correlacoes_mantidas_MT.csv
+
+Descrição:
+  Correlações com Matemática que passaram no filtro (|r| > 0.30)
+
+Colunas:
+  • Variavel_Socioecon: Nome da variável (ex: TX_RESP_Q09 = Escolaridade mãe)
+  • r_value: Valor da correlação (-1 a +1)
+  • p_value: P-valor (< 0.05 = significativa)
+  • Metodo: Spearman ou Pearson (depende do tipo de variável)
+  • Status_Calculo: "OK" = válida
+
+Como usar no TCC:
+  → Use APENAS linhas com Status_Calculo = "OK"
+  → Interprete r_value:
+     • 0.30-0.50 = fraca
+     • 0.50-0.70 = moderada
+     • 0.70+ = forte
+  → Se p_value < 0.05: correlação é estatisticamente significativa
+  → Exemplo: "Escolaridade da mãe apresentou correlação moderada (r=0.45)
+               com proficiência em Matemática (p<0.05)"
+
+---
+
+Arquivo 2: dados_por_escola/ID_ESCOLA/todas_correlacoes_calculadas.csv
+
+Descrição:
+  TODAS as correlações calculadas, incluindo as descartadas
+
+Colunas extras (além das acima):
+  • Status_Calculo:
+    - "OK" = válida (usar)
+    - "SEM_VARIANCIA_X" = variável X é constante
+    - "SEM_VARIANCIA_Y" = proficiência é constante
+    - "SEM_PARES" = muitos NA, n < 3 pares válidos
+    - "NA_RESULTADO" ou "NaN_RESULTADO" = erro no cálculo
+
+Como usar no TCC:
+  → Relatar quantas foram descartadas e por quê
+  → Exemplo: "De 50 correlações calculadas, 35 foram mantidas.
+               Das 15 descartadas: 8 por variância zero, 7 por n pequeno"
+
+---
+
+Arquivo 3: dados_por_escola/ID_ESCOLA/variaveis_degeneradas.csv
+
+Descrição:
+  Variáveis que foram EXCLUÍDAS (constantes, pouca variação, etc)
+
+Como usar no TCC:
+  → Justificar exclusões de variáveis
+  → Exemplo: "TX_RESP_Q15 foi excluída por apresentar variância zero
+               em 3 das 4 escolas"
+
+
+📊 SAÍDAS DO PASSO 4: METADADOS
+════════════════════════════════════════════════════════════════════════════════
+
+Arquivo: processados/metadados_escolas_YYYYMMDD_HHMMSS.csv
+
+Descrição:
+  Perfil AGREGADO de cada escola (1 linha = 1 escola)
+
+Colunas principais:
+  • ID_ESCOLA: Identificador
+  • N_ALUNOS: Quantidade de alunos na base
+  • PROFICIENCIA_MT_MEDIA: Nota média em MT
+  • PROFICIENCIA_LP_MEDIA: Nota média em LP
+  • DESVIO_PADRAO_MT: Variabilidade das notas em MT
+  • DESVIO_PADRAO_LP: Variabilidade das notas em LP
+  • TP_ESCOLA: "Pública" ou "Privada"
+  • TP_LOCALIZACAO: "Urbana" ou "Rural"
+  • TP_CAPITAL_INTERIOR: "Capital" ou "Interior"
+  • INSE: Índice Socioeconômico (1-7, onde 1=baixo, 7=alto)
+
+Como usar no TCC:
+  → Descrever a amostra: "4 escolas foram analisadas...
+     A escola X (privada, urbana) tinha INSE 6 e nota média 340 em MT"
+  → Comparar escolas: "As escolas privadas (n=2) tiveram proficiência média
+     de 350 em MT, enquanto públicas (n=2) tiveram 280"
+
+
+📊 SAÍDAS DO PASSO 5: COMPARAÇÕES
+════════════════════════════════════════════════════════════════════════════════
+
+Arquivo: processados/resultados_comparacao_YYYYMMDD_HHMMSS.csv
+
+Descrição:
+  Testes estatísticos (Wilcoxon) comparando grupos
+
+Colunas:
+  • Disciplina: MT ou LP
+  • Grupo1 vs Grupo2: Qual foi a comparação (ex: Pública vs Privada)
+  • Mediana_G1, Mediana_G2: Nota mediana de cada grupo
+  • W_statistic: Estatística de Wilcoxon
+  • p_value: P-valor do teste
+  • Effect_Size: Tamanho do efeito (correlação rank-biserial, -1 a +1)
+  • Significancia: "Sim" (p<0.05) ou "Não"
+
+Como usar no TCC:
+  → Use APENAS linhas com Significancia = "Sim"
+  → Escrever: "Escolas públicas (mediana=280) apresentaram proficiência
+               significativamente menor em MT que privadas (mediana=350),
+               teste Wilcoxon p=0.032, r=0.65 (efeito grande)"
+  → Effect_Size:
+     • 0.1-0.3 = pequeno
+     • 0.3-0.5 = moderado
+     • 0.5+ = grande
+
+---
+
+Arquivos PNG: processados/figuras_comparacao/
+
+  • 01_boxplot_tipo_escola.png
+    → Boxplot: Pública vs Privada
+    → Use no TCC: mostra distribuição, mediana, outliers
+    → Interpret: altura da caixa = 50% dos dados
+
+  • 02_boxplot_urbano_rural.png
+    → Boxplot: Urbana vs Rural
+
+  • 03_boxplot_capital_interior.png
+    → Boxplot: Capital vs Interior
+
+  • 04_boxplot_inse.png
+    → Boxplot: Grupos de INSE (1-2 baixo, 3-4 médio, 5-7 alto)
+    → INSE crescente = nota maior? → indicador de equidade
+
+
+📊 SAÍDAS DO PASSO 7: CLUSTERING
+════════════════════════════════════════════════════════════════════════════════
+
+Arquivo 1: processados/clusters_escolas_YYYYMMDD_HHMMSS.csv
+
+Descrição:
+  Atribuição de cada escola a um cluster (grupo)
+
+Colunas:
+  • ID_ESCOLA: Identificador
+  • Cluster_MT_INSE: Cluster na perspectiva MT+INSE (1, 2, 3, ...)
+  • Cluster_LP_INSE: Cluster na perspectiva LP+INSE
+  • Cluster_MT_LP_INSE: Cluster na perspectiva MT+LP+INSE
+
+Como usar no TCC:
+  → Identificar grupos de escolas similares
+  → Exemplo: "Cluster 1 (n=2) contém escolas com baixa proficiência e baixo INSE.
+             Cluster 2 (n=1) contém escola de alta proficiência e alto INSE.
+             Sugerindo que desigualdade socioeconômica está associada a
+             resultados de aprendizagem"
+
+---
+
+Arquivos PNG: processados/figuras_dendrogramas/
+
+  • dendrograma_MT_YYYYMMDD_*.png
+    → Árvore hierárquica de similaridade em MT+INSE
+    → Distância (altura do "ramo") = dissimilaridade entre escolas
+    → Escolas perto = similares
+
+  • dendrograma_LP_YYYYMMDD_*.png
+    → Mesmo, mas para LP+INSE
+
+  • dendrograma_3D_YYYYMMDD_*.png
+    → Incluindo todas 3 variáveis (MT, LP, INSE)
+
+  • scatter_MT_vs_INSE.png
+    → Gráfico de dispersão
+    → Eixo X = INSE, Eixo Y = Proficiência MT
+    → Pontos (escolas) agrupados por cor = clusters
+    → Observar: clusters são naturais ou há sobreposição?
+
+  • scatter_LP_vs_INSE.png
+    → Mesmo para LP
+
+  • scatter_MT_vs_LP.png
+    → MT no eixo X, LP no eixo Y
+    → Se ponto está na diagonal = proficiência balanceada
+    → Se acima/abaixo = mais forte em LP/MT
+
+
+⚠️ TROUBLESHOOTING
+════════════════════════════════════════════════════════════════════════════════
+
+❌ "Não apareceu o arquivo correlacoes_mantidas_MT.csv"
+   → Verificar: todas as correlações foram descartadas?
+   → Abrir: todas_correlacoes_calculadas.csv
+   → Se Status_Calculo ≠ "OK" para todas: variáveis têm problema
+   → Solução: revisar dados originais em PASSO 1
+
+❌ "Muitos NA nos resultados"
+   → Significa: variáveis com muitos valores faltantes
+   → Verificar: % de NAs por coluna em dados_escola_em_numeros.csv
+   → Usar: subset de variáveis com menos NAs
+
+❌ "Dendrogramas não aparecem"
+   → Verificar: pacotes ggdendro e dendextend instalados?
+   → Comando: library(ggdendro); library(dendextend)
+   → Se erro: reinstalar com install.packages()
+
+❌ "Boxplots vêm em branco/vazio"
+   → Possível: muitos outliers fudindo a escala
+   → Solução: normal, revisar CSV de resultados para entender
+
+❌ "Arquivo correlacoes_mantidas tem só 2 linhas"
+   → Significa: apenas 2 variáveis passaram filtro |r| > 0.30
+   → Possível: escola tem forte homoassociação (dados muito similares)
+   → Solução: usar "todas_correlacoes_calculadas.csv" com filtro menor (|r| > 0.20)
+
+
+📝 ESTRUTURA PARA METODOLOGIA DO TCC
+════════════════════════════════════════════════════════════════════════════════
+
+Use estes dados para escrever sua Metodologia:
+
+Seção 1: Tratamento de Dados
+  ✓ "Dados brutos continham X variáveis categoriais que foram
+     transformadas para codificação numérica..."
+  ✓ Quantidade de alunos e escolas
+
+Seção 2: Análise de Correlação
+  ✓ "Método: correlações de Spearman (ordinais) e Pearson (contínuas)"
+  ✓ "Limiar: |r| > 0.30 para manter correlação"
+  ✓ Resultados: "de X correlações, Y foram mantidas (Z%)"
+
+Seção 3: Comparação de Grupos
+  ✓ "Teste: Wilcoxon (não-paramétrico, não assume normalidade)"
+  ✓ "Significância: α = 0.05"
+  ✓ Resultados de cada comparação (com p-value e effect size)
+
+Seção 4: Clustering
+  ✓ "Método: Hierarchical clustering com distância euclidiana"
+  ✓ Interpretação dos clusters encontrados
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+**Última atualização:** 11 de Maio de 2026
+

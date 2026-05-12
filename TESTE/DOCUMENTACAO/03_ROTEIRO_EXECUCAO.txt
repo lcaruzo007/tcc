@@ -1,0 +1,284 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                  📋 ROTEIRO DE EXECUÇÃO — Passo a Passo                      ║
+║                      (Versão 11 de Maio de 2026)                            ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+ANTES DE COMEÇAR
+════════════════════════════════════════════════════════════════════════════════
+
+✅ Leia: 02_GUIA_RAPIDO.txt (tem os comandos prontos para copiar/colar)
+✅ Instale dependências em 04_REQUIREMENTS.md
+✅ Confirme: Todos os caminhos usam / (não \)
+
+
+🎯 ESTRUTURA DOS SCRIPTS (NOVA)
+════════════════════════════════════════════════════════════════════════════════
+
+TESTE/
+├─ 1_LIMPEZA_E_TRANSFORMACAO/
+│  └─ ajeitar_dados.r              ← PASSO 1
+│
+├─ 2_ANALISE_POR_ESCOLA/
+│  └─ Scripts/
+│     ├─ correlacao.r              ← PASSO 2
+│     └─ graficos.r                ← PASSO 3 (opcional)
+│
+└─ 3_ANALISE_DE_GRUPOS/
+   └─ Scripts/
+      ├─ classificar_escolas.r      ← PASSO 4 (⭐ NECESSÁRIO)
+      ├─ comparar_grupos.r          ← PASSO 5
+      ├─ comparar_duas_escolas.r    ← PASSO 6 (opcional)
+      └─ dendrograma.r              ← PASSO 7
+
+
+═══════════════════════════════════════════════════════════════════════════════
+🔥 ROTEIRO: PASSO A PASSO COM DETALHES
+═══════════════════════════════════════════════════════════════════════════════
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ PASSO 1: LIMPEZA E TRANSFORMAÇÃO                                            ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                            ┃
+┃ 📍 Localização:                                                            ┃
+┃    1_LIMPEZA_E_TRANSFORMACAO/ajeitar_dados.r                              ┃
+┃                                                                            ┃
+┃ 🎯 Objetivo:                                                               ┃
+┃    Transformar variáveis categoriais (A, B, C) para numéricas (1, 2, 3)   ┃
+┃    Lê: TS_ALUNO_34EM.csv (173k alunos)                                   ┃
+┃    Escreve: dados_por_escola/ID_ESCOLA/dados_escola_em_numeros.csv       ┃
+┃                                                                            ┃
+┃ ⚙️ Configuração:                                                            ┃
+┃    arquivo_entrada ← "C:/Users/Usuario/Desktop/tcc/MICRODADOS_SAEB_2023/DADOS/TS_ALUNO_34EM.csv"
+┃    dir_saida_por_escola ← "C:/Users/Usuario/Desktop/tcc/TESTE/dados_por_escola"
+┃                                                                            ┃
+┃ 🚀 Como executar:                                                           ┃
+┃    source("C:/Users/Usuario/Desktop/tcc/TESTE/1_LIMPEZA_E_TRANSFORMACAO/ajeitar_dados.r")
+┃                                                                            ┃
+┃ ⏱️ Tempo: ~2-3 minutos                                                     ┃
+┃                                                                            ┃
+┃ ✅ Saída esperada:                                                          ┃
+┃    ✓ dados_por_escola/61432986/dados_escola_em_numeros.csv               ┃
+┃    ✓ dados_por_escola/61458788/dados_escola_em_numeros.csv               ┃
+┃    ✓ dados_por_escola/61466120/dados_escola_em_numeros.csv               ┃
+┃    ✓ dados_por_escola/61466123/dados_escola_em_numeros.csv               ┃
+┃    ✓ dados_escola_limpos.csv (consolidado)                                ┃
+┃                                                                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ PASSO 2: CALCULAR CORRELAÇÕES POR ESCOLA                                    ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                            ┃
+┃ 📍 Localização:                                                            ┃
+┃    2_ANALISE_POR_ESCOLA/Scripts/correlacao.r                              ┃
+┃                                                                            ┃
+┃ 🎯 Objetivo:                                                               ┃
+┃    Calcular correlações (Spearman/Pearson) entre variáveis socioeconômicas
+┃    e proficiência (MT, LP) — de forma diferenciada por tipo de variável    ┃
+┃                                                                            ┃
+┃ ⚙️ Configuração (antes de executar):                                        ┃
+┃    modo_execucao <- "todas"                                               ┃
+┃      # Opções: "todas", "pendentes", "especificas"                        ┃
+┃      # "todas" = processa todas as escolas                                ┃
+┃      # "pendentes" = só escolas sem correlações completas                 ┃
+┃      # "especificas" = apenas escolas em escolas_especificas              ┃
+┃                                                                            ┃
+┃ 🚀 Como executar:                                                           ┃
+┃    source("C:/Users/Usuario/Desktop/tcc/TESTE/2_ANALISE_POR_ESCOLA/Scripts/correlacao.r")
+┃                                                                            ┃
+┃ ⏱️ Tempo: ~5-10 minutos                                                    ┃
+┃                                                                            ┃
+┃ ✅ Saída esperada (por escola):                                             ┃
+┃    ✓ correlacoes_mantidas_MT.csv (correlações MT com |r| > 0.30)          ┃
+┃    ✓ correlacoes_mantidas_LP.csv (correlações LP com |r| > 0.30)          ┃
+┃    ✓ todas_correlacoes_calculadas.csv (todas, com status de validação)    ┃
+┃    ✓ dados_FINAL_MT_Filtrado.csv (dados escalados para MT)                ┃
+┃    ✓ dados_FINAL_LP_Filtrado.csv (dados escalados para LP)                ┃
+┃    ✓ variaveis_degeneradas.csv (variáveis descartadas)                    ┃
+┃    ✓ diagnostico_degeneracao.csv (relatório de exclusões)                 ┃
+┃                                                                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ PASSO 3 (OPCIONAL): DASHBOARD INTERATIVO                                    ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                            ┃
+┃ 📍 Localização:                                                            ┃
+┃    2_ANALISE_POR_ESCOLA/Scripts/graficos.r                                ┃
+┃                                                                            ┃
+┃ 🎯 Objetivo:                                                               ┃
+┃    Explorar dados de forma interativa com Shiny Dashboard                 ┃
+┃                                                                            ┃
+┃ 🚀 Como executar:                                                           ┃
+┃    shiny::runApp("C:/Users/Usuario/Desktop/tcc/TESTE/2_ANALISE_POR_ESCOLA/Scripts/graficos.r")
+┃                                                                            ┃
+┃ 🌐 Resultado:                                                               ┃
+┃    Abre navegador web (http://localhost:XXXX)                             ┃
+┃    Para sair: Pressione Esc no console                                     ┃
+┃                                                                            ┃
+┃ ⏱️ Tempo: Enquanto estiver aberto                                          ┃
+┃                                                                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ PASSO 4: CLASSIFICAR ESCOLAS E CRIAR METADADOS (⭐ NECESSÁRIO)              ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                            ┃
+┃ 📍 Localização:                                                            ┃
+┃    3_ANALISE_DE_GRUPOS/Scripts/classificar_escolas.r                      ┃
+┃                                                                            ┃
+┃ 🎯 Objetivo:                                                               ┃
+┃    Agregar dados de alunos para criar perfil de CADA escola               ┃
+┃    Gera: tipo (pública/privada), localização (urbana/rural), etc.         ┃
+┃                                                                            ┃
+┃ 🚀 Como executar:                                                           ┃
+┃    source("C:/Users/Usuario/Desktop/tcc/TESTE/3_ANALISE_DE_GRUPOS/Scripts/classificar_escolas.r")
+┃                                                                            ┃
+┃ ⏱️ Tempo: ~2-3 minutos                                                     ┃
+┃                                                                            ┃
+┃ ⚠️  IMPORTANTE:                                                             ┃
+┃    Este passo é NECESSÁRIO antes de executar passos 5 e 7                 ┃
+┃    Gera o arquivo metadados_escolas_*.csv que alimenta os próximos        ┃
+┃                                                                            ┃
+┃ ✅ Saída esperada:                                                          ┃
+┃    ✓ processados/metadados_escolas_YYYYMMDD_HHMMSS.csv                    ┃
+┃      (Contém: ID, tipo escola, localização, INSE, proficiência média)    ┃
+┃                                                                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ PASSO 5: COMPARAR GRUPOS                                                    ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                            ┃
+┃ 📍 Localização:                                                            ┃
+┃    3_ANALISE_DE_GRUPOS/Scripts/comparar_grupos.r                          ┃
+┃                                                                            ┃
+┃ 🎯 Objetivo:                                                               ┃
+┃    Testar diferenças significativas entre grupos:                          ┃
+┃    • Pública vs Privada                                                    ┃
+┃    • Urbana vs Rural                                                       ┃
+┃    • Capital vs Interior                                                   ┃
+┃    • Faixas de INSE                                                        ┃
+┃                                                                            ┃
+┃    Usa teste não-paramétrico (Wilcoxon) + tamanho de efeito (rank-biserial)
+┃                                                                            ┃
+┃ 🚀 Como executar:                                                           ┃
+┃    source("C:/Users/Usuario/Desktop/tcc/TESTE/3_ANALISE_DE_GRUPOS/Scripts/comparar_grupos.r")
+┃                                                                            ┃
+┃ ⏱️ Tempo: ~1-2 minutos                                                     ┃
+┃                                                                            ┃
+┃ ✅ Saída esperada:                                                          ┃
+┃    ✓ processados/resultados_comparacao_YYYYMMDD_HHMMSS.csv                ┃
+┃      (p-value, tamanho de efeito, mediana, IQR para cada comparação)      ┃
+┃    ✓ processados/figuras_comparacao/01_boxplot_tipo_escola.png            ┃
+┃    ✓ processados/figuras_comparacao/02_boxplot_urbano_rural.png           ┃
+┃    ✓ processados/figuras_comparacao/03_boxplot_capital_interior.png       ┃
+┃    ✓ processados/figuras_comparacao/04_boxplot_inse.png                   ┃
+┃                                                                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ PASSO 6 (OPCIONAL): COMPARAR 2 ESCOLAS ESPECÍFICAS                          ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                            ┃
+┃ 📍 Localização:                                                            ┃
+┃    3_ANALISE_DE_GRUPOS/Scripts/comparar_duas_escolas.r                    ┃
+┃                                                                            ┃
+┃ 🎯 Objetivo:                                                               ┃
+┃    Comparar perfil de 2 escolas escolhidas por você (lado a lado)          ┃
+┃                                                                            ┃
+┃ ⚙️ Configuração (ANTES de executar):                                        ┃
+┃    1. Abra o arquivo com um editor (VSCode, RStudio, etc)                 ┃
+┃    2. Procure pelas linhas:                                                ┃
+┃       ID_ESCOLA_A <- 61432986                                             ┃
+┃       ID_ESCOLA_B <- 61466120                                             ┃
+┃    3. Altere para os IDs das escolas que quer comparar                    ┃
+┃    4. Salve o arquivo                                                      ┃
+┃                                                                            ┃
+┃ 🚀 Como executar:                                                           ┃
+┃    source("C:/Users/Usuario/Desktop/tcc/TESTE/3_ANALISE_DE_GRUPOS/Scripts/comparar_duas_escolas.r")
+┃                                                                            ┃
+┃ ⏱️ Tempo: ~1 minuto                                                        ┃
+┃                                                                            ┃
+┃ ✅ Saída esperada:                                                          ┃
+┃    ✓ processados/comparacao_duas_escolas/Comparacao_Escola_A_vs_B_*.csv   ┃
+┃    ✓ processados/comparacao_duas_escolas/Perfis_Escolas_*.csv             ┃
+┃    ✓ processados/comparacao_duas_escolas/visualizacao_comparacao_*.png    ┃
+┃                                                                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ PASSO 7: CLUSTERING HIERÁRQUICO COM DENDROGRAMAS                            ┃
+┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+┃                                                                            ┃
+┃ 📍 Localização:                                                            ┃
+┃    3_ANALISE_DE_GRUPOS/Scripts/dendrograma.r                              ┃
+┃                                                                            ┃
+┃ 🎯 Objetivo:                                                               ┃
+┃    Clustering hierárquico para identificar grupos de escolas similares      ┃
+┃    Gera dendrogramas em 3 perspectivas:                                    ┃
+┃    • MT + INSE (Matemática + Nível Socioeconômico)                        ┃
+┃    • LP + INSE (Língua Portuguesa + Nível Socioeconômico)                 ┃
+┃    • MT + LP + INSE (Tudo junto)                                           ┃
+┃                                                                            ┃
+┃ 🚀 Como executar:                                                           ┃
+┃    source("C:/Users/Usuario/Desktop/tcc/TESTE/3_ANALISE_DE_GRUPOS/Scripts/dendrograma.r")
+┃                                                                            ┃
+┃ ⏱️ Tempo: ~2-3 minutos                                                     ┃
+┃                                                                            ┃
+┃ ✅ Saída esperada:                                                          ┃
+┃    ✓ processados/figuras_dendrogramas/dendrograma_MT_YYYYMMDD_*.png       ┃
+┃    ✓ processados/figuras_dendrogramas/dendrograma_LP_YYYYMMDD_*.png       ┃
+┃    ✓ processados/figuras_dendrogramas/dendrograma_3D_YYYYMMDD_*.png       ┃
+┃    ✓ processados/figuras_dendrogramas/scatter_MT_vs_INSE.png              ┃
+┃    ✓ processados/figuras_dendrogramas/scatter_LP_vs_INSE.png              ┃
+┃    ✓ processados/figuras_dendrogramas/scatter_MT_vs_LP.png                ┃
+┃    ✓ processados/clusters_escolas_YYYYMMDD_*.csv (atribuição de clusters) ┃
+┃                                                                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📊 RESUMO VISUAL
+═══════════════════════════════════════════════════════════════════════════════
+
+Entrada                    Script              Saída
+─────────────────────────────────────────────────────────────────────────────
+
+TS_ALUNO_34EM.csv    ──►  PASSO 1         ──►  dados_por_escola/*/
+                      ajeitar_dados.r         dados_escola_em_numeros.csv
+
+
+dados_escola_em_...  ──►  PASSO 2         ──►  dados_por_escola/*/
+                      correlacao.r           correlacoes_mantidas_MT/LP.csv
+                                              dados_FINAL_*_Filtrado.csv
+
+
+(opcional)           ──►  PASSO 3         ──►  Dashboard web (http://...)
+                      graficos.r
+
+
+dados_por_escola/*   ──►  PASSO 4         ──►  processados/
+TS_ESCOLA.csv             classificar_escolas.r metadados_escolas_*.csv
+TS_ALUNO_34EM.csv
+
+
+metadados_escolas_*  ──►  PASSO 5         ──►  processados/
+                      comparar_grupos.r     resultados_comparacao_*.csv
+                                              figuras_comparacao/*.png
+
+
+(config IDs)         ──►  PASSO 6         ──►  processados/
+                      comparar_duas_escolas comparacao_duas_escolas/*.csv
+
+
+metadados_escolas_*  ──►  PASSO 7         ──►  processados/
+                      dendrograma.r        figuras_dendrogramas/*.png
+                                              clusters_escolas_*.csv
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+**Última atualização:** 11 de Maio de 2026
+

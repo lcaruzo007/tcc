@@ -1,0 +1,159 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                         🚀 COMECE AQUI PRIMEIRO 🚀                           ║
+║                                                                              ║
+║                   ANÁLISE TCC — SAEB 2023 DE MINAS GERAIS                   ║
+║                    Impacto Socioeconômico na Proficiência                   ║
+║                                                                              ║
+║               ✨ Documentação Reorganizada — 11 de Maio 2026 ✨              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+
+👋 BEM-VINDO!
+═══════════════════════════════════════════════════════════════════════════════
+
+Você está no lugar certo. Este é o ponto de partida para entender toda a
+análise de dados SAEB 2023.
+
+**⏱️ Leia isto em 5 minutos e saiba por onde começar.**
+
+
+📚 QUAL É O SEU OBJETIVO?
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 🎯 OBJETIVO 1: Executar os Scripts Agora                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ ▸ Abra:    02_GUIA_RAPIDO.txt                                              │
+│ ▸ Copie:   Os comandos source() de lá                                      │
+│ ▸ Execute: Um por um no R Console                                          │
+│                                                                             │
+│ ✓ Pronto em 15-20 minutos (primeira execução)                              │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 🎯 OBJETIVO 2: Entender os Passos e Detalhes                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ ▸ Leia:    03_ROTEIRO_EXECUCAO.txt (ordem, caminhos, tempo)                │
+│ ▸ Depois:  05_DOCUMENTACAO_PASSOS_TCC.txt (metodologia completa)            │
+│ ▸ Depois:  06_GUIA_INTERPRETAR_RESULTADOS.txt (o que significa cada saída) │
+│                                                                             │
+│ ✓ Use isto para escrever sua Metodologia no TCC                            │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 🎯 OBJETIVO 3: Entender a Estrutura de Pastas                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ ▸ Leia:    07_MAPA_ESTRUTURA_PASTAS.txt (visual de onde fica tudo)         │
+│ ▸ Depois:  00_INDEX.md (índice geral de toda documentação)                  │
+│                                                                             │
+│ ✓ Saiba exatamente onde os scripts estão e onde os dados são salvos        │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 🎯 OBJETIVO 4: Instalar Dependências                                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│ ▸ Leia:    04_REQUIREMENTS.md (pacotes necessários)                        │
+│ ▸ Execute: Os comandos install.packages() de lá                            │
+│ ▸ Aguarde: Instalação completa                                             │
+│                                                                             │
+│ ✓ Faça isto ANTES de rodar os scripts                                      │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+🚀 INICIAR RÁPIDO (30 segundos)
+═══════════════════════════════════════════════════════════════════════════════
+
+Faça isto AGORA para começar:
+
+1️⃣  Abra: 02_GUIA_RAPIDO.txt
+2️⃣  Copie o texto da seção "ANTES DE COMEÇAR"
+3️⃣  Cole no R Console e execute
+4️⃣  Aguarde a instalação de pacotes
+5️⃣  Depois volte para 02_GUIA_RAPIDO.txt e copie os comandos dos passos
+
+
+📖 ESTRUTURA DE DOCUMENTAÇÃO
+═══════════════════════════════════════════════════════════════════════════════
+
+```
+DOCUMENTACAO/
+├── 00_INDEX.md
+│   Índice geral de TUDO
+│
+├── 01_COMECE_AQUI_PRIMEIRO.txt (você está aqui)
+│   Guia de orientação inicial
+│
+├── 02_GUIA_RAPIDO.txt ⭐⭐⭐
+│   Comandos prontos para copiar/colar
+│   → COMECE AQUI SE QUER EXECUTAR
+│
+├── 03_ROTEIRO_EXECUCAO.txt
+│   Ordem dos scripts, caminhos, tempo, saídas
+│
+├── 04_REQUIREMENTS.md
+│   Instalar pacotes R necessários
+│
+├── 05_DOCUMENTACAO_PASSOS_TCC.txt
+│   Detalhes técnicos para Metodologia
+│
+├── 06_GUIA_INTERPRETAR_RESULTADOS.txt
+│   O que significa cada coluna, cada gráfico
+│   Troubleshooting de erros
+│
+├── 07_MAPA_ESTRUTURA_PASTAS.txt
+│   Visual de onde está tudo (pastas, scripts, dados)
+│
+├── HISTORICO_MUDANCAS.md
+│   Rastreamento de o que mudou e quando
+│
+└── utils_saeb.r
+    Funções compartilhadas entre scripts
+```
+
+
+💡 DICAS IMPORTANTES
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ Todos os caminhos usam SLASH (/)
+   ✓ Correto:   C:/Users/Usuario/Desktop/tcc/TESTE/...
+   ✗ Errado:    C:\Users\Usuario\Desktop\tcc\TESTE\...
+
+✅ Execute os scripts em ORDEM
+   1. ajeitar_dados.r (Limpeza)
+   2. correlacao.r (Correlações)
+   3. classificar_escolas.r (Metadados) ⭐ NECESSÁRIO
+   4. comparar_grupos.r (Comparações)
+   5. dendrograma.r (Clustering)
+
+✅ Dados saem AUTOMATICAMENTE
+   📁 dados_por_escola/  ← do ajeitar_dados.r e correlacao.r
+   📁 processados/       ← de classificar_escolas.r, comparar_grupos.r, dendrograma.r
+
+✅ Leia antes de executar
+   Se é a primeira vez, leia 02_GUIA_RAPIDO.txt primeiro
+
+
+⚠️ PRÓXIMA AÇÃO
+═══════════════════════════════════════════════════════════════════════════════
+
+→ Próximo arquivo para ler: 02_GUIA_RAPIDO.txt
+
+Ele tem:
+  ✓ Comandos prontos para copiar/colar
+  ✓ Instruções de instalação de pacotes
+  ✓ Roteiros recomendados (primeira vez, reexecução, etc)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+**Última atualização:** 11 de Maio de 2026
+**Status:** ✅ Documentação Reorganizada
+
