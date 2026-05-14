@@ -259,6 +259,126 @@ TESTE/processados/
 
 ---
 
+# 📓 Diário de Desenvolvimento — TCC
+
+---
+
+### 📅 13 de Maio de 2026
+
+**Horário:** 14h30 – 18h00
+**Fase:** Refinamento e consolidação dos scripts de análise de dendrogramas
+**Status:** ✅ Concluído com sucesso
+
+---
+
+#### Atividades Realizadas
+
+---
+
+##### 1. Filtro de desempenho no `dendrograma_duas_escolas.r`
+
+Implementação de filtro para comparações apenas entre escolas de **ALTO vs BAIXO desempenho**, removendo as intermediárias (solicitação do orientador: *"Deixa este mas agora coloque escolas só com alto e baixo desempenho. Retire as com desempenho intermediário"*):
+
+- ✅ Função `categorizar_desempenho()` — Classifica cada escola em 3 categorias:
+  - **ALTO:** ≥ percentil 75% de proficiência média
+  - **BAIXO:** ≤ percentil 25% de proficiência média
+  - **INTERMEDIÁRIO:** 25% < x < 75% **(REMOVIDO)**
+- ✅ Flag configurável `FILTRAR_DESEMPENHO = TRUE` — Permite ativar/desativar filtro facilmente
+- ✅ Carregamento de metadados com categorização automática (quartis MT + LP, distribuição exibida no console)
+- ✅ Validação de pares: comparações com escola intermediária são rejeitadas com mensagem explicativa
+- ✅ Relatório final: contagem de pares processados vs rejeitados
+
+---
+
+##### 2. Consolidação de 3 scripts em 1: `dendrograma_analise_completa.r`
+
+Análise identificou **redundância** entre os 3 scripts anteriores:
+
+| Script antigo | Função |
+|---|---|
+| `dendrograma_geral.r` | Dendrograma com N escolas (IDs hard-coded) |
+| `dendrograma_duas_escolas.r` | Comparação de 2 escolas (IDs hard-coded) |
+| `dendrograma_multiplos_pares.r` | Comparação de múltiplos pares (de CSV) |
+
+**Solução:** novo script único com 2 modos de operação:
+
+- ✅ **MODO 1** — Dendrograma geral com todas as escolas ALTO+BAIXO
+  - Categorização automática por quartis de proficiência
+  - Dendrograma unificado + scatter validador
+  - Saída: `dendrograma_geral_ALTO_BAIXO_*.png` + tabela CSV
+- ✅ **MODO 2** — Dendrogramas comparativos de pares (lê `lista_comparacoes.csv`)
+  - Gera dendrograma + ficha comparativa para cada par
+  - Cria pasta separada por comparação
+  - Saída: `Escola_A_vs_B_*/dendrograma_*.png` + `resumo_*.csv`
+- ✅ Scripts antigos deletados: `dendrograma_geral.r`, `dendrograma_duas_escolas.r`, `dendrograma_multiplos_pares.r`
+
+---
+
+##### 3. Correções no Modo 1 — problema de escala e ilegibilidade
+
+Após rodar o script com dados reais, dois bugs foram identificados na imagem gerada:
+
+**Bug 1 — MEDIA_LP com valores absurdos (escala 0–30.000 no scatter)**
+- Causa: escolas com poucas observações válidas acumulavam médias distorcidas nos microdados
+- Solução: remoção de outliers de `MEDIA_LP` fora de `[média ± 3×dp]` antes do clustering
+- Controle: flag `REMOVER_OUTLIERS_LP = TRUE`; quantidade removida e intervalo válido são reportados no caption do gráfico
+
+**Bug 2 — Dendrograma com 1.165 escolas (completamente ilegível)**
+- Causa: o script passava todas as escolas ALTO+BAIXO diretamente ao `hclust`
+- Solução: **amostragem inteligente** — seleciona as `N_MAX_POR_GRUPO` escolas mais extremas de cada grupo (piores do BAIXO + melhores do ALTO), que são exatamente as que maximizam a separação visual entre clusters
+- O scatter continua usando **todas** as escolas limpas para contexto completo
+- Controle: `N_MAX_POR_GRUPO <- 30` (30 ALTO + 30 BAIXO = 60 escolas legíveis)
+
+**Bug 3 — Legenda sobreposta às folhas do dendrograma**
+- Causa: posição x da legenda fixada em 0.6 (canto esquerdo, onde as folhas se acumulam)
+- Solução: legenda reposicionada para o **canto superior direito** (`x = nrow - 1.5`), livre de sobreposição independente do número de escolas
+
+---
+
+#### Impacto Consolidado
+
+| Aspecto | Antes | Depois |
+|---|---|---|
+| Scripts de dendrograma | 3 | 1 |
+| Escolas no dendrograma geral | 1.165 (ilegível) | 60 (legível) |
+| Outliers em MEDIA_LP | Distorciam escala (0–30k) | Removidos automaticamente |
+| Legenda | Sobreposta às folhas | Canto superior direito |
+| Filtro ALTO/BAIXO | Ausente | Implementado com flag configurável |
+| Manutenção do código | Difícil (3 versões) | Fácil (1 versão) |
+
+---
+
+#### Estrutura de Saída
+
+**Modo 1:**
+```
+outputs_figuras/
+├── dendrograma_geral_ALTO_BAIXO_<ts>.png
+└── tabela_escolas_ALTO_BAIXO_<ts>.csv
+```
+
+**Modo 2:**
+```
+outputs_figuras/
+├── Escola_61432986_vs_Escola_61466120_<ts>/
+│   ├── dendrograma_61432986_vs_61466120_<ts>.png
+│   └── scatter_comparacao_61432986_vs_61466120_<ts>.png
+├── Escola_61425355_vs_Escola_61458788_<ts>/
+│   └── ...
+└── resumo_dendrogramas_<ts>.csv
+```
+
+---
+
+#### Próximos Passos
+
+- [ ] Executar Modo 1 com os parâmetros corrigidos e validar o novo dendrograma
+- [ ] Verificar distribuição ALTO/BAIXO após remoção dos outliers de LP
+- [ ] Se usar Modo 2: atualizar `lista_comparacoes.csv` com IDs válidos (apenas ALTO+BAIXO)
+- [ ] Integrar visualizações na redação final do TCC
+
+---
+
 ## 📊 Resumo Geral
 
 | Período | Scripts | Análises | Status |
@@ -266,10 +386,11 @@ TESTE/processados/
 | 06-26 Abr | 3 | Intra-escola (correlações) | ✅ |
 | 11 Mai (manhã) | 3 | Inter-grupos (comparações, clusters) | ✅ |
 | 11 Mai (tarde) | Reorganização | Documentação estruturada | ✅ |
-| **Total** | **7 scripts** | **Visão 360° dos dados** | **✅ Pronto** |
+| 13 Mai | 1 (refinado) | Filtro ALTO/BAIXO em dendrograma | ✅ |
+| **Total** | **7 scripts** | **Visão 360° dos dados + refinamentos** | **✅ Pronto** |
 
 ---
 
-**Atualizado:** 11 de Maio de 2026  
+**Atualizado:** 13 de Maio de 2026  
 **Próxima revisão:** Após execução com dados reais
 

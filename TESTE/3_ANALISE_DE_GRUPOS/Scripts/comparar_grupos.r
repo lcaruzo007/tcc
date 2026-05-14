@@ -15,14 +15,35 @@
 ################################################################################
 
 # ============================================================================
-# PASSO 0: CARREGAR PACOTES E DEFINIR CAMINHOS
+# PASSO 0: CARREGAR PACOTES E DEFINIR CAMINHOS (DETECÇÃO AUTOMÁTICA)
 # ============================================================================
 
 library(tidyverse)
 library(data.table)
 
+# Detectar raiz automaticamente
+detectar_raiz <- function() {
+  cwd <- getwd()
+  while (cwd != dirname(cwd)) {
+    if (dir.exists(file.path(cwd, "TESTE"))) {
+      message("✓ Projeto encontrado em: ", cwd)
+      return(cwd)
+    }
+    cwd <- dirname(cwd)
+  }
+  if (interactive()) {
+    raiz <- utils::choose.dir(default = getwd(),
+                              caption = "Selecione a pasta raiz do projeto TCC")
+    if (is.na(raiz) || raiz == "") stop("Caminho não selecionado.")
+    message("✓ Pasta selecionada: ", raiz)
+    return(raiz)
+  } else {
+    stop("Não foi possível detectar o caminho automaticamente.")
+  }
+}
+
 # Paths
-RAIZ <- "C:/Users/13756596699/tcc"
+RAIZ <- detectar_raiz()
 DIR_TESTE <- file.path(RAIZ, "TESTE")
 DIR_ANALISE <- file.path(DIR_TESTE, "3_ANALISE_DE_GRUPOS")
 DIR_OUTPUTS_ESCOLAS <- file.path(DIR_ANALISE, "outputs_escolas")

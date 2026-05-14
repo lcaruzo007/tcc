@@ -7,13 +7,55 @@ library(tidyverse)
 library(caret)
 
 # =========================================================================
+# Detecção Automática de Caminhos — Funciona em qualquer computador!
+# =========================================================================
+
+detectar_raiz <- function() {
+  # 1. Começar do diretório de trabalho atual
+  cwd <- getwd()
+  
+  # 2. Procurar pela pasta "TESTE" subindo a árvore de diretórios
+  while (cwd != dirname(cwd)) {  # enquanto não chegar à raiz do sistema
+    if (dir.exists(file.path(cwd, "TESTE"))) {
+      message("✓ Projeto encontrado em: ", cwd)
+      return(cwd)
+    }
+    cwd <- dirname(cwd)  # sobe um nível
+  }
+  
+  # 3. Se não encontrar, pedir ao usuário
+  message("⚠️  Não consegui encontrar a pasta 'TESTE' automaticamente.")
+  message("   Por favor, selecione manualmente a pasta raiz do projeto TCC")
+  
+  if (interactive()) {
+    raiz <- utils::choose.dir(default = getwd(),
+                              caption = "Selecione a pasta raiz do projeto TCC (onde está a pasta TESTE)")
+    if (is.na(raiz) || raiz == "") {
+      stop("Caminho não selecionado. Encerrando.")
+    }
+    message("✓ Pasta selecionada: ", raiz)
+    return(raiz)
+  } else {
+    stop("Script não pode rodar em modo não-interativo sem encontrar o caminho.",
+         "\nExecute no RStudio ou em um terminal interativo.")
+  }
+}
+
+# =========================================================================
 # Configuração de Caminhos
 # =========================================================================
-RAIZ <- "C:/Users/13756596699/tcc"
+
+# Detectar raiz e configurar caminhos
+RAIZ <- detectar_raiz()
 DIR_TESTE <- file.path(RAIZ, "TESTE")
 DIR_ANALISE_2 <- file.path(DIR_TESTE, "2_ANALISE_POR_ESCOLA")
 DIR_ENTRADA_ESCOLAS <- file.path(DIR_ANALISE_2, "dados_por_escola")
 DIR_SAIDA_RAIZ <- file.path(DIR_ANALISE_2, "outputs_correlacoes")
+
+message("Caminhos configurados:")
+message("  RAIZ:             ", RAIZ)
+message("  Entrada escolas:  ", DIR_ENTRADA_ESCOLAS)
+message("  Saída:            ", DIR_SAIDA_RAIZ)
 
 # Criar diretório de saída se não existir
 if (!dir.exists(DIR_SAIDA_RAIZ)) {

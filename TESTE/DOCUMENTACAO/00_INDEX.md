@@ -1,6 +1,6 @@
 # 📚 Índice de Documentação — Análise SAEB 2023
 
-**Última atualização:** 11 de Maio de 2026  
+**Última atualização:** 13 de Maio de 2026  
 **Status:** ✅ Estrutura Reorganizada e Documentação Consolidada
 
 ---
@@ -27,6 +27,9 @@
 
 6. **[06_GUIA_INTERPRETAR_RESULTADOS.txt](06_GUIA_INTERPRETAR_RESULTADOS.txt)** — O que significam os outputs  
    *Explica cada coluna, cada gráfico, cada arquivo.*
+
+10. **[10_RESUMO_ANALISE_GRUPOS.md](10_RESUMO_ANALISE_GRUPOS.md)** — O que cada script faz  
+   *Explicação completa de `classificar_escolas.r`, `comparar_grupos.r`, `dendrograma_analise_completa.r`.*
 
 ### Referência Técnica
 7. **[07_MAPA_ESTRUTURA_PASTAS.txt](07_MAPA_ESTRUTURA_PASTAS.txt)** — Estrutura visual completa  
@@ -98,6 +101,8 @@ Algo Quebrou?
 | 05_DOCUMENTACAO_PASSOS | Acadêmico | Escrever TCC | 30 min |
 | 06_GUIA_INTERPRETAR | Referência | Entender outputs | 20 min |
 | 07_MAPA_ESTRUTURA | Técnico | Estrutura de pastas | 5 min |
+| 09_DIARIO_DE_TCC | Registro | Rastrear progresso | 10 min |
+| 10_RESUMO_ANALISE_GRUPOS | Explicativo | Entender cada script | 15 min |
 | HISTORICO_MUDANCAS | Referência | Saber o que mudou | 10 min |
 
 ---

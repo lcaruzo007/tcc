@@ -8,12 +8,53 @@ library(dendextend)
 library(ggdendro)
 
 # =========================================================================
+# Detecção Automática de Caminhos — Funciona em qualquer computador!
+# =========================================================================
+
+detectar_raiz <- function() {
+  # 1. Começar do diretório de trabalho atual
+  cwd <- getwd()
+  
+  # 2. Procurar pela pasta "TESTE" subindo a árvore de diretórios
+  while (cwd != dirname(cwd)) {  # enquanto não chegar à raiz do sistema
+    if (dir.exists(file.path(cwd, "TESTE"))) {
+      message("✓ Projeto encontrado em: ", cwd)
+      return(cwd)
+    }
+    cwd <- dirname(cwd)  # sobe um nível
+  }
+  
+  # 3. Se não encontrar, pedir ao usuário
+  message("⚠️  Não consegui encontrar a pasta 'TESTE' automaticamente.")
+  message("   Por favor, selecione manualmente a pasta raiz do projeto TCC")
+  
+  if (interactive()) {
+    raiz <- utils::choose.dir(default = getwd(),
+                              caption = "Selecione a pasta raiz do projeto TCC (onde está a pasta TESTE)")
+    if (is.na(raiz) || raiz == "") {
+      stop("Caminho não selecionado. Encerrando.")
+    }
+    message("✓ Pasta selecionada: ", raiz)
+    return(raiz)
+  } else {
+    stop("Script não pode rodar em modo não-interativo sem encontrar o caminho.",
+         "\nExecute no RStudio ou em um terminal interativo.")
+  }
+}
+
+# =========================================================================
 # Configuração de Caminhos
 # =========================================================================
-RAIZ <- "C:/Users/13756596699/tcc"
+
+# Detectar raiz e configurar caminhos
+RAIZ <- detectar_raiz()
 DIR_TESTE <- file.path(RAIZ, "TESTE")
 DIR_ANALISE_2 <- file.path(DIR_TESTE, "2_ANALISE_POR_ESCOLA")
 DIR_RESULTADOS_POR_ESCOLA <- file.path(DIR_ANALISE_2, "dados_por_escola")
+
+message("Caminhos configurados:")
+message("  RAIZ:                   ", RAIZ)
+message("  Resultados por escola:  ", DIR_RESULTADOS_POR_ESCOLA)
 
 source(file.path(RAIZ, "DOCUMENTACAO", "utils_saeb.r"))
 
@@ -30,16 +71,29 @@ NOTAS <- c(nota_MT, nota_LP)
 # -------------------------------------------------------------------------
 # Validação inicial (falha cedo, antes de subir o app)
 # -------------------------------------------------------------------------
+message("\n📂 Validação de diretório:")
+message("  Procurando em: ", dir_resultados_por_escola)
+
 if (!dir.exists(dir_resultados_por_escola)) {
-  stop("Diretorio nao encontrado: ", dir_resultados_por_escola)
+  stop("❌ ERRO: Diretório NÃO encontrado: ", dir_resultados_por_escola,
+       "\n   Verifique se PASSO 1 foi executado corretamente.")
 }
+
+message("  ✓ Diretório encontrado")
 
 pastas_escola <- list.dirs(dir_resultados_por_escola,
                            full.names = FALSE, recursive = FALSE)
 pastas_escola <- pastas_escola[nzchar(pastas_escola)]
 
+message("  Escolas encontradas: ", length(pastas_escola))
+if (length(pastas_escola) > 0L) {
+  message("  IDs: ", paste(sort(pastas_escola), collapse = ", "))
+}
+
 if (length(pastas_escola) == 0L) {
-  stop("Nenhuma pasta de escola encontrada em: ", dir_resultados_por_escola)
+  stop("❌ ERRO: Nenhuma pasta de escola encontrada em: ", dir_resultados_por_escola,
+       "\n   Executar PASSO 2 (correlacao.r) antes de usar este dashboard.",
+       "\n   Isto irá criar as pastas de escolas com dados processados.")
 }
 
 # -------------------------------------------------------------------------
@@ -191,14 +245,37 @@ server <- function(input, output, session) {
     req(input$id_escola)
 
     pasta      <- file.path(dir_resultados_por_escola, input$id_escola)
+    
+    message("\n🔍 Carregando escola: ", input$id_escola)
+    message("  Pasta: ", pasta)
+    
     caminho_mt <- encontrar_arquivo_mais_recente(pasta, "dados_FINAL_MT_Filtrado")
     caminho_lp <- encontrar_arquivo_mais_recente(pasta, "dados_FINAL_LP_Filtrado")
     caminho_metodos <- encontrar_arquivo_mais_recente(pasta, "todas_correlacoes_calculadas")
 
+    # Validação com mensagens descritivas
+    if (is.null(caminho_mt)) {
+      message("  ❌ Arquivo MT não encontrado")
+    } else {
+      message("  ✓ MT: ", basename(caminho_mt))
+    }
+    
+    if (is.null(caminho_lp)) {
+      message("  ❌ Arquivo LP não encontrado")
+    } else {
+      message("  ✓ LP: ", basename(caminho_lp))
+    }
+    
+    if (is.null(caminho_metodos)) {
+      message("  ❌ Arquivo de métodos não encontrado")
+    } else {
+      message("  ✓ Métodos: ", basename(caminho_metodos))
+    }
+
     validate(
-      need(!is.null(caminho_mt), "Arquivo de Matemática não encontrado para esta escola."),
-      need(!is.null(caminho_lp), "Arquivo de Língua Portuguesa não encontrado para esta escola."),
-      need(!is.null(caminho_metodos), "Tabela de métodos de correlação não encontrada para esta escola.")
+      need(!is.null(caminho_mt), "❌ Arquivo de Matemática não encontrado para esta escola. Execute PASSO 2 (correlacao.r)."),
+      need(!is.null(caminho_lp), "❌ Arquivo de Língua Portuguesa não encontrado para esta escola. Execute PASSO 2 (correlacao.r)."),
+      need(!is.null(caminho_metodos), "❌ Tabela de métodos de correlação não encontrada para esta escola. Execute PASSO 2 (correlacao.r).")
     )
 
     # Carregar arquivos com validação
@@ -214,6 +291,8 @@ server <- function(input, output, session) {
         need(nrow(metodos) > 0, "Tabela de métodos está vazia para esta escola.")
       )
       
+      message("  ✓ Dados carregados com sucesso")
+      
       list(
         mt         = mt,
         lp         = lp,
@@ -222,6 +301,7 @@ server <- function(input, output, session) {
         arquivo_lp = basename(caminho_lp)
       )
     }, error = function(e) {
+      message("  ❌ ERRO ao ler arquivo: ", conditionMessage(e))
       validate(need(FALSE, paste("Erro ao ler arquivos da escola:", conditionMessage(e))))
     })
   })
