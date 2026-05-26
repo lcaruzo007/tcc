@@ -358,15 +358,17 @@ cook_mt_df <- tibble(
   mutate(obs = as.factor(obs))
 
 p_cook_mt <- ggplot(cook_mt_df |> slice(1:50), aes(x = reorder(obs, -cooks_d), y = cooks_d, fill = eh_outlier)) +
-  geom_col(alpha = 0.8) +
+  geom_col(alpha = 0.8, colour = "black", linewidth = 0.3) +
   geom_hline(yintercept = 4/nobs(modelo_mt), linetype = "dashed", colour = "#D62728", linewidth = 1) +
   coord_flip() +
   scale_fill_manual(values = c("TRUE" = "#D62728", "FALSE" = "#1f77b4"),
-                    labels = c("TRUE" = "Influente", "FALSE" = "Normal")) +
+                    labels = c("FALSE" = "Observação Normal", "TRUE" = "Observação Influente")) +
   labs(
     title = "Cook's Distance — 50 Observações com Maior Influência (MEDIA_MT)",
+    subtitle = "Identifica escolas cujos dados têm maior influência nos coeficientes estimados",
     x = "Índice da Observação",
     y = "Cook's Distance",
+    caption = "Linha tracejada = limiar de significância (4/n); acima dela = influência excessiva",
     fill = ""
   ) +
   tema_saeb() +
@@ -386,15 +388,17 @@ cook_lp_df <- tibble(
   mutate(obs = as.factor(obs))
 
 p_cook_lp <- ggplot(cook_lp_df |> slice(1:50), aes(x = reorder(obs, -cooks_d), y = cooks_d, fill = eh_outlier)) +
-  geom_col(alpha = 0.8) +
+  geom_col(alpha = 0.8, colour = "black", linewidth = 0.3) +
   geom_hline(yintercept = 4/nobs(modelo_lp), linetype = "dashed", colour = "#D62728", linewidth = 1) +
   coord_flip() +
   scale_fill_manual(values = c("TRUE" = "#D62728", "FALSE" = "#ff7f0e"),
-                    labels = c("TRUE" = "Influente", "FALSE" = "Normal")) +
+                    labels = c("FALSE" = "Observação Normal", "TRUE" = "Observação Influente")) +
   labs(
     title = "Cook's Distance — 50 Observações com Maior Influência (MEDIA_LP)",
+    subtitle = "Identifica escolas cujos dados têm maior influência nos coeficientes estimados",
     x = "Índice da Observação",
     y = "Cook's Distance",
+    caption = "Linha tracejada = limiar de significância (4/n); acima dela = influência excessiva",
     fill = ""
   ) +
   tema_saeb() +

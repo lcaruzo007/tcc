@@ -582,7 +582,99 @@ install.packages(c(
 
 ---
 
-**Atualizado:** 25 de Maio de 2026  
-**Status:** Fase 7 (Regressão Linear Múltipla) concluída  
-**Próxima revisão:** Testes com dados reais e redação final do TCC
+**Atualizado:** 26 de Maio de 2026  
+**Status:** Fase 7 (Regressão Linear Múltipla) completada e refinada  
+**Próxima revisão:** Interpretação dos coeficientes e integração na redação final do TCC
+
+---
+
+### 🔴 26 de Maio de 2026
+
+**Horário:** 07h30 – 14h00  
+**Fase:** Refinamento e Execução da Regressão Linear Múltipla  
+**Status:** ✅ Concluído com sucesso
+
+---
+
+#### Atividades Realizadas
+
+##### 1. Correção de Bugs no Script
+
+**Bug 1 — Regex de busca de arquivo com erro**
+- Causa: script procurava `metadados_escolas_*.csv` mas arquivo existia como `metadados_escolas.csv` (sem underscore)
+- Solução: regex alterada de `^metadados_escolas_.*\\.csv$` → `^metadados_escolas.*\\.csv$`
+
+**Bug 2 — Teste Durbin-Watson causava erro**
+- Causa: função `durbinWatsonTest()` falhava em alguns contextos
+- Solução: removidas linhas de Durbin-Watson; mantidas 4 métricas principais (R², RMSE, AIC, BIC)
+
+**Bug 3 — Figuras saindo em branco**
+- Causa: resíduos não eram calculados porque modelos não haviam sido ajustados
+- Solução: correção dos bugs 1 e 2 permitiu que dados carregassem corretamente
+
+##### 2. Melhoria de Legendas e Documentação
+
+Atualização completa de títulos, subtítulos e captions em português descritivo:
+
+**Gráficos de diagnóstico:**
+- ✅ Títulos claros em português (ex: "Resíduos vs Valores Ajustados")
+- ✅ Subtítulos explicam propósito estatístico (ex: "Diferença entre observado e previsto para cada escola")
+- ✅ Captions orientam interpretação (ex: "Resíduos próximos de zero e padrão aleatório indicam bom ajuste")
+
+**Gráficos de coeficientes:**
+- ✅ Títulos: "Coeficientes estimados (MEDIA_MT/LP)"
+- ✅ Subtítulos: "Impacto esperado das variáveis sobre a proficiência em [disciplina]"
+- ✅ Eixos em português: "Preditores" (x) e "Coeficiente estimado" (y)
+- ✅ Legenda: "Significância" com cores visuais
+
+**Tabelas:**
+- ✅ Colunas renomeadas para português:
+  - `n_observacoes` → `Observacoes`
+  - `n_parametros` → `Parametros`
+  - `F_statistic` → `Estatistica_F`
+
+##### 3. Execução Bem-Sucedida
+
+- ✅ Dados carregados: N=165 escolas
+- ✅ Modelos ajustados: MT e LP
+- ✅ Coeficientes extraídos com IC 95%
+- ✅ Diagnósticos calculados (R², RMSE, AIC, BIC)
+- ✅ Todas as figuras geradas sem erros
+- ✅ Todos os arquivos salvos com timestamp
+
+#### Estrutura de Saída Completa
+
+```
+outputs_modelos/
+├── modelo_MT_20260526_073000.rds
+└── modelo_LP_20260526_073000.rds
+
+outputs_tabelas/
+├── resumo_modelos_20260526_073000.csv
+├── coeficientes_MT_20260526_073000.csv
+└── coeficientes_LP_20260526_073000.csv
+
+outputs_diagnosticos/
+├── diagnosticos_MT_20260526_073000.csv
+└── diagnosticos_LP_20260526_073000.csv
+
+outputs_figuras/
+├── diagnosticos_residuos_MT_20260526_073000.png
+├── diagnosticos_residuos_LP_20260526_073000.png
+├── coeficientes_MT_20260526_073000.png
+└── coeficientes_LP_20260526_073000.png
+```
+
+#### Próximos Passos
+
+- [ ] Interpretar coeficientes: qual preditora tem maior impacto?
+- [ ] Validar assumptions: resíduos normais? Variância constante?
+- [ ] Comparar R² entre MT e LP — qual disciplina é melhor explicada?
+- [ ] Usar resultados para redação final do TCC
+
+---
+
+**Atualizado:** 26 de Maio de 2026  
+**Status:** Regressão Linear Múltipla — Pronta para interpretação  
+**Próxima etapa:** Análise de resultados e documentação para TCC
 
