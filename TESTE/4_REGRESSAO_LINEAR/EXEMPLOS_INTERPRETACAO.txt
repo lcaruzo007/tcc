@@ -1,0 +1,457 @@
+################################################################################
+# EXEMPLOS DE INTERPRETACAO — REGRESSAO LINEAR MULTIPLA
+################################################################################
+
+Este arquivo mostra exemplos REAIS de como interpretar as saídas do script.
+
+================================================================================
+EXEMPLO 1: TABELA DE COEFICIENTES (resumo_modelos_*.csv)
+================================================================================
+
+Arquivo: resumo_modelos_20260525_143000.csv
+
+Conteúdo:
+┌─────────────┬──────────┬──────────┬─────────────┬────────┬───────────┬─────────┬─────────┐
+│ Modelo      │ n_obs    │ n_param  │ R2_ajustado │ RMSE   │ F_stat    │ AIC     │ BIC     │
+├─────────────┼──────────┼──────────┼─────────────┼────────┼───────────┼─────────┼─────────┤
+│ MEDIA_MT    │ 1050     │ 5        │ 0.6234      │ 15.42  │ 340.67    │ 6234.5  │ 6262.1  │
+│ MEDIA_LP    │ 1050     │ 5        │ 0.5891      │ 18.76  │ 298.45    │ 6845.2  │ 6872.8  │
+└─────────────┴──────────┴──────────┴─────────────┴────────┴───────────┴─────────┴─────────┘
+
+INTERPRETAÇÃO:
+
+1. n_obs = 1050
+   "Ambos os modelos foram ajustados com 1050 escolas"
+
+2. n_param = 5
+   "Cada modelo tem 5 parâmetros:
+    - 1 intercept
+    - 4 coeficientes (INSE + 3 dummies)"
+
+3. R2_ajustado = 0.6234 (MT) vs 0.5891 (LP)
+   "O modelo de Matemática explica 62.3% da variação em MEDIA_MT
+    O modelo de Leitura explica 58.9% da variação em MEDIA_LP
+    
+    Ou seja:
+    • MT é mais previsível que LP
+    • Ainda há ~37% de variação não explicada em MT
+    • RECOMENDAÇÃO: Investigar quais outras variáveis afetam LP"
+
+4. RMSE = 15.42 (MT) vs 18.76 (LP)
+   "Em média:
+    • Predições de MT erram por ±15.42 pontos
+    • Predições de LP erram por ±18.76 pontos
+    
+    Em escala 0-500:
+    • MT: erro relativo = 15.42/500 = 3.1% (bom!)
+    • LP: erro relativo = 18.76/500 = 3.8% (bom!)"
+
+5. F_stat = 340.67 (MT) vs 298.45 (LP)
+   "Ambos os modelos são ALTAMENTE significativos globalmente
+    (p < 0.001 para ambos)
+    
+    Interpretação:
+    'O modelo como um todo é muito melhor que predizer sempre a média'"
+
+6. AIC = 6234.5 (MT) vs 6845.2 (LP)
+   "AIC = Akaike Information Criterion
+    • Menor é melhor
+    • MT tem AIC menor → mais bem ajustado
+    • Diferença de 600 é MUITO grande → MT é claramente superior"
+
+7. BIC = 6262.1 (MT) vs 6872.8 (LP)
+   "BIC = Bayesian Information Criterion
+    • Penaliza mais parâmetros que AIC
+    • Chega à mesma conclusão: MT é melhor"
+
+CONCLUSÃO GERAL:
+  ✓ Modelo MT é excelente (R² = 62.3%)
+  ✓ Modelo LP é bom (R² = 58.9%)
+  ✓ Ambos explicam relação forte entre características e proficiência
+  ✓ Mas há espaço para melhoria (não explica 37-41%)
+
+================================================================================
+EXEMPLO 2: COEFICIENTES COM SIGNIFICANCIA
+================================================================================
+
+Arquivo: coeficientes_MT_20260525_143000.csv
+
+Conteúdo:
+┌──────────────────────┬──────────────┬────────┬─────────┬───────────┬─────┬───────────────┬───────────────┐
+│ Termo                │ Coeficiente  │ SE     │ t_value │ p_valor   │ Sig │ IC_95_inf     │ IC_95_sup     │
+├──────────────────────┼──────────────┼────────┼─────────┼───────────┼─────┼───────────────┼───────────────┤
+│ (Intercept)          │ 275.34       │ 2.15   │ 128.07  │ < 0.001   │ *** │ 271.12        │ 279.56        │
+│ INSE_MEDIO_norm      │ 18.45        │ 1.23   │ 15.00   │ < 0.001   │ *** │ 16.04         │ 20.86         │
+│ TIPO_ESCOLA_Privada  │ 28.67        │ 3.42   │ 8.38    │ < 0.001   │ *** │ 22.00         │ 35.34         │
+│ AREA_Rural           │ -12.34       │ 2.87   │ -4.30   │ < 0.001   │ *** │ -17.96        │ -6.72         │
+│ LOCALIZACAO_Interior │ -5.67        │ 1.95   │ -2.91   │ 0.0036    │ **  │ -9.49         │ -1.85         │
+└──────────────────────┴──────────────┴────────┴─────────┴───────────┴─────┴───────────────┴───────────────┘
+
+INTERPRETAÇÃO LINHA POR LINHA:
+
+LINHA 1: (Intercept) = 275.34 ***
+  "Quando todas as variáveis são 0 (categoria de referência):
+   • Escola PÚBLICA, URBANA, de CAPITAL (referências)
+   • INSE_MEDIO normalizado = 0 (INSE na média)
+   
+   → MEDIA_MT prevista = 275.34 pontos
+   
+   Intervalo de confiança 95%: [271.12, 279.56]
+   'Podemos afirmar com 95% confiança que a verdadeira média está entre estes valores'"
+
+LINHA 2: INSE_MEDIO_norm = 18.45 ***
+  "Para CADA 1 DESVIO-PADRÃO de aumento no INSE:
+   
+   MEDIA_MT AUMENTA 18.45 PONTOS
+   
+   Exemplo concreto:
+   • INSE médio em MG = 50.3, dp = 7.2
+   • Uma escola com INSE = 57.5 (50.3 + 7.2) → +18.45 pontos em MT
+   
+   Intervalo de confiança 95%: [16.04, 20.86]
+   'O efeito verdadeiro está entre 16 e 21 pontos, muito provavelmente'
+   
+   p < 0.001: Altamente significativo ***
+   'Certeza praticamente 100% de que este efeito é real'"
+
+LINHA 3: TIPO_ESCOLA_Privada = 28.67 ***
+  "Comparado à escola PÚBLICA (categoria de referência):
+   
+   Escolas PRIVADAS têm MEDIA_MT 28.67 PONTOS MAIOR
+   
+   Exemplo:
+   • Escola pública com INSE = 50, urbana, capital → MEDIA_MT = 275.34
+   • Escola privada com INSE = 50, urbana, capital → MEDIA_MT = 275.34 + 28.67 = 304.01
+   
+   Intervalo de confiança 95%: [22.00, 35.34]
+   'O prêmio de ser privada está entre 22 e 35 pontos'
+   
+   p < 0.001: Altamente significativo ***
+   'Este é um efeito muito real e não por acaso'"
+
+LINHA 4: AREA_Rural = -12.34 ***
+  "Comparado à escola URBANA (categoria de referência):
+   
+   Escolas RURAIS têm MEDIA_MT 12.34 PONTOS MENOR
+   
+   Exemplo:
+   • Escola urbana, pública, INSE = 50, capital → MEDIA_MT = 275.34
+   • Escola rural, pública, INSE = 50, capital → MEDIA_MT = 275.34 - 12.34 = 263.00
+   
+   Intervalo de confiança 95%: [-17.96, -6.72]
+   'A penalidade rural está entre 7 e 18 pontos'
+   
+   p < 0.001: Altamente significativo ***"
+
+LINHA 5: LOCALIZACAO_Interior = -5.67 **
+  "Comparado à escola de CAPITAL (categoria de referência):
+   
+   Escolas do INTERIOR têm MEDIA_MT 5.67 PONTOS MENOR
+   
+   Exemplo:
+   • Escola de capital, pública, INSE = 50, urbana → MEDIA_MT = 275.34
+   • Escola do interior, pública, INSE = 50, urbana → MEDIA_MT = 275.34 - 5.67 = 269.67
+   
+   Intervalo de confiança 95%: [-9.49, -1.85]
+   'A penalidade interior está entre 2 e 9 pontos'
+   
+   p = 0.0036: Significativo **
+   'Chance de ser acaso = 0.36% (bem pequena)'"
+
+RANKING DE IMPORTANCIA (por |t_value|):
+  1º: (Intercept) — t = 128.07 (baseline)
+  2º: INSE_MEDIO_norm — t = 15.00 (MAIOR efeito contínuo)
+  3º: TIPO_ESCOLA_Privada — t = 8.38 (MAIOR efeito categórico)
+  4º: AREA_Rural — t = -4.30
+  5º: LOCALIZACAO_Interior — t = -2.91 (MENOR efeito)
+
+INTERPRETACAO GLOBAL:
+  "A ordem de importância para MEDIA_MT é:
+   1. TIPO DE ESCOLA (privado vs público): ±28.67 pontos
+   2. INSE (riqueza da família): ±18.45 pontos por dp
+   3. TIPO DE AREA (rural vs urbano): ±12.34 pontos
+   4. LOCALIZACAO (interior vs capital): ±5.67 pontos
+   
+   Isto significa que ser PRIVADO é quase tão importante quanto
+   diferença de riqueza socioeconômica entre os extremos!"
+
+================================================================================
+EXEMPLO 3: TESTE DE NORMALIDADE
+================================================================================
+
+Arquivo: resumo_testes_20260525_143000.csv
+Campo: Normalidade_p
+
+RESULTADO: 0.1234 (para MT)
+
+INTERPRETACAO:
+  "Teste Shapiro-Wilk
+   H₀: Os resíduos seguem distribuição normal
+   
+   p = 0.1234 > 0.05
+   
+   CONCLUSÃO: Não rejeitamos H₀
+   'Podemos assumir que os resíduos são aproximadamente normais'"
+
+RESULTADO: 0.0012 (para LP) — PROBLEMA!
+
+INTERPRETACAO:
+  "p = 0.0012 < 0.05
+   
+   CONCLUSÃO: Rejeitamos H₀
+   'Os resíduos NÃO seguem distribuição normal'
+   
+   IMPACTO:
+   • Testes de significância podem estar inválidos
+   • Mas estimativas de coeficientes ainda são válidas
+   • Intervalos de confiança podem estar ligeiramente errados
+   
+   SOLUÇÃO:
+   • Usar bootstrap para CIs robustos
+   • Transformar Y (log, raiz, Box-Cox)
+   • Com n=1050, normalidade não é tão crítica"
+
+================================================================================
+EXEMPLO 4: TESTE DE HOMOCEDASTICIDADE
+================================================================================
+
+Campo: Homocedasticidade_p
+
+RESULTADO: 0.3421 (para MT) — BOM!
+
+INTERPRETACAO:
+  "Teste Breusch-Pagan
+   H₀: Variância dos resíduos é constante
+   
+   p = 0.3421 > 0.05
+   
+   CONCLUSÃO: Não rejeitamos H₀
+   'A variância é homogênea em todo o range de valores preditos'"
+
+RESULTADO: 0.0045 (para LP) — PROBLEMA!
+
+INTERPRETACAO:
+  "p = 0.0045 < 0.05
+   
+   CONCLUSÃO: Rejeitamos H₀
+   'Há heterocedasticidade (variância não-constante)'
+   
+   IMPACTO:
+   • Erros padrão dos coeficientes estão ERRADOS
+   • Intervalos de confiança estão ERRADOS
+   • P-valores estão ERRADOS
+   
+   SOLUÇÃO:
+   • Usar erros padrão robustos (Huber-White)
+   • Transformar Y
+   • Weighted least squares
+   
+   CÓDIGO R:
+   library(sandwich)
+   library(lmtest)
+   coeftest(modelo_lp, vcov = vcovHC(modelo_lp, type = "HC1"))"
+
+================================================================================
+EXEMPLO 5: TESTE DE MULTICOLINEARIDADE (VIF)
+================================================================================
+
+Arquivo: vif_MT_20260525_143000.csv
+
+Conteúdo:
+┌────────────────────┬─────────┬──────────────┐
+│ Variavel           │ VIF     │ Severidade   │
+├────────────────────┼─────────┼──────────────┤
+│ INSE_MEDIO_norm    │ 1.23    │ Aceitável    │
+│ TIPO_ESCOLA_Priv   │ 2.14    │ Aceitável    │
+│ AREA_Rural         │ 1.87    │ Aceitável    │
+│ LOCALIZACAO_Inter  │ 3.45    │ Aceitável    │
+└────────────────────┴─────────┴──────────────┘
+
+INTERPRETACAO:
+  "VIF (Variance Inflation Factor)
+   
+   INSE_MEDIO_norm: VIF = 1.23
+   'Variância do coef é 1.23x maior que seria sem multicolinearidade
+    Nenhuma correlação com outras variáveis'
+   
+   TIPO_ESCOLA_Privada: VIF = 2.14
+   'Correlação leve com outras variáveis, mas aceitável'
+   
+   Todas < 5 → Sem problemas de multicolinearidade
+   
+   ESCALA DE REFERÊNCIA:
+   • VIF = 1      → Sem correlação (ideal)
+   • 1 < VIF < 5  → Aceitável
+   • 5 < VIF < 10 → Moderada (investigar)
+   • VIF > 10     → Severa (remover variáveis)"
+
+EXEMPLO COM PROBLEMA:
+Conteúdo hipotético:
+┌────────────────────┬─────────┬──────────────┐
+│ AREA_Rural         │ 8.23    │ Moderada     │
+│ TIPO_ESCOLA_Priv   │ 11.45   │ SEVERA       │
+└────────────────────┴─────────┴──────────────┘
+
+INTERPRETACAO:
+  "TIPO_ESCOLA_Privada tem VIF = 11.45 → PROBLEMA!
+   
+   Significa:
+   'Privado está altamente correlacionado com outra(s) variável(is)'
+   
+   Provável causa:
+   'Escolas privadas tendem a estar em áreas urbanas
+    Escolas privadas tendem a ter maior INSE'
+   
+   SOLUÇÃO:
+   • Remover uma das variáveis correlacionadas
+   • Combinar em índice único
+   • Usar PCA (Principal Component Analysis)
+   • Usar regularização (Ridge/Lasso)"
+
+================================================================================
+EXEMPLO 6: TESTE DE INDEPENDENCIA (DURBIN-WATSON)
+================================================================================
+
+Campo: DW
+
+RESULTADO: 1.98 — BOM!
+
+INTERPRETACAO:
+  "Durbin-Watson test
+   
+   DW = 1.98 ≈ 2
+   
+   Interpretação:
+   'Os resíduos são independentes (sem autocorrelação)'
+   
+   Escala:
+   • DW = 0   → Autocorrelação positiva EXTREMA
+   • DW = 2   → Independência PERFEITA
+   • DW = 4   → Autocorrelação negativa EXTREMA
+   
+   Intervalo aceitável: 1.5 < DW < 2.5
+   p-valor > 0.05 → Não há autocorrelação significativa"
+
+RESULTADO: 0.87 — PROBLEMA!
+
+INTERPRETACAO:
+  "DW = 0.87 < 1.5
+   
+   CONCLUSÃO: Há autocorrelação POSITIVA dos resíduos
+   
+   Significa:
+   'Um resíduo grande é seguido por outro grande
+    Não estão distribuídos aleatoriamente'
+   
+   Causa comum:
+   'Dados ordenados por tempo ou espaço
+    Observações próximas são mais similares'
+   
+   IMPACTO:
+   • Erros padrão subestimados
+   • P-valores muito pequenos (falsos positivos)
+   • Previsões de intervalos são otimistas demais
+   
+   SOLUÇÃO:
+   • Incluir lags (MEDIA_MT_anterior)
+   • Usar modelos com estrutura temporal
+   • ARIMA ou AR models
+   • Agrupar dados por unidade"
+
+================================================================================
+EXEMPLO 7: OUTLIERS (COOK'S DISTANCE)
+================================================================================
+
+Arquivo: outliers_cooks_MT_*.png (gráfico visual)
+
+O que é Cook's Distance:
+  'Medida de quanto a regressão muda se você remover uma observação
+   
+   Cozinha do Chef:
+   • Sal normal = resíduo pequeno
+   • Sal demais = outlier com valor extremo
+   
+   Mas:
+   • Uma pitada extra de sal em um prato simples = grande mudança (influente!)
+   • Uma pitada extra em um stew com 10 ingredientes = muda pouco (não-influente)
+   
+   Cook's Distance combina os dois: valor extremo + influência'
+
+Limiar: 4 / n_observacoes = 4 / 1050 = 0.0038
+
+INTERPRETACAO:
+  "Se Cook's D > 0.0038 → Observação é influente
+   Se Cook's D < 0.0038 → Observação é normal
+   
+   Encontramos 34 observações influentes
+   Representam 3.2% dos dados (aceitável)
+   
+   O QUE FAZER:
+   • Verificar se são erros de digitação
+   • Verificar se são casos especiais válidos
+   • Refazer regressão sem elas e comparar coeficientes
+   • Se coeficientes mudam muito → são influentes de verdade
+   • Se mudam pouco → modelo é robusto"
+
+EXEMPLO COM PROBLEMA:
+  "Encontramos 150 observações influentes
+   Representam 14.3% dos dados (PROBLEMA!)
+   
+   Significa:
+   'Modelo depende muito de poucos dados extremos
+    Não generaliza bem
+    Resultados podem estar enviesados'
+   
+   AÇÃO IMEDIATA:
+   • Investigar estas 150 escolas
+   • Revisar coleta de dados
+   • Considerar transformação ou subgrupos"
+
+================================================================================
+RESUMO VISUAL — COMO USAR ESTES EXEMPLOS
+================================================================================
+
+Quando você executar os scripts, receberá arquivos similares a estes.
+
+Use este documento assim:
+
+1. ABRIR: seu arquivo gerado (ex: resumo_modelos_*.csv)
+2. PROCURAR: o valor que você quer entender
+3. ENCONTRAR: a seção com exemplo parecido acima
+4. LER: a interpretação
+5. ADAPTAR: aos seus dados específicos
+
+CHECKLIST RÁPIDO:
+
+□ R² > 0.5? 
+  → Se sim: ótimo, modelo explica bem
+  → Se não: modelo fraco, revisar
+
+□ Todos p < 0.05?
+  → Se sim: todas variáveis significativas
+  → Se não: considerar remover não-significativas
+
+□ Normalidade p > 0.05?
+  → Se sim: resíduos são normais
+  → Se não: resultado menos confiável
+
+□ Homocedasticidade p > 0.05?
+  → Se sim: variância é constante
+  → Se não: usar erros robustos
+
+□ VIF < 5?
+  → Se sim: sem multicolinearidade
+  → Se não: remover variáveis correlacionadas
+
+□ DW entre 1.5-2.5?
+  → Se sim: independência OK
+  → Se não: há autocorrelação
+
+✓ Se passar em todos → MODELO EXCELENTE!
+
+================================================================================
+FIM DOS EXEMPLOS
+================================================================================
+
+Para mais detalhes técnicos, ver README.md
+Para instruções de uso, ver GUIA_RAPIDO.txt

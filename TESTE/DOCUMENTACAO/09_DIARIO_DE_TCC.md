@@ -379,6 +379,196 @@ outputs_figuras/
 
 ---
 
+### 🟡 25 de Maio de 2026
+
+**Horário:** 15h30 – 17h00
+**Fase:** Implementação de Regressão Linear Múltipla com Variáveis Dummy
+**Status:** ✅ Concluído com sucesso
+
+---
+
+#### Atividades Realizadas
+
+**Criação de nova seção 4 — Análise de Regressão Linear:**
+
+Desenvolvimento de estrutura completa para modelagem preditiva da proficiência das escolas.
+
+##### 1. Estrutura de Pastas
+
+- ✅ Criação de diretório `TESTE/4_REGRESSAO_LINEAR/` com 4 subdiretorios:
+  - `Scripts/` — 2 scripts R
+  - `outputs_modelos/` — Modelos RDS reutilizáveis
+  - `outputs_tabelas/` — Tabelas CSV de resultados
+  - `outputs_diagnosticos/` — Resultados de testes de pressupostos
+  - `outputs_figuras/` — Gráficos PNG
+
+##### 2. Script Principal: `regressao_linear_multipla.r` (446 linhas)
+
+Modelagem preditiva com variáveis dummy:
+- ✅ Detecção automática de caminhos (RAIZ via `detectar_raiz()`)
+- ✅ Carregamento de metadados_escolas_*.csv gerado por `classificar_escolas.r`
+- ✅ **Criação automática de variáveis dummy:**
+  - `TIPO_ESCOLA_Privada` (referência: Pública)
+  - `AREA_Rural` (referência: Urbana)
+  - `LOCALIZACAO_Interior` (referência: Capital)
+- ✅ **Normalização (z-score)** de variáveis contínuas (INSE)
+- ✅ Ajuste de 2 modelos de regressão linear (MT e LP)
+- ✅ Extração de coeficientes com:
+  - Valores β (efeito estimado)
+  - Erro padrão
+  - Estatística t
+  - P-valor com significância (*, **, ***)
+  - Intervalo de confiança 95%
+- ✅ Diagnósticos do modelo (R², RMSE, AIC, BIC, DW)
+- ✅ Geração de 8 gráficos:
+  - 4 painéis de diagnóstico residuos (Fitted, Q-Q, Scale-Location, Histogram)
+  - Gráficos de coeficientes com IC
+  - 1 para MT, 1 para LP
+- ✅ Salvamento de modelos em RDS (reutilizáveis)
+- ✅ Versionamento com timestamps (sem sobrescrita)
+
+**Saída:** 8 arquivos (3 tabelas CSV, 2 modelos RDS, 8 gráficos PNG)
+
+##### 3. Script Complementar: `testes_pressupostos.r` (490 linhas)
+
+Validação dos 5 pressupostos da regressão linear:
+- ✅ **Normalidade** — Teste Shapiro-Wilk
+- ✅ **Homocedasticidade** — Teste Breusch-Pagan
+- ✅ **Multicolinearidade** — VIF (Variance Inflation Factor)
+- ✅ **Independência** — Durbin-Watson
+- ✅ **Outliers influentes** — Cook's Distance (Top 50)
+
+Implementação:
+- ✅ Leitura automática dos modelos RDS gerados pelo Passo 1
+- ✅ Tabela consolidada de resultados de testes
+- ✅ Diagnóstico por variável (VIF)
+- ✅ Gráficos de multicolinearidade (VIF)
+- ✅ Gráficos de outliers (Cook's Distance)
+- ✅ Interpretação automática com recomendações
+
+**Saída:** 6 arquivos (3 tabelas CSV, 3 gráficos PNG)
+
+##### 4. Documentação Técnica: `README.md` (49 linhas)
+
+- ✅ Visão geral da análise
+- ✅ Estrutura de pastas detalhada
+- ✅ Instruções de uso (3 passos)
+- ✅ Interpretação de coeficientes com exemplos
+- ✅ Explicação de cada teste de pressuposto
+- ✅ Tabelas de referência (escala de VIF, Durbin-Watson)
+- ✅ Troubleshooting de problemas comuns
+- ✅ Referências matemáticas (fórmula, notação)
+- ✅ Fluxograma do processo
+
+##### 5. Guia Prático: `GUIA_RAPIDO.txt` (361 linhas)
+
+- ✅ 3 passos para começar (resumido)
+- ✅ Exemplo real de interpretação (tabelas fictícias)
+- ✅ Checklist de qualidade do modelo
+- ✅ 10 FAQs respondidas:
+  - Diferença entre coeficiente e p-valor
+  - Quando remover variáveis
+  - Por que criar dummies
+  - Como interpretar dummies
+  - O que significa "normalizado"
+  - Como fazer previsões com modelo
+- ✅ 5 dicas práticas
+- ✅ Estrutura esperada de pastas
+- ✅ Troubleshooting expandido
+
+##### 6. Exemplos Detalhados: `EXEMPLOS_INTERPRETACAO.txt` (500+ linhas)
+
+- ✅ 7 exemplos reais com valores fictícios:
+  1. Tabela de resumo de modelos
+  2. Coeficientes com interpretação linha-a-linha
+  3. Teste de normalidade
+  4. Teste de homocedasticidade
+  5. Teste de multicolinearidade (VIF)
+  6. Teste de independência (Durbin-Watson)
+  7. Outliers (Cook's Distance)
+- ✅ Cada exemplo inclui:
+  - Valores fictícios reais
+  - Interpretação técnica
+  - Interpretação prática
+  - Exemplos de "o que fazer"
+- ✅ Checklist visual de qualidade
+- ✅ Tabelas comparativas
+
+#### Recursos Técnicos Implementados
+
+**Funcionalidades automáticas:**
+- [x] Detecção de RAIZ sem hard-coding de caminhos
+- [x] Criação de dummies com referência automática
+- [x] Normalização (z-score) para comparabilidade
+- [x] Extração de coeficientes com IC 95%
+- [x] Cálculo de VIF por variável
+- [x] Identificação de Cook's Distance
+- [x] Versionamento com timestamps
+- [x] Não sobrescreve arquivos anteriores
+
+**Validações implementadas:**
+- [x] Verifica se metadados_escolas_*.csv existe
+- [x] Verifica se variáveis necessárias existem
+- [x] Remove NAs automaticamente
+- [x] Reporta quantidade de observações em cada etapa
+
+**Visualizações:**
+- [x] 4 painéis de diagnóstico de resíduos (residuos vs fitted, Q-Q, scale-location, histogram)
+- [x] Gráfico de coeficientes com IC e significância visual
+- [x] Gráfico de VIF com cores (aceitável, moderada, severa)
+- [x] Gráfico de Cook's Distance (Top 50 pontos influentes)
+
+#### Fluxo de Execução Esperado
+
+```
+PASSO 1: classificar_escolas.r (3_ANALISE_DE_GRUPOS)
+  ↓
+  Gera: metadados_escolas_*.csv
+
+PASSO 2: regressao_linear_multipla.r
+  ↓
+  Ajusta modelos MT e LP
+  Gera: 8 arquivos (tabelas + gráficos + RDS)
+
+PASSO 3: testes_pressupostos.r [Opcional, mas recomendado]
+  ↓
+  Valida 5 pressupostos
+  Gera: 6 arquivos (diagnósticos + gráficos)
+```
+
+#### Dependências Necessárias
+
+```r
+install.packages(c(
+  "tidyverse",    # ggplot2, dplyr, readr, tidyr
+  "broom",        # tidying model outputs
+  "patchwork",    # composição de gráficos
+  "car",          # VIF, Durbin-Watson
+  "lmtest"        # Breusch-Pagan test
+))
+```
+
+#### Próximos Passos
+
+- [ ] Executar `regressao_linear_multipla.r` com dados reais
+- [ ] Validar se coeficientes fazem sentido teórico
+- [ ] Executar `testes_pressupostos.r` para validar pressupostos
+- [ ] Documentar resultados na redação do TCC
+- [ ] Considerar análises adicionais:
+  - Variáveis de interação (ex: TIPO_ESCOLA × AREA)
+  - Regressão segmentada por grupos
+  - Modelos não-lineares (transformações)
+
+#### Integração com Análise Anterior
+
+| Fase | Escopo | Output |
+|------|--------|--------|
+| 1-3 | Intra-escola (correlações) | Quais variáveis correlacionam? |
+| 4-6 | Inter-grupos (comparações) | Grupos diferem entre si? |
+| **7 (NOVO)** | **Modelagem preditiva** | **Qual é o efeito de cada variável?** |
+
+---
+
 ## 📊 Resumo Geral
 
 | Período | Scripts | Análises | Status |
@@ -387,10 +577,12 @@ outputs_figuras/
 | 11 Mai (manhã) | 3 | Inter-grupos (comparações, clusters) | ✅ |
 | 11 Mai (tarde) | Reorganização | Documentação estruturada | ✅ |
 | 13 Mai | 1 (refinado) | Filtro ALTO/BAIXO em dendrograma | ✅ |
-| **Total** | **7 scripts** | **Visão 360° dos dados + refinamentos** | **✅ Pronto** |
+| 25 Mai | 2 + docs | Regressão Linear Múltipla + 3 guias | ✅ |
+| **Total** | **9 scripts** | **Análise 360° + Modelagem Preditiva** | **✅ Pronto** |
 
 ---
 
-**Atualizado:** 13 de Maio de 2026  
-**Próxima revisão:** Após execução com dados reais
+**Atualizado:** 25 de Maio de 2026  
+**Status:** Fase 7 (Regressão Linear Múltipla) concluída  
+**Próxima revisão:** Testes com dados reais e redação final do TCC
 

@@ -1,7 +1,7 @@
 # 📚 Índice de Documentação — Análise SAEB 2023
 
-**Última atualização:** 13 de Maio de 2026  
-**Status:** ✅ Estrutura Reorganizada e Documentação Consolidada
+**Última atualização:** 25 de Maio de 2026  
+**Status:** ✅ Estrutura Completa com Regressão Linear Múltipla
 
 ---
 
@@ -30,6 +30,16 @@
 
 10. **[10_RESUMO_ANALISE_GRUPOS.md](10_RESUMO_ANALISE_GRUPOS.md)** — O que cada script faz  
    *Explicação completa de `classificar_escolas.r`, `comparar_grupos.r`, `dendrograma_analise_completa.r`.*
+
+### Para Análise de Regressão Linear (NOVO)
+11. **[11_GUIA_REGRESSAO_LINEAR.md](../4_REGRESSAO_LINEAR/README.md)** — Regressão Linear Múltipla  
+   *Modelagem preditiva com variáveis dummy. Includes pressupostos e diagnósticos.*
+
+12. **[GUIA_RAPIDO_REGRESSAO.txt](../4_REGRESSAO_LINEAR/GUIA_RAPIDO.txt)** — Início rápido em regressão  
+   *3 passos, exemplos, FAQs, checklist de qualidade do modelo.*
+
+13. **[EXEMPLOS_INTERPRETACAO.txt](../4_REGRESSAO_LINEAR/EXEMPLOS_INTERPRETACAO.txt)** — Exemplos com interpretação  
+   *7 exemplos reais com tabelas fictícias. Como ler cada resultado.*
 
 ### Referência Técnica
 7. **[07_MAPA_ESTRUTURA_PASTAS.txt](07_MAPA_ESTRUTURA_PASTAS.txt)** — Estrutura visual completa  
@@ -104,6 +114,9 @@ Algo Quebrou?
 | 09_DIARIO_DE_TCC | Registro | Rastrear progresso | 10 min |
 | 10_RESUMO_ANALISE_GRUPOS | Explicativo | Entender cada script | 15 min |
 | HISTORICO_MUDANCAS | Referência | Saber o que mudou | 10 min |
+| **4_REGRESSAO_LINEAR/README** | **Técnico** | **Metodologia de regressão** | **20 min** |
+| **GUIA_RAPIDO_REGRESSAO** | **Tutorial** | **Executar regressão rápido** | **10 min** |
+| **EXEMPLOS_INTERPRETACAO** | **Prático** | **Entender resultados** | **30 min** |
 
 ---
 
@@ -124,7 +137,19 @@ TESTE/
 │     ├─ classificar_escolas.r      ← PASSO 4
 │     ├─ comparar_grupos.r          ← PASSO 5
 │     ├─ comparar_duas_escolas.r    ← PASSO 6 (opcional)
-│     └─ dendrograma.r              ← PASSO 7
+│     └─ dendrograma_analise_completa.r  ← PASSO 7
+│
+├─ 4_REGRESSAO_LINEAR/             ← NOVO
+│  ├─ Scripts/
+│  │  ├─ regressao_linear_multipla.r  ← PASSO 8
+│  │  └─ testes_pressupostos.r        ← PASSO 9 (complementar)
+│  ├─ outputs_modelos/              ← Modelos RDS
+│  ├─ outputs_tabelas/              ← Resultados CSV
+│  ├─ outputs_diagnosticos/         ← Testes de pressupostos
+│  ├─ outputs_figuras/              ← Gráficos PNG
+│  ├─ README.md                     ← Documentação técnica
+│  ├─ GUIA_RAPIDO.txt               ← Guia prático
+│  └─ EXEMPLOS_INTERPRETACAO.txt    ← Exemplos detalhados
 │
 ├─ DOCUMENTACAO/
 │  ├─ 00_INDEX.md                  ← Você está aqui
@@ -135,6 +160,8 @@ TESTE/
 │  ├─ 05_DOCUMENTACAO_PASSOS_TCC.txt
 │  ├─ 06_GUIA_INTERPRETAR_RESULTADOS.txt
 │  ├─ 07_MAPA_ESTRUTURA_PASTAS.txt
+│  ├─ 09_DIARIO_DE_TCC.md
+│  ├─ 10_RESUMO_ANALISE_GRUPOS.md
 │  ├─ HISTORICO_MUDANCAS.md
 │  └─ utils_saeb.r                 ← Funções compartilhadas
 │
@@ -158,6 +185,9 @@ TESTE/
 
 4. **Quer detalhes?**  
    Vá para: `03_ROTEIRO_EXECUCAO.txt`
+
+5. **Quer fazer regressão linear?**  
+   Vá para: `4_REGRESSAO_LINEAR/GUIA_RAPIDO.txt`
 
 ---
 
@@ -191,6 +221,6 @@ TESTE/
 
 ---
 
-**Última atualização:** 11/05/2026  
-**Versão:** 1.0 (Reorganizado com estrutura temática)
+**Última atualização:** 25/05/2026  
+**Versão:** 1.1 (Incluida Seção 4: Regressão Linear Múltipla)
 
