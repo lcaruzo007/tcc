@@ -1,0 +1,4 @@
+Variavel,Referencia,Descricao
+TIPO_ESCOLA,Publica,Categoria base para comparação de tipo de escola
+AREA,Capital,Categoria base para comparação de localização geográfica
+LOCALIZACAO,Urbana,Categoria base para comparação de área (urbana/rural)

@@ -78,50 +78,27 @@
 library(tidyverse)
 library(broom)
 library(patchwork)
+if (!requireNamespace("car", quietly = TRUE)) install.packages("car")
 library(car)
+
 
 # =============================================================================
 # DETECÇÃO AUTOMÁTICA DE CAMINHOS
 # =============================================================================
 
-detectar_raiz <- function() {
-  cwd <- getwd()
-  while (cwd != dirname(cwd)) {
-    if (dir.exists(file.path(cwd, "TESTE"))) {
-      message("✓ Projeto encontrado em: ", cwd)
-      return(cwd)
-    }
-    cwd <- dirname(cwd)
-  }
-  message("⚠️  Pasta 'TESTE' não encontrada automaticamente.")
-  if (interactive()) {
-    raiz <- utils::choose.dir(default = getwd(),
-                              caption = "Selecione a pasta raiz do projeto TCC")
-    if (is.na(raiz) || raiz == "") stop("Caminho não selecionado. Encerrando.")
-    message("✓ Pasta selecionada: ", raiz)
-    return(raiz)
-  } else {
-    stop("Script não pode rodar em modo não-interativo sem encontrar o caminho.")
-  }
-}
+RAIZ <- "C:/Users/13756596699/tcc"
 
-RAIZ             <- detectar_raiz()
-
-DIR_DADOS_BRUTOS     <- file.path(RAIZ, "MICRODADOS_SAEB_2023", "DADOS")
-ARQUIVO_DADOS_BRUTOS <- arquivo_mais_recente(DIR_DADOS_BRUTOS, "^TS_ALUNO_34EM\.csv$")
+ARQUIVO_DADOS_BRUTOS <- file.path(RAIZ, "MICRODADOS_SAEB_2023/DADOS/TS_ALUNO_34EM.csv")
 
 DIR_MODELOS      <- file.path(RAIZ, "TESTE/4_REGRESSAO_LINEAR/outputs_modelos")
 DIR_DIAGNOSTICOS <- file.path(RAIZ, "TESTE/4_REGRESSAO_LINEAR/outputs_diagnosticos")
 DIR_FIGURAS      <- file.path(RAIZ, "TESTE/4_REGRESSAO_LINEAR/outputs_figuras")
 DIR_TABELAS      <- file.path(RAIZ, "TESTE/4_REGRESSAO_LINEAR/outputs_tabelas")
 
-message("Caminhos configurados:")
-message("  Dados brutos: ", ARQUIVO_DADOS_BRUTOS)
-message("  Modelos:      ", DIR_MODELOS)
-message("  Figuras:      ", DIR_FIGURAS)
-message("  Tabelas:      ", DIR_TABELAS, "\n")
-
-# =============================================================================
+message("Arquivo de dados: ", ARQUIVO_DADOS_BRUTOS)
+message("Existe? ", file.exists(ARQUIVO_DADOS_BRUTOS))
+# =========================================================
+====================
 # CONFIGURAÇÕES
 # =============================================================================
 
@@ -142,27 +119,46 @@ VARS_CONTINUAS      <- c("INSE_MEDIO")
 ALPHA               <- 0.05
 
 # =============================================================================
-# FUNÇÕES UTILITÁRIAS
+# FUNÇÃO: CRIAR DUMMIES COM REFERÊNCIAS EXPLÍCITAS
 # =============================================================================
 
-arquivo_mais_recente <- function(pasta, padrao) {
-  arqs <- list.files(pasta, pattern = padrao, full.names = TRUE)
-  if (length(arqs) == 0L) return(NULL)
-  arqs[which.max(file.info(arqs)$mtime)]
-}
-
-criar_dummies <- function(df, vars_cat) {
+criar_dummies_com_refs <- function(df, vars_cat, refs_explícitas = NULL) {
+  # refs_explícitas: named list. Ex: list(TIPO_ESCOLA = "Publica", AREA = "Capital")
+  # Se não fornecido, usa o primeiro valor ordenado como referência (aviso emitido)
+  
   vars_ok      <- intersect(vars_cat, names(df))
   dummies_list <- list()
+  refs_usadas  <- list()
+  
   for (var in vars_ok) {
     valores <- sort(unique(na.omit(df[[var]])))
-    for (valor in valores[-1]) {           # primeiro = referência
+    
+    # Determinar referência
+    if (!is.null(refs_explícitas) && var %in% names(refs_explícitas)) {
+      ref <- refs_explícitas[[var]]
+      if (!(ref %in% valores)) {
+        warning("Referência '", ref, "' não encontrada em ", var, 
+                ". Usando primeira ordenada: ", valores[1])
+        ref <- valores[1]
+      }
+    } else {
+      ref <- valores[1]  # Primeira em ordem alfabética = referência
+      warning("Nenhuma referência explícita para ", var, 
+              ". Usando categoria de referência: ", ref)
+    }
+    
+    refs_usadas[[var]] <- ref
+    
+    # Criar dummies para todas EXCETO a referência
+    for (valor in valores[valores != ref]) {
       nome          <- paste0(var, "_", valor)
       df[[nome]]    <- as.integer(df[[var]] == valor)
-      dummies_list[[nome]] <- c(var, valor)
+      dummies_list[[nome]] <- c(var, valor, "vs", ref)
     }
   }
+  
   attr(df, "dummies_criadas") <- dummies_list
+  attr(df, "refs_dummies")    <- refs_usadas
   df
 }
 
@@ -257,6 +253,13 @@ message("  Proficiência válida:  IN_PROFICIENCIA_MT/LP = 1")
 message("  Faixa de valores:     PROFICIENCIA_SAEB entre ", PROF_MIN, " e ", PROF_MAX)
 message("  Mínimo alunos/escola: ", MIN_ALUNOS_ESCOLA)
 
+# Criar dummies com referências EXPLÍCITAS
+refs_modelo <- list(
+  TIPO_ESCOLA = "Publica",
+  AREA        = "Capital",
+  LOCALIZACAO = "Urbana"
+)
+
 # ── Médias de proficiência ────────────────────────────────────────────────────
 media_prof <- dados_brutos |>
   filter(
@@ -336,6 +339,19 @@ write_csv(dados_escola,
           file.path(DIR_TABELAS, paste0("base_escolas_agregada_", ts_global, ".csv")))
 message("\nBase agregada salva: base_escolas_agregada_", ts_global, ".csv")
 
+# Documentar referências utilizadas
+refs_doc <- tibble(
+  Variavel  = c("TIPO_ESCOLA", "AREA", "LOCALIZACAO"),
+  Referencia = c(refs_modelo$TIPO_ESCOLA, refs_modelo$AREA, refs_modelo$LOCALIZACAO),
+  Descricao = c(
+    "Categoria base para comparação de tipo de escola",
+    "Categoria base para comparação de localização geográfica",
+    "Categoria base para comparação de área (urbana/rural)"
+  )
+)
+write_csv(refs_doc, file.path(DIR_TABELAS, paste0("REFERENCIAS_MODELOS_", ts_global, ".csv")))
+message("Referências documentadas: REFERENCIAS_MODELOS_", ts_global, ".csv")
+
 # =============================================================================
 # ETAPA 3: PREPARAR DADOS DO MODELO
 # =============================================================================
@@ -344,14 +360,35 @@ message("\n", strrep("-", 50))
 message("ETAPA 3: PREPARANDO DADOS DO MODELO")
 message(strrep("-", 50))
 
-# Criar dummies
-dados_modelo <- criar_dummies(dados_escola, VARS_CATEGORICAS)
-dummies_info <- attr(dados_modelo, "dummies_criadas")
+# Validar categóricas antes de criar dummies
+message("\nValidação de valores faltantes nas categóricas:")
+for (var in VARS_CATEGORICAS) {
+  n_na <- sum(is.na(dados_escola[[var]]))
+  if (n_na > 0) {
+    warning("⚠️  ", var, " tem ", n_na, " valores faltantes. Serão excluídos.")
+    dados_escola <- dados_escola |> filter(!is.na(!!sym(var)))
+  } else {
+    message("  ✓ ", var, ": sem faltantes")
+  }
+}
 
-message("Variáveis dummy criadas: ", length(dummies_info))
+message("\nEscolas após remoção de NAs nas categóricas: ", nrow(dados_escola))
+
+
+
+dados_modelo <- criar_dummies_com_refs(dados_escola, VARS_CATEGORICAS, refs_explícitas = refs_modelo)
+dummies_info <- attr(dados_modelo, "dummies_criadas")
+refs_usadas  <- attr(dados_modelo, "refs_dummies")
+
+message("\nReferências utilizadas no modelo:")
+for (var in names(refs_usadas)) {
+  message("  ✓ ", var, " = ", refs_usadas[[var]])
+}
+
+message("\nVariáveis dummy criadas: ", length(dummies_info))
 for (dummy_name in names(dummies_info)) {
   info <- dummies_info[[dummy_name]]
-  message("  + ", dummy_name, "  (ref: ", info[1], " = primeiros da ordem)")
+  message("  + ", dummy_name, "  (", info[3], " ", info[4], ")")
 }
 
 # Normalizar INSE (z-score)
@@ -399,6 +436,41 @@ message("  F-statistic: ", round(summary_lp$fstatistic[1], 2))
 message("  RMSE:        ", round(sqrt(mean(summary_lp$residuals^2)), 2))
 
 # =============================================================================
+# ETAPA 4b: VERIFICAR MULTICOLINEARIDADE (VIF)
+# =============================================================================
+
+message("\n", strrep("-", 50))
+message("ETAPA 4b: MULTICOLINEARIDADE (VIF)")
+message(strrep("-", 50))
+
+vif_mt <- car::vif(modelo_mt)
+vif_lp <- car::vif(modelo_lp)
+
+message("\nFatores de Inflação de Variância (VIF):")
+message("  MT — Mínimo: ", round(min(vif_mt), 2), " | Máximo: ", round(max(vif_mt), 2))
+message("  LP — Mínimo: ", round(min(vif_lp), 2), " | Máximo: ", round(max(vif_lp), 2))
+message("\n  (Interpretação: VIF > 10 = multicolinearidade severa | VIF > 5 = problemático)")
+
+# Salvar VIF para referência
+vif_df <- tibble(
+  Variavel = names(vif_mt),
+  VIF_MT   = as.numeric(vif_mt),
+  VIF_LP   = as.numeric(vif_lp),
+  Status_MT = case_when(
+    as.numeric(vif_mt) > 10 ~ "CRÍTICO (>10)",
+    as.numeric(vif_mt) > 5  ~ "Problemático (5-10)",
+    TRUE ~ "OK (<5)"
+  ),
+  Status_LP = case_when(
+    as.numeric(vif_lp) > 10 ~ "CRÍTICO (>10)",
+    as.numeric(vif_lp) > 5  ~ "Problemático (5-10)",
+    TRUE ~ "OK (<5)"
+  )
+)
+write_csv(vif_df, file.path(DIR_TABELAS, paste0("VIF_multicolinearidade_", ts_global, ".csv")))
+message("\nVIF salvo em: VIF_multicolinearidade_", ts_global, ".csv")
+
+# =============================================================================
 # ETAPA 5: COEFICIENTES
 # =============================================================================
 
@@ -436,6 +508,305 @@ message("Coeficientes MT:")
 print(coef_mt, n = Inf)
 message("\nCoeficientes LP:")
 print(coef_lp, n = Inf)
+
+# =============================================================================
+# ETAPA 5b: MODELOS COM TODAS AS REFERÊNCIAS (COMPARAÇÕES SIMÉTRICAS)
+# =============================================================================
+
+message("\n", strrep("-", 50))
+message("ETAPA 5b: GERANDO COMPARAÇÕES COM TODAS AS REFERÊNCIAS")
+message(strrep("-", 50))
+
+# Função auxiliar: criar dummies com referência específica
+criar_dummies_ref_especifica <- function(df, vars_cat, ref_especifica) {
+  # ref_especifica: named list. Ex: list(TIPO_ESCOLA = "Privada", ...)
+  
+  vars_ok      <- intersect(vars_cat, names(df))
+  dummies_list <- list()
+  
+  for (var in vars_ok) {
+    valores <- sort(unique(na.omit(df[[var]])))
+    ref <- ref_especifica[[var]]
+    
+    # Criar dummies para todas EXCETO a referência
+    for (valor in valores[valores != ref]) {
+      nome          <- paste0(var, "_", valor)
+      df[[nome]]    <- as.integer(df[[var]] == valor)
+      dummies_list[[nome]] <- c(var, valor, "vs", ref)
+    }
+  }
+  
+  attr(df, "dummies_criadas") <- dummies_list
+  df
+}
+
+# Obter todas as categorias de cada variável categórica
+categorias_unicas <- list()
+for (var in VARS_CATEGORICAS) {
+  categorias_unicas[[var]] <- sort(unique(na.omit(dados_escola[[var]])))
+}
+
+message("\nCategorias encontradas:")
+for (var in names(categorias_unicas)) {
+  message("  ", var, ": ", paste(categorias_unicas[[var]], collapse = ", "))
+}
+
+# Gerar todos os modelos possíveis com diferentes referências
+modelos_comparacao <- list()
+coef_comparacao_mt <- list()
+coef_comparacao_lp <- list()
+
+# Iterar sobre todas as combinações de referências
+for (ref_tipo in categorias_unicas$TIPO_ESCOLA) {
+  for (ref_area in categorias_unicas$AREA) {
+    for (ref_loc in categorias_unicas$LOCALIZACAO) {
+      
+      ref_combo <- list(
+        TIPO_ESCOLA = ref_tipo,
+        AREA        = ref_area,
+        LOCALIZACAO = ref_loc
+      )
+      
+      # Criar chave para identificar esta combinação
+      chave <- paste(ref_tipo, ref_area, ref_loc, sep = "_")
+      
+      # Preparar dados com as novas dummies
+      dados_temp <- dados_modelo |> 
+        select(ID_ESCOLA, MEDIA_MT, MEDIA_LP, INSE_MEDIO_norm, TIPO_ESCOLA, AREA, LOCALIZACAO)
+      
+      dados_temp <- criar_dummies_ref_especifica(dados_temp, VARS_CATEGORICAS, ref_combo)
+      
+      # Definir preditoras
+      preditoras_temp <- setdiff(
+        names(dados_temp),
+        c("ID_ESCOLA", "MEDIA_MT", "MEDIA_LP", VARS_CATEGORICAS, "INSE_MEDIO")
+      )
+      
+      # Ajustar modelos
+      formula_mt_temp <- as.formula(paste("MEDIA_MT ~", paste(preditoras_temp, collapse = " + ")))
+      formula_lp_temp <- as.formula(paste("MEDIA_LP ~", paste(preditoras_temp, collapse = " + ")))
+      
+      mod_mt <- lm(formula_mt_temp, data = dados_temp)
+      mod_lp <- lm(formula_lp_temp, data = dados_temp)
+      
+      modelos_comparacao[[chave]] <- list(mt = mod_mt, lp = mod_lp)
+      coef_comparacao_mt[[chave]] <- extrair_coef(mod_mt) |> 
+        mutate(Referencia = chave)
+      coef_comparacao_lp[[chave]] <- extrair_coef(mod_lp) |> 
+        mutate(Referencia = chave)
+    }
+  }
+}
+
+message("✓ ", length(modelos_comparacao), " modelos gerados com referências diferentes")
+
+# Consolidar coeficientes em uma tabela única
+tabela_comparacao_mt <- bind_rows(coef_comparacao_mt) |>
+  filter(Termo != "(Intercept)") |>
+  arrange(Termo, Referencia)
+
+tabela_comparacao_lp <- bind_rows(coef_comparacao_lp) |>
+  filter(Termo != "(Intercept)") |>
+  arrange(Termo, Referencia)
+
+write_csv(tabela_comparacao_mt, 
+          file.path(DIR_TABELAS, paste0("comparacao_todas_referencias_MT_", ts_global, ".csv")))
+write_csv(tabela_comparacao_lp, 
+          file.path(DIR_TABELAS, paste0("comparacao_todas_referencias_LP_", ts_global, ".csv")))
+
+message("\n✓ Tabelas de comparação salvas:")
+message("  comparacao_todas_referencias_MT_", ts_global, ".csv")
+message("  comparacao_todas_referencias_LP_", ts_global, ".csv")
+
+# =============================================================================
+# ETAPA 5c: GRÁFICO DE COEFICIENTES — VERSÃO TCC
+# =============================================================================
+
+n_escolas   <- nrow(dados_modelo)
+r2_mt       <- round(summary_mt$adj.r.squared * 100, 1)
+r2_lp       <- round(summary_lp$adj.r.squared * 100, 1)
+
+# ── Preparar dados ────────────────────────────────────────────────────────────
+comparacao_simetrica <- bind_rows(
+  coef_mt |> mutate(Modelo = "Matemática (MT)"),
+  coef_lp |> mutate(Modelo = "Língua Portuguesa (LP)")
+) |>
+  filter(Termo != "(Intercept)") |>
+  mutate(
+    Variavel = case_when(
+      Termo == "TIPO_ESCOLA_Privada" ~ "Tipo de escola\nPrivada",
+      Termo == "AREA_Interior"       ~ "Localização geográfica\nInterior",
+      Termo == "AREA_Capital"        ~ "Localização geográfica\nCapital",
+      Termo == "LOCALIZACAO_Rural"   ~ "Zona\nRural",
+      Termo == "LOCALIZACAO_Urbana"  ~ "Zona\nUrbana",
+      Termo == "INSE_MEDIO_norm"     ~ "Nível socioeconômico\n(INSE +1 desvio-padrão)",
+      TRUE ~ Termo 
+    ),
+    Grupo = case_when(
+      Termo == "INSE_MEDIO_norm"                        ~ "1. Nível Socioeconômico",
+      Termo == "TIPO_ESCOLA_Privada"                    ~ "2. Tipo de Escola",
+      Termo %in% c("AREA_Interior", "AREA_Capital")     ~ "3. Localização Geográfica",
+      Termo %in% c("LOCALIZACAO_Rural","LOCALIZACAO_Urbana") ~ "3. Localização Geográfica",
+      TRUE ~ "Outro"
+    ),
+    Variavel = factor(Variavel, levels = c(
+      "Zona\nRural",
+      "Zona\nUrbana",
+      "Localização geográfica\nCapital",
+      "Localização geográfica\nInterior",
+      "Tipo de escola\nPrivada",
+      "Nível socioeconômico\n(INSE +1 desvio-padrão)"
+    )),
+    Magnitude = case_when(
+      abs(Coef) >= 20 ~ "Alto",
+      abs(Coef) >= 10 ~ "Médio",
+      TRUE            ~ "Baixo"
+    )
+  )
+
+# ── Separadores de grupo (linhas horizontais entre categorias) ────────────────
+separadores_y <- c(1.5, 2.5)   # entre Rural/Interior e Interior/Tipo, Tipo/INSE
+
+# ── Paleta: versão colorida E P&B geradas juntas ─────────────────────────────
+gerar_grafico_coef_tcc <- function(colorido = TRUE) {
+
+  if (colorido) {
+    cores   <- c("Matemática (MT)" = "#1B6CA8", "Língua Portuguesa (LP)" = "#C75B2A")
+    formas  <- c("Matemática (MT)" = 21,        "Língua Portuguesa (LP)" = 24)
+    fill_ic <- c("Matemática (MT)" = "#1B6CA8", "Língua Portuguesa (LP)" = "#C75B2A")
+    cor_mag <- c("Alto" = "#8B0000", "Médio" = "#555555", "Baixo" = "#555555")
+  } else {
+    cores   <- c("Matemática (MT)" = "#111111", "Língua Portuguesa (LP)" = "#666666")
+    formas  <- c("Matemática (MT)" = 21,        "Língua Portuguesa (LP)" = 24)
+    fill_ic <- c("Matemática (MT)" = "#111111", "Língua Portuguesa (LP)" = "#666666")
+    cor_mag <- c("Alto" = "#000000", "Médio" = "#333333", "Baixo" = "#333333")
+  }
+
+  ggplot(comparacao_simetrica,
+         aes(x = Variavel, y = Coef, colour = Modelo,
+             shape = Modelo, fill = Modelo)) +
+
+    # ── Faixa de destaque para efeito alto ───────────────────────────────────
+    annotate("rect",
+             xmin = 3.5, xmax = 4.5,          # posição do INSE no eixo x (after coord_flip = y)
+             ymin = -Inf, ymax = Inf,
+             fill = if (colorido) "#EEF4FB" else "#F0F0F0",
+             alpha = 0.6) +
+
+    # ── Separadores de grupo ─────────────────────────────────────────────────
+    geom_hline(yintercept = separadores_y,
+               linetype = "solid", colour = "#CCCCCC", linewidth = 0.6) +
+
+    # ── Linha zero ───────────────────────────────────────────────────────────
+    geom_vline(xintercept = 0,
+               linetype = "dashed", colour = "#999999", linewidth = 0.8) +
+
+    # ── IC 95% ───────────────────────────────────────────────────────────────
+    geom_linerange(aes(ymin = IC_95_inf, ymax = IC_95_sup),
+                   position = position_dodge(width = 0.55),
+                   linewidth = 1.3, alpha = 0.45) +
+
+    # ── Pontos ───────────────────────────────────────────────────────────────
+    geom_point(position = position_dodge(width = 0.55),
+               size = 5, stroke = 1.4,
+               colour = "white") +          # borda branca para destacar
+    geom_point(position = position_dodge(width = 0.55),
+               size = 3.8, stroke = 1.4) +
+
+    # ── Rótulos dos coeficientes ─────────────────────────────────────────────
+    geom_text(
+      aes(label = paste0(ifelse(Coef > 0, "+", ""), round(Coef, 1), Sig),
+          y     = ifelse(Coef >= 0, IC_95_sup + 1.2, IC_95_inf - 1.2),
+          colour = Modelo),
+      position    = position_dodge(width = 0.55),
+      size        = 3.8,
+      fontface    = "bold",
+      show.legend = FALSE
+    ) +
+
+    coord_flip() +
+
+    scale_colour_manual(values = cores) +
+    scale_fill_manual(values   = fill_ic) +
+    scale_shape_manual(values  = formas) +
+    scale_y_continuous(
+      breaks = seq(-10, 40, by = 10),
+      labels = function(x) paste0(ifelse(x > 0, "+", ""), x),
+      expand = expansion(mult = c(0.12, 0.15))
+    ) +
+
+    labs(
+      title    = "Determinantes da proficiência escolar — SAEB 2023 (3ª série EM)",
+      subtitle = paste0(
+        "Coeficientes da regressão linear múltipla com intervalos de confiança 95%\n",
+        "Comparado às escolas públicas, urbanas e do interior"
+      ),
+      x       = NULL,
+      y       = "Coeficiente (pontos de proficiência SAEB)",
+      colour  = "Disciplina:",
+      shape   = "Disciplina:",
+      fill    = "Disciplina:",
+      caption = paste0(
+        "N = ", n_escolas, " escolas  |  ",
+        "R² ajustado: Matemática = ", r2_mt, "%  ·  Língua Portuguesa = ", r2_lp, "%\n",
+        "*** p<0,001  ** p<0,01  * p<0,05  |  ",
+        "IC 95% calculado como Coef ± 1,96 × EP\n",
+        "INSE normalizado (z-score): coeficiente representa o efeito de +1 desvio-padrão ",
+        "no nível socioeconômico médio da escola"
+      )
+    ) +
+
+    theme_minimal(base_size = 13) +
+    theme(
+      # Fundo totalmente branco
+      plot.background   = element_rect(fill = "white", colour = NA),
+      panel.background  = element_rect(fill = "white", colour = NA),
+      panel.grid.major.y = element_blank(),
+      panel.grid.major.x = element_line(colour = "#E5E5E5", linewidth = 0.4),
+      panel.grid.minor   = element_blank(),
+
+      # Títulos
+      plot.title    = element_text(face = "bold", size = 15, colour = "#1A1A1A",
+                                   margin = margin(b = 4)),
+      plot.subtitle = element_text(size = 11, colour = "#555555",
+                                   lineheight = 1.3, margin = margin(b = 12)),
+      plot.caption  = element_text(size = 9, colour = "#777777", face = "italic",
+                                   hjust = 0, lineheight = 1.4,
+                                   margin = margin(t = 14)),
+
+      # Eixos
+      axis.text.y  = element_text(size = 11, colour = "#1A1A1A",
+                                  lineheight = 1.35, face = "plain"),
+      axis.text.x  = element_text(size = 11, colour = "#555555"),
+      axis.title.x = element_text(size = 11, colour = "#333333",
+                                  margin = margin(t = 8)),
+
+      # Legenda
+      legend.position  = "top",
+      legend.direction = "horizontal",
+      legend.text      = element_text(size = 12),
+      legend.title     = element_text(size = 12, face = "bold"),
+      legend.key.size  = unit(1.1, "lines"),
+
+      plot.margin = margin(16, 24, 12, 16)
+    )
+}
+
+# ── Salvar versão colorida ────────────────────────────────────────────────────
+p_tcc_color <- gerar_grafico_coef_tcc(colorido = TRUE)
+ggsave(
+  file.path(DIR_FIGURAS, paste0("coeficientes_TCC_color_", ts_global, ".png")),
+  p_tcc_color, width = 12, height = 7, dpi = 200, bg = "white"
+)
+message("Figura salva: coeficientes_TCC_color")
+
+# ── Salvar versão P&B para impressão ─────────────────────────────────────────
+p_tcc_pb <- gerar_grafico_coef_tcc(colorido = FALSE)
+ggsave(
+  file.path(DIR_FIGURAS, paste0("coeficientes_TCC_PB_", ts_global, ".png")),
+  p_tcc_pb, width = 12, height = 7, dpi = 200, bg = "white"
+)
+message("Figura salva: coeficientes_TCC_PB")
 
 # =============================================================================
 # ETAPA 6: DIAGNÓSTICOS
@@ -585,13 +956,13 @@ message("Figura salva: diagnosticos_residuos_LP")
 # ETAPA 8: GRÁFICOS DE COEFICIENTES
 # =============================================================================
 
-gerar_grafico_coef <- function(coef_df, nome, cor_sig) {
-
-  ref_info <- tibble(
-    Termo        = paste0("(Referência: Publica, Capital, Urbana)"),
-    Coef         = 0, SE = 0, t_value = 0, p_valor = 1,
-    Sig          = "", IC_95_inf = 0, IC_95_sup = 0,
-    Significancia = FALSE
+gerar_grafico_coef <- function(coef_df, nome, cor_sig, refs_usadas) {
+  # refs_usadas: named list com as referências de cada variável dummy
+  
+  refs_texto <- paste(
+    "Referências: Escola", refs_usadas$TIPO_ESCOLA, "|",
+    refs_usadas$AREA, "|",
+    refs_usadas$LOCALIZACAO
   )
 
   dados_plot <- coef_df |>
@@ -621,7 +992,7 @@ gerar_grafico_coef <- function(coef_df, nome, cor_sig) {
       y        = "Coeficiente (pontos de proficiência SAEB)",
       fill     = "Significância estatística",
       caption  = paste0(
-        "Referências: Escola Pública | Capital | Urbana\n",
+        refs_texto, "\n",
         "Coef > 0: variável aumenta a proficiência em relação à referência\n",
         "Coef < 0: variável reduz a proficiência em relação à referência\n",
         "Barras de erro = intervalo de confiança 95% (se cruzar o zero, efeito pode ser nulo)\n",
@@ -635,8 +1006,8 @@ gerar_grafico_coef <- function(coef_df, nome, cor_sig) {
     )
 }
 
-p_coef_mt <- gerar_grafico_coef(coef_mt, "MEDIA_MT", "#1f77b4")
-p_coef_lp <- gerar_grafico_coef(coef_lp, "MEDIA_LP", "#ff7f0e")
+p_coef_mt <- gerar_grafico_coef(coef_mt, "MEDIA_MT", "#1f77b4", refs_usadas)
+p_coef_lp <- gerar_grafico_coef(coef_lp, "MEDIA_LP", "#ff7f0e", refs_usadas)
 
 ggsave(file.path(DIR_FIGURAS, paste0("coeficientes_MT_", ts_global, ".png")),
        p_coef_mt, width = 10, height = 8, dpi = 180, bg = "white", device = "png")
@@ -759,10 +1130,38 @@ message("  MT — R²aj: ", round(summary_mt$adj.r.squared, 4),
         " | RMSE: ", round(sqrt(mean(summary_mt$residuals^2)), 2))
 message("  LP — R²aj: ", round(summary_lp$adj.r.squared, 4),
         " | RMSE: ", round(sqrt(mean(summary_lp$residuals^2)), 2))
+
+message("\n⚠️  IMPORTANTE — INTERPRETAÇÃO DOS COEFICIENTES:")
+message("\nAs referências utilizadas no modelo são:")
+for (var in names(refs_usadas)) {
+  message("  • ", var, " = ", refs_usadas[[var]])
+}
+message("\nSignificado dos coeficientes:")
+message("  • Coef > 0: a categoria do dummy tem proficiência MAIOR que a referência")
+message("  • Coef < 0: a categoria do dummy tem proficiência MENOR que a referência")
+message("\nExemplo:")
+message("  Se TIPO_ESCOLA_Privada = -7, significa:")
+message("    → Escolas PRIVADAS têm ~7 pontos MENOS de proficiência")
+message("    → comparadas às escolas PÚBLICAS (referência)")
+
 message("\nArquivos gerados em:")
 message("  ", DIR_TABELAS)
 message("  ", DIR_FIGURAS)
 message("  ", DIR_MODELOS)
+
+message("\nArquivos de referência:")
+message("  • REFERENCIAS_MODELOS_", ts_global, ".csv (categorias de referência de cada dummy)")
+message("  • VIF_multicolinearidade_", ts_global, ".csv (verificação de multicolinearidade)")
+message("  • base_escolas_agregada_", ts_global, ".csv (dados utilizados no modelo)")
+message("\nArquivos de comparações simétricas:")
+message("  • comparacao_todas_referencias_MT_", ts_global, ".csv (todos os modelos — MT)")
+message("  • comparacao_todas_referencias_LP_", ts_global, ".csv (todos os modelos — LP)")
+message("  • resumo_pares_MT_", ts_global, ".csv (tabela pivotada de comparações rápidas)")
+message("  • comparacao_tipo_escola_MT_", ts_global, ".png (visualização das diferenças)")
+message("\n💡 DICA: Use os arquivos 'comparacao_todas_referencias_*.csv' para ver")
+message("   TODAS as comparações possíveis entre categorias (A vs B, B vs C, etc)")
+message("   e entender quais diferenças são estatisticamente significativas.")
+
 message("\n", strrep("=", 70))
 message("CONCLUÍDO COM SUCESSO!")
 message(strrep("=", 70))

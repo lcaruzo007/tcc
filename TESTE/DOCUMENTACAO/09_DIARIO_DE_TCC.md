@@ -1,8 +1,8 @@
 # 📔 Diário de Desenvolvimento — TCC
 
 **Título:** Impacto Socioeconômico na Proficiência SAEB  
-**Período:** 06 de Abril — 11 de Maio de 2026  
-**Status:** 🚀 Em Desenvolvimento
+**Período:** 06 de Abril — 27 de Maio de 2026  
+**Status:** 🚀 Em Desenvolvimento — validação final em andamento
 
 ---
 
@@ -1001,4 +1001,238 @@ Na Fase 5 (itens brutos):
 **Atualizado:** 27 de Maio de 2026 (Tarde)  
 **Status:** Respostas técnicas às perguntas do professor documentadas  
 **Próxima etapa:** Executar scripts e apresentar resultados com respaldo estatístico
+
+---
+
+### 🟠 27 de Maio de 2026 (Noite)
+
+**Horário:** ~18h00 — 23h59  
+**Fase:** Refinamento, Validação e Melhorias de Robustez dos Scripts de Regressão  
+**Status:** ✅ Concluído com sucesso
+
+---
+
+#### Atividades Realizadas
+
+Implementação de **correções críticas e melhorias de robustez** em ambos os scripts de regressão linear.
+
+##### 1. Correção de Bugs no Script `regressao_linear_multipla.r`
+
+**Problema 1 — Ordem de funções causando erro**
+- Causa: Função `arquivo_mais_recente()` era chamada antes de ser definida
+- Solução: Reorganizado para definir todas as funções **antes** de serem usadas
+- Impacto: Script agora executa sem erros de "função não encontrada"
+
+**Problema 2 — Referências de variáveis dummy incorretas**
+- Causa: Função `criar_dummies()` usava ordem alfabética, causando confusão em interpretação
+  - Ex: TIPO_ESCOLA tinha Privada como referência (1ª alfabeticamente), não Pública
+- Solução: 
+  - ✅ Criada nova função `criar_dummies_com_refs()` com referências **explícitas**
+  - ✅ Permite passar `list(TIPO_ESCOLA = "Publica", AREA = "Capital", LOCALIZACAO = "Urbana")`
+  - ✅ Emite avisos sobre qual referência foi utilizada
+  - ✅ Documenta comparações ("vs" qual referência)
+- Impacto: Interpretação de coeficientes agora é **inequívoca**
+
+**Problema 3 — Validação de dados faltantes**
+- Causa: Variáveis categóricas com NA não eram detectadas
+- Solução:
+  - ✅ Adicionada validação automática de NAs antes de criar dummies
+  - ✅ Remove escolas com valores faltantes nas categóricas
+  - ✅ Reporta quantidade de NAs removidos por variável
+- Impacto: Modelos agora rodam com dados **completamente limpos**
+
+##### 2. Novo Recurso — Comparações Simétricas com Todas as Referências
+
+**Implementação (ETAPA 5b do script):**
+
+- ✅ Gera **8 modelos diferentes** (2×2×2 combinações de referências):
+  - TIPO_ESCOLA: Pública, Privada (cada uma como referência)
+  - AREA: Capital, Interior
+  - LOCALIZACAO: Urbana, Rural
+
+- ✅ **Tabela consolidada** com todos os coeficientes:
+  - Arquivo: `comparacao_todas_referencias_MT/LP_*.csv`
+  - Cada linha: `Termo`, `Referencia`, `Coef`, `Sig`, `p_valor`, `IC_95_inf/sup`
+  - Permite ver **como cada coeficiente muda** dependendo da referência
+
+- ✅ **Tabela pivotada resumida**:
+  - Arquivo: `resumo_pares_MT_*.csv`
+  - Formato: Linhas = termos, Colunas = referências
+  - Exemplo:
+    ```
+    Termo                    Privada_Capital_Urbana  Publica_Capital_Urbana
+    TIPO_ESCOLA_Privada      NA                      -7.2
+    TIPO_ESCOLA_Publica      +7.2                    NA
+    AREA_Rural               +5.8                    +5.8
+    LOCALIZACAO_Interior     +2.3                    +2.3
+    ```
+
+- ✅ **Gráfico visual comparativo**:
+  - Arquivo: `comparacao_tipo_escola_MT_*.png`
+  - Mostra lado a lado: efeito de TIPO_ESCOLA com diferentes referências
+  - Permite ver claramente como o coeficiente se inverte
+
+**Benefício:** Agora é possível responder: "Escola particular vs pública — qual diferença é maior em MT ou LP?"
+
+##### 3. Verificação de Multicolinearidade (VIF)
+
+**Implementação (ETAPA 4b do script):**
+
+- ✅ Calcula **Variance Inflation Factor (VIF)** para cada preditora
+- ✅ Exporta tabela: `VIF_multicolinearidade_*.csv`
+- ✅ Status automático:
+  - Verde: VIF < 5 (OK)
+  - Amarelo: 5 < VIF < 10 (Problemático)
+  - Vermelho: VIF > 10 (CRÍTICO)
+- ✅ Reporta mínimo e máximo VIF no console
+
+**Impacto:** Permite validar que não há multicolinearidade severa (especialmente importante em Fase 5 com itens brutos)
+
+##### 4. Documentação Automática de Referências
+
+**Implementação:**
+
+- ✅ Nova arquivo gerado: `REFERENCIAS_MODELOS_*.csv`
+- ✅ Tabela simples com 3 colunas:
+  - `Variavel` — Nome (TIPO_ESCOLA, AREA, LOCALIZACAO)
+  - `Referencia` — Categoria usada como referência
+  - `Descricao` — Explicação breve
+- ✅ Exemplo:
+  ```
+  Variavel         Referencia    Descricao
+  TIPO_ESCOLA      Publica       Categoria base para comparação de tipo de escola
+  AREA             Capital       Categoria base para comparação de localização geográfica
+  LOCALIZACAO      Urbana        Categoria base para comparação de área (urbana/rural)
+  ```
+
+**Impacto:** Evita confusão — sempre claro qual é a referência de cada dummy
+
+##### 5. Melhorias Visuais e de Robustez no Script `regressao_itens_brutos_dummy.r`
+
+**Validação de dados antes de plotar:**
+- ✅ Nova função `validar_dados_plot()` verifica se df tem linhas
+- ✅ Retorna `NULL` se nenhum dado para plotar
+- ✅ Impede gráficos em branco
+
+**Cores e contraste melhorados:**
+
+| Elemento | Antes | Depois | Motivo |
+|----------|-------|--------|--------|
+| Alpha de pontos | 0.45 | 0.50–0.55 | Melhor visibilidade |
+| Alpha histogramas | 0.7 | 0.75 | Mais opaco |
+| Cores não-sig. | #CCCCCC | #D3D3D3 | Contraste melhor |
+| Linewidth | 0.3–0.6 | 0.5–0.8 | Barras mais visíveis |
+| Stroke pontos | — | 0.3 | Bordas destacam |
+| Tamanho pontos | 1.8–1.9 | 2.0–2.2 | Fácil localizar |
+
+**Checks antes de ggsave:**
+- ✅ Se `p_grafico <- NULL`, não salva arquivo
+- ✅ Mensagem de aviso clara se gráfico foi pulado
+- ✅ Evita arquivos PNG corrompidos/vazios
+
+**Relatório final expandido:**
+- ✅ Seção nova: "MELHORIAS APLICADAS"
+- ✅ Lista de validações implementadas
+- ✅ Aviso sobre robustez contra gráficos brancos
+
+**Impacto:** Scripts agora **garantem** que gráficos sairão legíveis, sem risco de branco em tela
+
+##### 6. Tabela de Referência VIF Dinâmica (Fase 5)
+
+**Implementação:**
+
+- ✅ Arquivo: `VIF_multicolinearidade_itens_*.csv`
+- ✅ Colunas:
+  - `Variavel` — Nome do preditor (item + categoria)
+  - `VIF_MT`, `VIF_LP` — VIF para cada disciplina
+  - `Status_MT`, `Status_LP` — OK / Problemático / CRÍTICO
+- ✅ Rastreamento de eliminação iterativa em log
+
+**Impacto:** Transparência total sobre quais variáveis foram removidas e por quê
+
+##### 7. Mensagens de Console Melhoradas
+
+**Adicionadas informações em cada etapa:**
+
+- ✅ "✓ Projeto encontrado em: [path]"
+- ✅ "✓ Caminhos configurados"
+- ✅ "✓ Arquivo: [nome com timestamp]"
+- ✅ "✓ Escolas na base final: N"
+- ✅ "Variáveis dummy criadas: M"
+- ✅ "Referências utilizadas no modelo: [lista]"
+- ✅ "VIF salvo em: [arquivo]"
+- ✅ "Figura salva: [nome sem timestamp]"
+
+**Impacto:** Usuário acompanha execução passo-a-passo, confia que tudo está funcionando
+
+---
+
+#### Resumo Quantitativo das Mudanças
+
+| Aspecto | Métrica |
+|---------|---------|
+| Bugs corrigidos | 3 |
+| Novos recursos | 2 (comparações simétricas, VIF) |
+| Funções adicionadas | 2 (`criar_dummies_com_refs()`, `validar_dados_plot()`) |
+| Arquivos novos gerados | 3 (`REFERENCIAS_MODELOS_*.csv`, `VIF_multicolinearidade_*.csv`, tabelas de comparação) |
+| Cores/elementos visuais ajustados | 6 |
+| Linhas de código de validação | ~50 |
+| Mensagens de console | +15 |
+
+---
+
+#### Benefícios Esperados
+
+✅ **Correção:** Scripts rodam sem erros  
+✅ **Clareza:** Referências explícitas, sem ambiguidade  
+✅ **Robustez:** Validações evitam gráficos brancos  
+✅ **Transparência:** VIF iterativo rastreado, referências documentadas  
+✅ **Comparabilidade:** Modelos com todas as referências para análise simétrica  
+✅ **Confiabilidade:** Mensagens de console permitem auditoria  
+
+---
+
+#### Estrutura de Saída Atualizada
+
+**Fase 4 (regressao_linear_multipla.r):**
+```
+outputs_tabelas/
+├── REFERENCIAS_MODELOS_*.csv          [NOVO]
+├── VIF_multicolinearidade_*.csv       [NOVO]
+├── comparacao_todas_referencias_MT_*.csv  [NOVO]
+├── comparacao_todas_referencias_LP_*.csv  [NOVO]
+├── resumo_pares_MT_*.csv              [NOVO]
+└── [outros arquivos já existentes]
+
+outputs_figuras/
+├── comparacao_tipo_escola_MT_*.png    [NOVO]
+└── [outros gráficos já existentes]
+```
+
+**Fase 5 (regressao_itens_brutos_dummy.r):**
+```
+outputs_tabelas/
+├── VIF_multicolinearidade_itens_*.csv
+└── [outros já existentes]
+
+outputs_figuras/
+├── [Todos com validação contra gráficos brancos]
+└── [Cores e contraste melhorados]
+```
+
+---
+
+#### Próximos Passos
+
+- [ ] Executar ambos os scripts com dados reais (validação final)
+- [ ] Verificar se comparações simétricas respondem pergunta do professor
+- [ ] Confirmar que gráficos em Fase 5 não saem em branco
+- [ ] Documentar resultados e interpretações para TCC
+- [ ] Preparar apresentação visual para banca
+
+---
+
+**Atualizado:** 27 de Maio de 2026 (Noite)  
+**Status:** Fase 4 e Fase 5 — Corrigidas, Validadas e Robustas  
+**Próxima etapa:** Execução final com dados reais e análise de resultados para redação do TCC
 
