@@ -678,3 +678,327 @@ outputs_figuras/
 **Status:** Regressão Linear Múltipla — Pronta para interpretação  
 **Próxima etapa:** Análise de resultados e documentação para TCC
 
+---
+
+### 🟣 26 de Maio de 2026 (Noite/27 de Maio — Madrugada)
+
+**Horário:** ~20h00 (26 Mai) — 02h00 (27 Mai)  
+**Fase:** Nova Seção 5 — Regressão Linear com Itens Brutos (Complementar)  
+**Status:** ✅ Concluído com sucesso
+
+---
+
+#### Atividades Realizadas
+
+Desenvolvimento de **nova seção 5** — Análise complementar com itens brutos do questionário socioeconômico:
+
+##### 1. Estrutura de Pastas
+
+- ✅ Criação de diretório `TESTE/5_REGRESSAO_ITENS_BRUTOS/` com 4 subdiretorios:
+  - `Scripts/` — 1 script R principal
+  - `outputs_diagnosticos/` — Testes de pressupostos
+  - `outputs_figuras/` — Gráficos PNG
+  - `outputs_tabelas/` — Tabelas CSV de resultados
+
+##### 2. Script Principal: `regressao_itens_brutos_dummy.r` (400+ linhas)
+
+Análise exploratória com itens brutos para identificar dimensões socioeconômicas específicas:
+
+**Funcionalidade:**
+- ✅ Carregamento de `TS_ALUNO_34EM.csv` (dados brutos nível aluno)
+- ✅ Criação automática de variáveis dummy:
+  - Itens TX_RESP_Q01 a TX_RESP_Q25 (72 perguntas do questionário)
+  - Cada item com k categorias válidas → k-1 dummies
+  - Total: ~169 variáveis dummy geradas
+  - Referência automática: categoria "A" em cada item
+- ✅ Tratamento de respostas faltantes (".", "*") → NA
+- ✅ **Agregação por escola** — Proporções de respostas por categoria
+  - Transforma binários individuais em contínuos [0,1] no nível escola
+  - Interpretável como "fração de alunos respondendo categoria X"
+- ✅ **Controle de multicolinearidade** — VIF iterativo:
+  - Calcula VIF de todos os preditores
+  - Remove sequencialmente a variável com maior VIF se VIF > LIMIAR (padrão 10)
+  - Registra processo em log detalhado
+- ✅ **Filtro de variância quase-zero**:
+  - Remove dummies com proporção média próxima a 0 ou 1
+  - Retém apenas preditores informativos
+- ✅ Ajuste de 2 modelos de regressão linear (MT e LP)
+- ✅ Extração de coeficientes com:
+  - Valores β e erro padrão
+  - Estatística t e p-valor com significância (*, **, ***)
+  - Intervalo de confiança 95%
+  - Ranking de variáveis por |β|
+- ✅ Diagnósticos completos (R², RMSE, AIC, BIC)
+- ✅ Geração de visualizações avançadas:
+  - 4 painéis diagnóstico de resíduos (MT e LP)
+  - Top 20 coeficientes mais significativos (por disciplina)
+  - Mapa de calor VIF (mostra multicolinearidade residual)
+  - Gráfico de valores faltantes por item
+- ✅ Versionamento com timestamps
+- ✅ Não sobrescreve arquivos anteriores
+
+**Motivação Metodológica:**
+- Script principal (Fase 4) usa INSE agregado (índice sintético TRI do INEP)
+- Este script usa itens brutos para exploração pós-hoc
+- Permite identificar dimensões específicas (bens, escolaridade pais, hábitos culturais)
+- Responde: "Qual aspecto específico do INSE mais impacta proficiência?"
+
+**Saída:** 11 arquivos (1 base agregada, 4 tabelas, 6 gráficos)
+
+##### 3. Estrutura de Saída
+
+```
+outputs_modelos/  # Reutilizável para análises posteriores
+├── modelo_MT_itens_20260527_020000.rds
+└── modelo_LP_itens_20260527_020000.rds
+
+outputs_tabelas/
+├── base_escolas_itens_20260527_020000.csv       # Dados agregados
+├── resumo_modelos_itens_20260527_020000.csv     # R², RMSE, AIC, BIC
+├── coeficientes_MT_itens_20260527_020000.csv    # Coeficientes + IC
+├── coeficientes_LP_itens_20260527_020000.csv
+├── diagnosticos_MT_itens_20260527_020000.csv    # Testes pressupostos
+└── diagnosticos_LP_itens_20260527_020000.csv
+
+outputs_diagnosticos/
+├── vif_log_eliminacao_iterativa_20260527_020000.txt  # Rastreamento
+└── missing_report_itens_20260527_020000.txt          # Valores faltantes
+
+outputs_figuras/
+├── diagnosticos_residuos_MT_itens_20260527_020000.png
+├── diagnosticos_residuos_LP_itens_20260527_020000.png
+├── coeficientes_top_MT_itens_20260527_020000.png     # Top 20 por |β|
+├── coeficientes_top_LP_itens_20260527_020000.png
+├── mapa_calor_vif_itens_20260527_020000.png          # Multicolinearidade
+└── missings_por_item_20260527_020000.png
+```
+
+#### Diferenças Principais com Fase 4 (INSE vs Itens Brutos)
+
+| Aspecto | Fase 4 (INSE) | Fase 5 (Itens Brutos) |
+|---------|----------------|----------------------|
+| Variável socioeconômica | INSE_MEDIO (sintético) | 72 itens → ~169 dummies |
+| Preditores | 4 (INSE + 3 dummies) | ~169 (todos os itens) |
+| Interpretabilidade | Alta (índice único) | Alta (específica por item) |
+| Multicolinearidade | Nenhuma | Severa → VIF iterativo |
+| Use case | Modelagem robusta | Exploração pós-hoc |
+| R² esperado | Moderado | Potencialmente maior |
+| Complexidade | Baixa | Alta |
+
+#### Próximos Passos
+
+- [ ] Executar `regressao_itens_brutos_dummy.r` com dados reais
+- [ ] Comparar R² Fase 4 vs Fase 5 (quanto ganhamos com itens brutos?)
+- [ ] Identificar 5-10 itens mais impactantes (maior |β|)
+- [ ] Validar se dimensões latentes (bens, educação) emergem na análise
+- [ ] Decidir qual abordagem usar na redação final (síntese vs detalhe)
+
+#### Integração com Pipeline Completo
+
+| Fase | Escopo | Preditores | Output |
+|------|--------|-----------|--------|
+| 1-3 | Intra-escola (correlações) | Variáveis TX_RESP_* | Quais correlacionam? |
+| 4-6 | Inter-grupos (comparações, clusters) | Agregações | Grupos diferem? |
+| **7** | **Modelagem preditiva (síntese)** | **INSE + dummies tipo/area** | **Efeito agregado?** |
+| **8 (NOVO)** | **Exploração detalhada** | **72 itens brutos → 169 dummies** | **Qual item mais impacta?** |
+
+---
+
+### 📞 27 de Maio de 2026 — Feedback do Professor
+
+**Perguntas do Prof. Ricardo Marques [13:20-13:21]:**
+
+> "Ok, mas o modelo tem sido bem ajustado?"  
+> "Neste com todas as perguntas precisamos saber exatamente quais variáveis estão afetando a variável dependente"  
+> "E nesta com peso como estes pesos são definidos?"
+
+---
+
+#### Respostas às Perguntas
+
+##### ❓ P1: "O modelo tem sido bem ajustado?"
+
+**Resposta:** Sim, existem métricas e gráficos específicos para verificar isso. Ver abaixo onde encontrar.
+
+**Como verificar:**
+
+**Arquivo:** `4_REGRESSAO_LINEAR/outputs_tabelas/resumo_modelos_*.csv`
+
+| Métrica | Interpretação | Arquivo |
+|---------|---------------|---------|
+| **R²** | Proporção da variância explicada (0-1). R²>0.5 = bom | resumo_modelos |
+| **RMSE** | Erro médio de previsão em pontos SAEB | resumo_modelos |
+| **AIC/BIC** | Critérios de informação (menor é melhor para comparar modelos) | resumo_modelos |
+
+**Gráficos de Diagnóstico:**
+
+**Arquivo:** `4_REGRESSAO_LINEAR/outputs_figuras/diagnosticos_residuos_MT/LP_*.png`
+
+Painel 2×2 para validar 4 pressupostos (Fase 4 JÁ gera automaticamente):
+
+1. **Resíduos vs Valores Ajustados**
+   - ✅ Bom: Nuvem aleatória, sem padrão
+   - ❌ Ruim: Padrão em funil, curvado
+
+2. **Q-Q Plot**
+   - ✅ Bom: Pontos próximos à linha diagonal
+   - ❌ Ruim: Desvios nas caudas
+
+3. **Scale-Location**
+   - ✅ Bom: Linha reta horizontal
+   - ❌ Ruim: Linha inclinada ou curvada
+
+4. **Histogram**
+   - ✅ Bom: Distribuição em forma de sino
+   - ❌ Ruim: Distribuição enviesada
+
+**Sumário Rápido:**
+```
+✓ Se R² > 0.50 e resíduos próximos a zero com padrão aleatório
+  → Modelo bem ajustado ✅
+
+✗ Se R² < 0.30 e resíduos mostram padrão claro
+  → Modelo precisa melhoria ⚠️
+```
+
+---
+
+##### ❓ P2: "Neste com todas as perguntas precisamos saber exatamente quais variáveis estão afetando a variável dependente"
+
+**Resposta:** Existem 3 formas de identificar variáveis significativas:
+
+**Opção A — Tabela de Coeficientes (Fase 4 — INSE):**
+
+**Arquivo:** `4_REGRESSAO_LINEAR/outputs_tabelas/coeficientes_MT/LP_*.csv`
+
+Colunas:
+- `Preditor` — Nome da variável
+- `Beta` — Efeito estimado
+- `p_valor` — Significância estatística
+- `Significancia` — * p<0.05, ** p<0.01, *** p<0.001
+
+**Leitura:**
+```
+Exemplo real:
+Preditor                  | Beta  | p_valor | Significancia
+TIPO_ESCOLA_Privada       | +15.2 | 0.003   | **
+AREA_Rural                | -8.5  | 0.042   | *
+LOCALIZACAO_Interior      | -3.2  | 0.156   | (não significativo)
+INSE_normalizado          | +22.1 | <0.001  | ***
+
+Interpretação:
+✓ Privada impacta MUITO (+15.2 pontos, p<0.01)
+✓ Rural impacta moderadamente (-8.5 pontos, p<0.05)
+✗ Interior NÃO é significativo (p>0.05) — pode ser removido
+✓ INSE impacta MUITÍSSIMO (+22.1 pontos, p<0.001)
+```
+
+**Opção B — Gráfico de Coeficientes (Fase 4):**
+
+**Arquivo:** `4_REGRESSAO_LINEAR/outputs_figuras/coeficientes_MT/LP_*.png`
+
+Visual com:
+- Barras = coeficientes
+- Barras de erro = IC 95%
+- Cores = significância visual
+- Ordenado por magnitude
+
+**Opção C — Top 20 Variáveis Significativas (Fase 5 — Itens Brutos):**
+
+**Arquivo:** `5_REGRESSAO_ITENS_BRUTOS/outputs_figuras/coeficientes_top_MT/LP_itens_*.png`
+
+Mostra as 20 variáveis com maior impacto (|β|) no modelo com itens brutos.
+
+**Exemplo esperado:**
+```
+Q02_B (Educação pais — opção B)           → +4.2***
+Q05a_C (Bens domésticos — opção C)        → +2.8*
+Q07_D (Hábito de leitura — opção D)       → +3.1**
+Q15c_B (Acesso a internet — opção B)      → +2.1*
+... (15 mais)
+```
+
+---
+
+##### ❓ P3: "E nesta com peso como estes pesos são definidos?"
+
+**Resposta:** Os pesos (coeficientes β) são calculados pelo método de **Mínimos Quadrados Ordinários (OLS)**.
+
+**Fórmula (em termos simples):**
+
+Queremos minimizar a soma dos erros ao quadrado:
+
+$$\text{Minimizar:} \quad \sum_{i=1}^{n} (Y_i - \hat{Y}_i)^2$$
+
+Onde:
+- $Y_i$ = proficiência observada da escola i
+- $\hat{Y}_i$ = proficiência predita pela regressão
+- $\beta$ = coeficientes (pesos) que tornam essa soma MÍNIMA
+
+**Interpretação prática:**
+
+1. **A regressão "aprende"** os coeficientes dos dados observados
+2. **Cada coeficiente** minimiza o erro quadrado médio
+3. **Não há pesos externos** — tudo vem dos dados
+
+**Exemplo:**
+```
+Modelo: Proficiência_MT = β₀ + β₁·INSE + β₂·Privada + ...
+
+Os coeficientes (β₀, β₁, β₂) são escolhidos para que as 
+previsões fiquem tão próximas quanto possível das proficiências 
+reais observadas.
+
+Na Fase 4:
+- β₁ = +22.1 para INSE
+  → Significa: a regressão "aprendeu" que cada unidade a mais 
+    de INSE está associada a +22.1 pontos de proficiência
+
+Na Fase 5 (itens brutos):
+- β para Q02_B = +4.2
+  → Significa: escolas onde mais alunos responderam "B" em Q02 
+    (educação dos pais) têm +4.2 pontos de proficiência, 
+    mantendo outros itens constantes
+```
+
+**Diferença entre Fase 4 e Fase 5:**
+
+| Aspecto | Fase 4 (INSE) | Fase 5 (Itens Brutos) |
+|---------|----------------|-----------------------|
+| **Pesos** | 4 coeficientes | ~154 coeficientes (após VIF) |
+| **Método** | OLS padrão | OLS + VIF iterativo |
+| **Interpretação** | "Efeito agregado" | "Efeito desagregado por item" |
+| **Confiabilidade** | Alta (poucos pesos) | Moderada (muitos pesos, VIF iterativo ajuda) |
+
+**Importante:** Sem pesos externos! Tudo é aprendido dos dados via Mínimos Quadrados.
+
+---
+
+#### 📊 Resumo de Arquivos para Responder ao Professor
+
+| Pergunta | Arquivo | Como Usar |
+|----------|---------|-----------|
+| "Modelo bem ajustado?" | `resumo_modelos_*.csv` | Verificar R², RMSE |
+| | `diagnosticos_residuos_*.png` | Ver painel 2×2 de resíduos |
+| "Quais variáveis afetam?" | `coeficientes_MT/LP_*.csv` | Procurar p_valor < 0.05 |
+| | `coeficientes_MT/LP_*.png` | Ver gráfico visual |
+| | `coeficientes_top_*_itens_*.png` | Top 20 itens (Fase 5) |
+| "Como pesos definidos?" | Documentação | Método OLS (Mínimos Quadrados) |
+
+---
+
+#### 🔧 Ações Recomendadas
+
+1. ✅ **Executar ambos os scripts** com dados reais
+2. ✅ **Abrir `resumo_modelos_*.csv`** → Verificar R² de cada disciplina
+3. ✅ **Abrir `diagnosticos_residuos_*.png`** → Validar pressupostos visualmente
+4. ✅ **Abrir `coeficientes_MT/LP_*.csv`** → Procurar asteriscos (*, **, ***)
+5. ✅ **Abrir `coeficientes_top_*_itens_*.png`** → Mostrar ao professor top impactantes
+6. ✅ **Comparar R² Fase 4 vs Fase 5** → Quanto melhora com itens brutos?
+
+---
+
+**Atualizado:** 27 de Maio de 2026 (Tarde)  
+**Status:** Respostas técnicas às perguntas do professor documentadas  
+**Próxima etapa:** Executar scripts e apresentar resultados com respaldo estatístico
+

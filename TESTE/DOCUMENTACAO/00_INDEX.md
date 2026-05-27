@@ -1,7 +1,7 @@
 # 📚 Índice de Documentação — Análise SAEB 2023
 
-**Última atualização:** 25 de Maio de 2026  
-**Status:** ✅ Estrutura Completa com Regressão Linear Múltipla
+**Última atualização:** 27 de Maio de 2026  
+**Status:** ✅ Estrutura Completa com Regressão Linear Múltipla + Itens Brutos
 
 ---
 
@@ -40,6 +40,22 @@
 
 13. **[EXEMPLOS_INTERPRETACAO.txt](../4_REGRESSAO_LINEAR/EXEMPLOS_INTERPRETACAO.txt)** — Exemplos com interpretação  
    *7 exemplos reais com tabelas fictícias. Como ler cada resultado.*
+
+### Para Análise de Regressão com Itens Brutos (NOVO — Fase 5)
+14. **[Regressão com Itens Brutos](../5_REGRESSAO_ITENS_BRUTOS/)** — Exploração detalhada  
+   *Modela diretamente os 72 itens do questionário socioeconômico como dummies (~169 variáveis).*
+   - **Por quê?** Identifica quais dimensões específicas (bens domésticos, escolaridade, hábitos) mais impactam proficiência
+   - **Complemento a Fase 4?** Sim — Fase 4 usa INSE sintético (robusto), Fase 5 usa itens brutos (exploratório)
+   - **Script:** `5_REGRESSAO_ITENS_BRUTOS/Scripts/regressao_itens_brutos_dummy.r`
+   - **Use quando:** Quer desagregar o efeito socioeconômico em componentes específicos
+
+### Respostas Técnicas (NOVO)
+15. **[11_RESPOSTAS_ORIENTADOR.md](11_RESPOSTAS_ORIENTADOR.md)** — Perguntas do Prof. Ricardo Marques  
+   *Respostas técnicas às 3 perguntas sobre qualidade de ajuste, variáveis significativas e como pesos são definidos.*
+   - ✅ Como saber se modelo está bem ajustado (R², RMSE, diagnósticos visuais)
+   - ✅ Como identificar quais variáveis afetam a proficiência (tabelas + gráficos)
+   - ✅ Como os coeficientes são calculados (Mínimos Quadrados Ordinários)
+   - **Use quando:** Precisa responder questões do orientador com evidências estatísticas
 
 ### Referência Técnica
 7. **[07_MAPA_ESTRUTURA_PASTAS.txt](07_MAPA_ESTRUTURA_PASTAS.txt)** — Estrutura visual completa  
