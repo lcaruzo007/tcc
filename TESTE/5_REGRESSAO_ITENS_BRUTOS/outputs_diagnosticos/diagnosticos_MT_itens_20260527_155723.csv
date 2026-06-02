@@ -1,5 +1,0 @@
-Diagnostico,Valor,Descricao
-R² ajustado,0.7392,Proporção da variância explicada (ajustada pelo número de preditores)
-RMSE,10.77,Erro médio de predição nas mesmas unidades da variável resposta
-AIC,17957.76,Qualidade relativa do modelo penalizando complexidade (menor = melhor)
-BIC,18843.48,Similar ao AIC com penalização maior por complexidade (menor = melhor)

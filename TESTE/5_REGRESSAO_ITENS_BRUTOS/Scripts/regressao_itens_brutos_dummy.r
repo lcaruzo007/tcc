@@ -131,6 +131,104 @@
 # Hair, J. F. et al. (2019). Multivariate Data Analysis (8ª ed.).
 # ---------------------------------------------------------------------------
 ################################################################################
+# ---------------------------------------------------------------------------
+# ALGORITMOS E MÉTODOS ESTATÍSTICOS UTILIZADOS
+# ---------------------------------------------------------------------------
+#
+# 1. TRANSFORMAÇÃO DE VARIÁVEIS CATEGÓRICAS (ONE-HOT ENCODING)
+#    Algoritmo: Para cada variável categórica (item do questionário) com
+#    k categorias válidas, geram-se k−1 variáveis binárias dummy.
+#    Implementação: loops sobre itens, geração de colunas lógicas transformadas
+#    em proporções por escola. Categoria "A" é tomada como referência (omitida).
+#
+# 2. AGREGAÇÃO HIERÁRQUICA (NÍVEL: ALUNO → ESCOLA)
+#    Método: Cálculo de proporções por escola (mean na dummy binária do aluno).
+#    Transformação: valores binários individuais {0,1} → contínuos [0,1] no
+#    nível escola. Filtragem: escolas com menos de MIN_RESP_ITEM (padrão=3)
+#    respostas válidas por item recebem NA, evitando estimativas instáveis.
+#
+# 3. FILTRAGEM DE VARIÂNCIA ZERO (LIMIAR ADAPTATIVO)
+#    Método: Cálculo de var(X) para cada variável candidata no nível escola.
+#    Critério: Removes são variáveis com var < 0,001 ou >50% dados faltantes,
+#    sem poder discriminatório entre escolas.
+#    Implementação: sapply() com var() e mean(is.na()).
+#
+# 4. CONTROLE DE MULTICOLINEARIDADE — VIF ITERATIVO
+#    Algoritmo: Procedimento iterativo de eliminação progressiva:
+#      a) Ajustar modelo completo via OLS (Ordinary Least Squares)
+#      b) Calcular VIF usando car::vif() para cada preditora
+#      c) Identificar preditora com VIF máximo
+#      d) Se VIF_max > limiar: remover, registrar em log, retornar a (a)
+#      e) Parar quando todos VIF ≤ limiar
+#    VIF = 1 / (1 − R²_j), onde R²_j é o R² da regressão da preditora j
+#    contra todas as demais. VIF > 10 indica >90% variância colinear.
+#    Implementação: repeat{ } loop com tryCatch para robustez.
+#
+# 5. REGRESSÃO LINEAR MÚLTIPLA (MÍNIMOS QUADRADOS ORDINÁRIOS — OLS)
+#    Modelo: Y = β₀ + β₁X₁ + β₂X₂ + ⋯ + βₚXₚ + ε
+#    Estimação: lm(formula, data) ajusta via decomposição QR.
+#    Pressupostos testados graficamente:
+#      • Linearidade: gráfico Resíduos vs Ajustados
+#      • Normalidade dos erros: Q-Q plot (qqplot)
+#      • Homocedasticidade: Scale-Location plot
+#      • Independência: suposição por design (escolas independentes)
+#    Implementação: stats::lm() função base R.
+#
+# 6. DIAGNÓSTICO DE RESÍDUOS (GRÁFICOS EXPLORATÓRIOS)
+#    Procedimentos gráficos (ggplot2 + patchwork):
+#      i.    Resíduos vs Ajustados: detecta não-linearidade e heteroced.
+#      ii.   Q-Q plot: avalia normalidade dos erros via quantis teóricos
+#      iii.  Scale-Location: √|resíduos padronizados| vs ajustados
+#      iv.   Histograma de resíduos: visualiza simetria e curtose
+#    Implementação: fitted(), residuals(), rstandard(), stat_qq().
+#
+# 7. ÍNDICES DE AJUSTE E QUALIDADE DO MODELO
+#    • R² ajustado = 1 − [(n−1)/(n−p−1)] × (1 − R²)
+#      Corrige viés de R² crescente com número de preditores; comparável
+#      entre modelos com diferentes números de variáveis.
+#    • RMSE (Root Mean Square Error) = √[Σ(eᵢ)² / n]
+#      Erro médio de predição nas mesmas unidades da resposta; penaliza
+#      erros grandes exponencialmente.
+#    • AIC (Akaike Information Criterion) = 2k − 2ln(L)
+#      Balanceia ajuste vs complexidade; menor = melhor modelo relativo.
+#    • BIC (Bayesian IC) = k×ln(n) − 2ln(L)
+#      Similar ao AIC com penalização maior por número de parâmetros;
+#      preferível para grandes amostras.
+#    Implementação: summary(lm), AIC(), BIC() base R.
+#
+# 8. TESTES DE SIGNIFICÂNCIA DOS COEFICIENTES
+#    Método: Teste t de Student para cada coeficiente.
+#    Hipótese nula: H₀: βⱼ = 0 (sem efeito da preditora j).
+#    Estatística: tⱼ = βⱼ / SE(βⱼ) ~ t_{n−p−1} sob H₀.
+#    p-valor bilateral: P(|T| ≥ |tⱼ|).
+#    Limiar α = 0,05 (padrão).
+#    Implementação: summary(lm)$coefficients + tidy(broom).
+#
+# 9. INTERVALO DE CONFIANÇA (IC 95%)
+#    Cálculo: IC = β̂ ± 1,96 × SE(β̂) [aproximação normal, n grande].
+#    Interpretação: Intervalo de 95% de confiança para o parâmetro populacional.
+#    Visualização: barras de erro nos gráficos de coeficientes.
+#    Implementação: estimate ± 1.96 * std.error.
+#
+# 10. VALIDAÇÃO E ESTRATIFICAÇÃO
+#     Partição por escola: análise independente por grupo de contraste
+#     (Pública vs Privada, Capital vs Interior, Urbana vs Rural).
+#     Estratificação temática: agrupa itens por dimensão socioeconômica
+#     (Q01–Q09, Q10–Q14, Q15–Q20, Q21–Q25) para facilitar interpretação
+#     e reduzir problema de múltiplos testes.
+#     Implementação: filter(), group_by(), facet estratificação em ggplot2.
+#
+# REFERÊNCIAS TEÓRICAS:
+# • Hair, J. F. et al. (2019). Multivariate Data Analysis (8ª ed.).
+#   Pearson. — Caps. 4–5: regressão, multicolinearidade, diagnóstico.
+# • Wooldridge, J. M. (2020). Introductory Econometrics: A Modern Approach
+#   (7ª ed.). Cengage. — Cap. 3: estimação OLS, pressupostos, testes.
+# • James, G. et al. (2021). An Introduction to Statistical Learning
+#   (2ª ed.). Springer. — Cap. 3: regressão linear, interpretação, validação.
+# • Fox, J. (2016). Applied Regression Analysis & Generalized Linear Models
+#   (3ª ed.). SAGE. — Cap. 6: diagnóstico, multicolinearidade, VIF.
+#
+# --------------------------------------------------------------------------
 
 library(tidyverse)
 library(broom)
@@ -266,6 +364,8 @@ validar_dados_plot <- function(df, nome_grafico) {
   }
   TRUE
 }
+
+
 
 # Eliminação iterativa de preditores com VIF > limiar
 eliminar_por_vif <- function(df_modelo, resposta, limiar = LIMIAR_VIF) {
@@ -868,11 +968,13 @@ grupos_tematicos <- list(
     c("TX_RESP_Q15a","TX_RESP_Q15b",
       "TX_RESP_Q16","TX_RESP_Q17","TX_RESP_Q18","TX_RESP_Q19","TX_RESP_Q20"),
 
-  "Práticas Escolares e Tecnologia\n(Q21–Q25)" = 
+  "Práticas Escolares e Tecnologia — Parte 1\n(Q21–Q22)" = 
     c("TX_RESP_Q21a","TX_RESP_Q21b","TX_RESP_Q21c","TX_RESP_Q21d","TX_RESP_Q21e",
       "TX_RESP_Q22a","TX_RESP_Q22b","TX_RESP_Q22c","TX_RESP_Q22d",
-      "TX_RESP_Q22e","TX_RESP_Q22f","TX_RESP_Q22g","TX_RESP_Q22h",
-      "TX_RESP_Q23a","TX_RESP_Q23b","TX_RESP_Q23c","TX_RESP_Q23d",
+      "TX_RESP_Q22e","TX_RESP_Q22f","TX_RESP_Q22g","TX_RESP_Q22h"),
+
+  "Práticas Escolares e Tecnologia — Parte 2\n(Q23–Q25)" = 
+    c("TX_RESP_Q23a","TX_RESP_Q23b","TX_RESP_Q23c","TX_RESP_Q23d",
       "TX_RESP_Q23e","TX_RESP_Q23f","TX_RESP_Q23g","TX_RESP_Q23h","TX_RESP_Q23i",
       "TX_RESP_Q24","TX_RESP_Q25"),
 
