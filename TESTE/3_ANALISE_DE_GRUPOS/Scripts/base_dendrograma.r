@@ -92,7 +92,7 @@ tema_saeb <- function(base_size = 11) {
 
 painel_dendrograma <- function(hc,
                                 lab_cores,
-                                y_expand     = 0.30,
+                                y_expand     = 0.42,
                                 titulo       = "",
                                 subtitulo    = "",
                                 annot_texto  = NULL,
@@ -105,8 +105,8 @@ painel_dendrograma <- function(hc,
   lab       <- dend_data$labels |> left_join(lab_cores, by = "label")
 
   y_max   <- max(seg$y, na.rm = TRUE)
-  y_label <- -0.09 * y_max
-  y_prof  <- if (!is.null(prof_labels)) -0.21 * y_max else NULL
+  y_label <- -0.02 * y_max
+  y_prof  <- if (!is.null(prof_labels)) -0.30 * y_max else NULL
 
   p <- ggplot() +
     geom_segment(data = seg,
@@ -117,7 +117,7 @@ painel_dendrograma <- function(hc,
                size = 6, shape = 19) +
     geom_text(data = lab,
               aes(x = x, y = y_label, label = label, colour = cor),
-              size = 3.2, fontface = "bold", hjust = 0.5, lineheight = 0.9) +
+              size = 3.2, fontface = "bold", angle = 90, hjust = 1, vjust = 0.5, lineheight = 0.9) +
     scale_colour_identity() +
     scale_y_continuous(
       expand = expansion(mult = c(y_expand, 0.07)),
@@ -351,8 +351,11 @@ salvar_figura_completa <- function(p_dend,
       )
     )
 
+  n_folhas <- nrow(p_dend$layers[[2]]$data)
+  largura  <- max(16, n_folhas * 0.4)
+
   caminho <- file.path(dir_saida, nome_arquivo)
-  ggsave(caminho, final, width = 16, height = 11, dpi = 180, bg = COR_FUNDO)
+  ggsave(caminho, final, width = largura, height = 11, dpi = 180, bg = COR_FUNDO)
   message("✓ Figura salva: ", nome_arquivo)
   invisible(caminho)
 }

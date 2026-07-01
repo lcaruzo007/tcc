@@ -81,15 +81,6 @@ alunos <- alunos %>%
     NU_TIPO_NIVEL_INSE
   )
 
-# Carregar escolas (apenas para pegar nome e tipo)
-escolas <- fread(file.path(DIR_MICRODADOS, "TS_ESCOLA.csv"),
-                  encoding = "Latin-1") %>%
-  as_tibble() %>%
-  select(ID_ESCOLA, IN_PUBLICA, ID_AREA, ID_LOCALIZACAO)
-
-cat("   ✓ Dados carregados\n")
-cat(sprintf("   • Escolas: %d\n", n_distinct(alunos$ID_ESCOLA)))
-cat(sprintf("   • Alunos: %d\n", nrow(alunos)))
 
 # ============================================================================
 # PASSO 2: AGREGAR PROFICIÊNCIA E INSE POR ESCOLA
@@ -100,31 +91,34 @@ cat("\n>>> Agregando dados por escola...\n")
 agregados <- alunos %>%
   group_by(ID_ESCOLA) %>%
   summarise(
-    # Proficiência média
+
     MEDIA_MT = mean(PROFICIENCIA_MT_SAEB, na.rm = TRUE),
     MEDIA_LP = mean(PROFICIENCIA_LP_SAEB, na.rm = TRUE),
-    
-    # INSE médio
+
     INSE_MEDIO = mean(INSE_ALUNO, na.rm = TRUE),
-    
-    # Nível INSE mais frequente
-    NIVEL_INSE_MODAL = as.numeric(names(sort(table(NU_TIPO_NIVEL_INSE), 
-                                               decreasing = TRUE)[1]))[1],
-    
-    # Localização (modal — deveria ser igual pra toda a escola)
-    ID_AREA_MODAL = as.numeric(names(sort(table(ID_AREA), 
-                                            decreasing = TRUE)[1]))[1],
-    ID_LOCALIZACAO_MODAL = as.numeric(names(sort(table(ID_LOCALIZACAO), 
-                                                   decreasing = TRUE)[1]))[1],
-    
-    # Contagem de alunos com dados válidos
+
+    NIVEL_INSE_MODAL =
+      as.numeric(names(sort(table(NU_TIPO_NIVEL_INSE),
+                            decreasing=TRUE)[1])),
+
+    TIPO_ESCOLA_MODAL =
+      as.numeric(names(sort(table(IN_PUBLICA),
+                            decreasing=TRUE)[1])),
+
+    ID_AREA_MODAL =
+      as.numeric(names(sort(table(ID_AREA),
+                            decreasing=TRUE)[1])),
+
+    ID_LOCALIZACAO_MODAL =
+      as.numeric(names(sort(table(ID_LOCALIZACAO),
+                            decreasing=TRUE)[1])),
+
     N_ALUNOS = n(),
     N_ALUNOS_MT_VALIDOS = sum(!is.na(PROFICIENCIA_MT_SAEB)),
     N_ALUNOS_LP_VALIDOS = sum(!is.na(PROFICIENCIA_LP_SAEB)),
-    
-    .groups = 'drop'
-  )
 
+    .groups="drop"
+  )
 cat("   ✓ Agregação completa\n")
 cat(sprintf("   • Escolas com dados: %d\n", nrow(agregados)))
 
@@ -165,19 +159,7 @@ agregados <- agregados %>%
 # ============================================================================
 
 cat("\n>>> Juntando com informações das escolas...\n")
-
-# Join com TS_ESCOLA
-metadados <- agregados %>%
-  left_join(escolas, by = "ID_ESCOLA")
-
-# Verificar se houve perda de dados
-cat(sprintf("   ✓ Escolas no agrupamento: %d\n", nrow(agregados)))
-cat(sprintf("   ✓ Escolas após join: %d\n", nrow(metadados)))
-
-if (nrow(metadados) < nrow(agregados)) {
-  warning(sprintf("⚠ Perda de %d escolas no join!\n", 
-                  nrow(agregados) - nrow(metadados)))
-}
+metadados <- agregados
 
 # ============================================================================
 # PASSO 5: CRIAR VARIÁVEIS DE CLASSIFICAÇÃO
@@ -201,11 +183,15 @@ localizacao_map <- tribble(
 
 # Aplicar mapeamentos
 metadados <- metadados %>%
-  left_join(area_map, by = "ID_AREA") %>%
-  left_join(localizacao_map, by = "ID_LOCALIZACAO") %>%
+  left_join(area_map,
+          by=c("ID_AREA_MODAL"="ID_AREA")) %>%
+left_join(localizacao_map,
+          by=c("ID_LOCALIZACAO_MODAL"="ID_LOCALIZACAO")) %>%
   # Criar variável de grupo (pública vs privada)
   mutate(
-    TIPO_ESCOLA = if_else(IN_PUBLICA == 1, "Pública", "Privada"),
+    TIPO_ESCOLA = if_else(TIPO_ESCOLA_MODAL == 1,
+                      "Pública",
+                      "Privada"),
     
     # INSE categorizado
     GRUPO_INSE = case_when(
@@ -258,51 +244,6 @@ cat(sprintf("   ✓ Arquivo salvo: metadados_escolas_%s.csv\n", timestamp))
 cat(sprintf("   • Caminh: %s\n", nome_saida))
 cat(sprintf("   • Linhas: %d (escolas) | Colunas: %d\n", 
             nrow(metadados), ncol(metadados)))
-
-# ============================================================================
-# PASSO 7: RESUMOS POR GRUPO
-# ============================================================================
-
-cat("\n>>> Resumos por grupo:\n")
-
-# Por tipo de escola
-cat("\n--- PÚBLICA vs PRIVADA ---\n")
-metadados %>%
-  group_by(TIPO_ESCOLA) %>%
-  summarise(
-    N_ESCOLAS = n(),
-    MEDIA_MT_GRUPO = mean(MEDIA_MT, na.rm = TRUE),
-    MEDIA_LP_GRUPO = mean(MEDIA_LP, na.rm = TRUE),
-    INSE_GRUPO = mean(INSE_MEDIO, na.rm = TRUE),
-    .groups = 'drop'
-  ) %>%
-  print()
-
-# Por localização
-cat("\n--- URBANA vs RURAL ---\n")
-metadados %>%
-  group_by(LOCALIZACAO) %>%
-  summarise(
-    N_ESCOLAS = n(),
-    MEDIA_MT_GRUPO = mean(MEDIA_MT, na.rm = TRUE),
-    MEDIA_LP_GRUPO = mean(MEDIA_LP, na.rm = TRUE),
-    INSE_GRUPO = mean(INSE_MEDIO, na.rm = TRUE),
-    .groups = 'drop'
-  ) %>%
-  print()
-
-# Por INSE
-cat("\n--- GRUPOS DE INSE ---\n")
-metadados %>%
-  group_by(GRUPO_INSE) %>%
-  summarise(
-    N_ESCOLAS = n(),
-    MEDIA_MT_GRUPO = mean(MEDIA_MT, na.rm = TRUE),
-    MEDIA_LP_GRUPO = mean(MEDIA_LP, na.rm = TRUE),
-    INSE_GRUPO = mean(INSE_MEDIO, na.rm = TRUE),
-    .groups = 'drop'
-  ) %>%
-  print()
 
 cat("\n✅ Script finalizado com sucesso!\n")
 

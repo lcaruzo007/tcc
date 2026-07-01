@@ -142,7 +142,7 @@ painel_dendrograma <- function(hc, lab_cores, y_expand = 0.28,
     left_join(lab_cores, by = "label")
 
   y_max   <- max(seg$y, na.rm = TRUE)
-  y_label <- -0.08 * y_max
+  y_label <- -0.22 * y_max
   y_prof  <- if (!is.null(prof_labels)) -0.20 * y_max else NULL
 
   p <- ggplot() +
@@ -154,11 +154,11 @@ painel_dendrograma <- function(hc, lab_cores, y_expand = 0.28,
                size = 6, shape = 19) +
     geom_text(data = lab,
               aes(x = x, y = y_label, label = label, colour = cor),
-              size = 3.2, fontface = "bold", hjust = 0.5, lineheight = 0.9) +
+              size = 3.2, fontface = "bold", hjust = 0.5, lineheight = 0.9, angle = 90) +
     scale_colour_identity() +
     scale_y_continuous(
-      expand = expansion(mult = c(y_expand, 0.06)),
-      name   = "Distancia Euclidiana (Ward.D2)"
+      expand = expansion(mult = c(0.45, 0.06)),
+      name = "Distancia Euclidiana (Ward.D2)"
     ) +
     labs(title = titulo, subtitle = subtitulo) +
     tema_saeb() +

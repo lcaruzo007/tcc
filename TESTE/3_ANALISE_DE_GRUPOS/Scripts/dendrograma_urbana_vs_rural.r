@@ -13,10 +13,58 @@
 #
 # VERSAO: 1.0 — Mai 2026
 ################################################################################
+# Carrega funcoes compartilhadas (ajuste o caminho se necessario)
+get_script_dir <- function() {
+  # Metodo 1: RStudio (funciona quando ha um editor de codigo aberto)
+  path <- tryCatch(
+    rstudioapi::getSourceEditorContext()$path,
+    error = function(e) NULL
+  )
+  if (!is.null(path) && nzchar(path)) {
+    return(dirname(normalizePath(path)))
+  }
 
-source(file.path(dirname(rstudioapi::getSourceEditorContext()$path),
-                 "base_dendrograma.r"))
+  # Metodo 2: quando o script foi chamado via source()
+  path <- tryCatch(
+    normalizePath(sys.frame(1)$ofile),
+    error = function(e) NULL
+  )
+  if (!is.null(path) && nzchar(path)) {
+    return(dirname(path))
+  }
 
+  # Metodo 3: execucao via linha de comando (Rscript arquivo.r)
+  args <- commandArgs(trailingOnly = FALSE)
+  file_arg <- grep("^--file=", args, value = TRUE)
+  if (length(file_arg) > 0L) {
+    return(dirname(normalizePath(sub("^--file=", "", file_arg[1]))))
+  }
+
+  # Metodo 4 (ultimo recurso): os 3 metodos acima falham quando o script e
+  # executado linha a linha / trecho selecionado fora do RStudio, ou em IDEs
+  # que nao implementam rstudioapi. Nesses casos getwd() pode nao ser a pasta
+  # do script - por isso procuramos base_dendrograma.r a partir do diretorio
+  # de trabalho atual (e, se preciso, subindo na arvore de pastas).
+  cwd <- getwd()
+  repeat {
+    achado <- list.files(cwd, pattern = "^base_dendrograma\\.r$",
+                          recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
+    if (length(achado) > 0L) {
+      return(dirname(achado[1]))
+    }
+    pai <- dirname(cwd)
+    if (pai == cwd) break
+    cwd <- pai
+  }
+
+  stop(
+    "Nao foi possivel localizar 'base_dendrograma.r' automaticamente.\n",
+    "Solucao definitiva: defina o caminho manualmente substituindo a linha\n",
+    "'source(file.path(get_script_dir(), \"base_dendrograma.r\"))' por, por exemplo:\n",
+    "  source(\"C:/Users/13756596699/tcc/TESTE/3_ANALISE_DE_GRUPOS/Scripts/base_dendrograma.r\")"
+  )
+}
+source(file.path(get_script_dir(), "base_dendrograma.r"))
 # =============================================================================
 # CONFIGURACAO
 # =============================================================================
@@ -29,7 +77,7 @@ VARS_CLUSTER <- c("MEDIA_MT", "MEDIA_LP", "INSE_MEDIO")
 N_CLUSTERS   <- 2
 
 # NULL = usa todas; numero = seleciona as mais extremas de cada grupo
-N_ESCOLAS_POR_GRUPO <- NULL
+N_ESCOLAS_POR_GRUPO <- 20
 
 COR_URBANA <- "#1B4F9A"   # azul
 COR_RURAL  <- "#2CA02C"   # verde
@@ -44,6 +92,13 @@ message("DENDROGRAMA: Urbana vs Rural")
 message(strrep("=", 70))
 
 metadados <- carregar_metadados(DIR_PROCESSADOS)
+metadados <- metadados |>
+  rename(
+    TIPO_ESCOLA = TIPO_ESCOLA_MODAL,
+    AREA = ID_AREA_MODAL,
+    LOCALIZACAO = ID_LOCALIZACAO_MODAL
+  )
+
 
 if (!"LOCALIZACAO" %in% names(metadados)) {
   stop("Coluna 'LOCALIZACAO' nao encontrada nos metadados.\n",
