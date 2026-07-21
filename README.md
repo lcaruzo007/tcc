@@ -25,74 +25,79 @@ tcc/
     │   ├── requisitos.md        (dependências R)
     │   └── utils_saeb.r         (funções compartilhadas)
     │
-    ├── 1_LIMPEZA_E_TRANSFORMACAO/
-    │   ├── ajeitar_dados.r      (PASSO 1)
-    │   └── outputs/
-    │
-    ├── 2_ANALISE_POR_ESCOLA/
-    │   ├── Scripts/
-    │   │   ├── correlacao.r     (PASSO 2)
-    │   │   └── graficos.r       (PASSO 3 - opcional)
-    │   └── outputs/
-    │
-    ├── 3_ANALISE_DE_GRUPOS/
-    │   ├── Scripts/
-    │   │   ├── classificar_escolas.r   (PASSO 4)
-    │   │   ├── comparar_grupos.r       (PASSO 5)
-    │   │   ├── comparar_duas_escolas.r (PASSO 6 - opcional)
-    │   │   └── dendrograma_analise_completa.r (PASSO 7)
-    │   ├── README.md
-    │   └── outputs/
-    │
-    ├── 4_REGRESSAO_LINEAR/
-    │   ├── Scripts/
-    │   │   └── regressao_linear_multipla.r (PASSO 8)
-    │   ├── README.md
-    │   └── outputs/
-    │
-    └── 5_REGRESSAO_ITENS_BRUTOS/
-        ├── Scripts/
-        │   └── regressao_itens_brutos_dummy.r (PASSO 9)
-        ├── README.md
-        └── outputs/
+    ├── 1_LIMPEZA_E_TRANSFORMACAO/    (PASSO 1)
+    ├── 2_ANALISE_POR_ESCOLA/         (PASSO 2-3)
+    ├── 3_ANALISE_DE_GRUPOS/          (PASSO 4-7)
+    ├── 4_REGRESSAO_LINEAR/           (PASSO 8)
+    ├── 5_REGRESSAO_ITENS_BRUTOS/     (PASSO 9)
+    ├── 6_ANALISE_ESPACIAL/           (PASSO 10 — mapas)
+    ├── 7_MODELOS_HIERARQUICOS/       (PASSO 11 — HLM)
+    ├── 8_ANALISE_MEDIACAO/           (PASSO 12 — mediação)
+    ├── 9_VALIDACAO_CRUZADA/          (PASSO 13 — CV + ROC)
+    ├── 10_ANALISE_RESIDUOS_ESPACIAIS/(PASSO 14 — Moran's I)
+    └── 11_INDICE_COMPOSTO/           (PASSO 15 — PCA)
 ```
 
 ## Pipeline de Execução
 
+### Fase 1: Limpeza e Correlações (PASSO 1-3)
+
 ```r
-# PASSO 1: Limpeza (1x)
 source("TESTE/1_LIMPEZA_E_TRANSFORMACAO/ajeitar_dados.r")
-
-# PASSO 2: Correlações
 source("TESTE/2_ANALISE_POR_ESCOLA/Scripts/correlacao.r")
+shiny::runApp("TESTE/2_ANALISE_POR_ESCOLA/Scripts/graficos.r")  # opcional
+```
 
-# PASSO 3: Dashboard (opcional)
-shiny::runApp("TESTE/2_ANALISE_POR_ESCOLA/Scripts/graficos.r")
+### Fase 2: Análise de Grupos (PASSO 4-7)
 
-# PASSO 4: Metadados das escolas (1x, necessário para 5-7)
+```r
 source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/classificar_escolas.r")
-
-# PASSO 5: Comparações entre grupos
 source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/comparar_grupos.r")
-
-# PASSO 6: Comparar 2 escolas (opcional)
-source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/comparar_duas_escolas.r")
-
-# PASSO 7: Clustering
+source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/comparar_duas_escolas.r")  # opcional
 source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/dendrograma_analise_completa.r")
+```
 
-# PASSO 8: Regressão linear
+### Fase 3: Modelagem Preditiva (PASSO 8-9)
+
+```r
 source("TESTE/4_REGRESSAO_LINEAR/Scripts/regressao_linear_multipla.r")
-
-# PASSO 9: Regressão com itens brutos
 source("TESTE/5_REGRESSAO_ITENS_BRUTOS/Scripts/regressao_itens_brutos_dummy.r")
 ```
 
+### Fase 4: Análises Avançadas (PASSO 10-15)
+
+```r
+source("TESTE/6_ANALISE_ESPACIAL/Scripts/mapa_municipios.r")
+source("TESTE/7_MODELOS_HIERARQUICOS/Scripts/modelos_hierarquicos.r")
+source("TESTE/8_ANALISE_MEDIACAO/Scripts/analise_mediacao.r")
+source("TESTE/9_VALIDACAO_CRUZADA/Scripts/validacao_cruzada.r")
+source("TESTE/10_ANALISE_RESIDUOS_ESPACIAIS/Scripts/analise_residuos_espaciais.r")
+source("TESTE/11_INDICE_COMPOSTO/Scripts/indice_composto.r")
+```
+
+## Resumo das Análises
+
+| # | Fase | O que faz | Figuras |
+|---|------|-----------|---------|
+| 1 | Limpeza | Transforma variáveis A/B/C → números | — |
+| 2 | Correlações | Spearman/Pearson por escola | — |
+| 3 | Dashboard | Shiny interativo (opcional) | — |
+| 4 | Metadados | Agrega por escola | — |
+| 5 | Comparações | Wilcoxon entre grupos | Figuras 1-4 |
+| 6 | 2 escolas | Comparação lado a lado | Figura 5 |
+| 7 | Clustering | Dendrogramas | Figura 5 |
+| 8 | Regressão | Modelos lineares (INSE) | Figuras 6-14 |
+| 9 | Itens brutos | Regressão com 72 itens | Figuras 6-14 |
+| 10 | Mapas | Coropléticos por município | Figuras 16-18 |
+| 11 | HLM | Modelos hierárquicos | Figuras 19-20 |
+| 12 | Mediação | INSE como mediador | Figuras 21-22 |
+| 13 | Validação CV | K-fold + ROC/AUC | Figuras 23-25 |
+| 14 | Resíduos espaciais | Moran's I + LISA | Figuras 26-28 |
+| 15 | Índice composto | PCA + indicador próprio | Figuras 29-31 |
+
 ## Detecção Automática de Caminhos
 
-Todos os scripts detectam automaticamente a pasta raiz do projeto. Funciona em qualquer computador, independente do nome da pasta de usuário (ex: `Usuario`, `13756596699`, etc).
-
-Se a detecção automática falhar, o script pedirá para selecionar a pasta raiz manualmente.
+Todos os scripts detectam automaticamente a pasta raiz do projeto. Funciona em qualquer computador, independente do nome da pasta de usuário.
 
 ## Documentação
 
@@ -108,3 +113,4 @@ Se a detecção automática falhar, o script pedirá para selecionar a pasta rai
 - Todos os outputs usam timestamp (não sobrescrevem)
 - Caminhos usam `/` (não `\`)
 - O PASSO 5 gera comparações bidirecionais (ex: Pública→Privada E Privada→Pública)
+- Todos os gráficos usam DPI 600 e fundo branco (qualidade para impressão)

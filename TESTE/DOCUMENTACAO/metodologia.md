@@ -117,3 +117,138 @@ Justificativas estatísticas das decisões metodológicas.
 | Interpretabilidade | Alta | Complexa |
 | Multicolinearidade | Nenhuma | Severa → VIF |
 | Uso | Modelagem final | Exploração |
+
+## PASSO 10: Análise Espacial (Mapas Coropléticos)
+
+### Objetivo
+Visualizar padrões geográficos de proficiência e INSE por município de MG.
+
+### Metodologia
+1. Integra `metadados_escolas` com `TS_ESCOLA.csv` via `ID_ESCOLA` para obter `ID_MUNICIPIO`
+2. Agrega proficiência e INSE por município
+3. Download do shapefile de MG via `geobr::read_municipality(code_muni = "MG")`
+4. Gera mapas coropléticos com `tmap` (5 quantis)
+
+### Justificativa
+- Identifica padrões regionais não visíveis em análise agregada
+- Revela desigualdades intraestaduais
+- Complementa análise de grupos com perspectiva geográfica
+
+## PASSO 11: Modelos Hierárquicos Lineares (HLM)
+
+### Objetivo
+Considerar estrutura aninhada dos dados (alunos dentro de escolas).
+
+### Metodologia
+1. **Modelo Nulo**: Intercepto aleatório por escola → calcula ICC
+2. **Modelo 1**: INSE_ALUNO como preditor fixo + intercepto aleatório
+3. **Modelo 2**: INSE individual + INSE médio da escola
+4. Comparação via Likelihood Ratio Test (ANOVA)
+5. R² marginal (efeitos fixos) e condicional (fixos + aleatórios)
+
+### ICC (Coeficiente de Correlação Intraclasse)
+- ICC > 20%: estrutura hierárquica forte — HLM necessário
+- ICC 10-20%: moderado — HLM recomendado
+- ICC < 10%: estrutura hierárquica fraca
+
+### Justificativa
+- Dados educacionais são inerentemente hierárquicos
+- Ignorar estrutura aninhada viola pressuposto de independência
+- Permite separar variância entre e dentro de escolas
+
+## PASSO 12: Análise de Mediação
+
+### Objetivo
+Testar se INSE media o efeito de variáveis de contexto sobre a proficiência.
+
+### Metodologia
+1. **Caminho A**: Variável independente → INSE (mediador)
+2. **Caminho B + C'**: INSE + variável independente → Proficiência
+3. **Efeito indireto** (A × B): bootstrap com 1000 simulações
+4. **Proporção mediada**: |indireto| / |total| × 100
+
+### Análises
+- TIPO_ESCOLA → INSE → Proficiência (MT e LP)
+- LOCALIZACAO → INSE → Proficiência (MT e LP)
+
+### Justificativa
+- Responde: "Escolas privadas têm melhor desempenho PORQUE têm INSE maior?"
+- Separa efeito direto (tipo de escola) do efeito indireto (via INSE)
+- Informa políticas públicas: focar em INSE reduz diferença?
+
+## PASSO 13: Validação Cruzada + Curva ROC
+
+### Objetivo
+Avaliar qualidade preditiva dos modelos e capacidade de classificação.
+
+### Metodologia
+
+#### Validação Cruzada (Regressão)
+- 10-fold CV estratificado por tipo de escola
+- Métricas: RMSE, MAE, R² por fold
+- Média e desvio padrão das métricas
+
+#### Curva ROC (Classificação)
+- Define "alto desempenho" como top 25% de proficiência
+- Modelo logístico com preditores: INSE, TIPO_ESCOLA, LOCALIZACAO, AREA
+- AUC com IC 95% (bootstrap)
+
+### Interpretação do AUC
+- AUC > 0.8: excelente discriminação
+- AUC 0.7-0.8: boa discriminação
+- AUC 0.6-0.7: discriminação moderada
+- AUC < 0.6: discriminação fraca
+
+### Justificativa
+- Testa robustez e generalização dos modelos
+- Evita overfitting
+- Quantifica capacidade de prever "alto desempenho"
+
+## PASSO 14: Análise de Resíduos Espaciais
+
+### Objetivo
+Testar autocorrelação espacial nos resíduos do modelo (Índice de Moran).
+
+### Metodologia
+1. Agrega resíduos por município (média dos resíduos das escolas)
+2. Cria matriz de vizinhança (queen contiguity) via `poly2nb()`
+3. Calcula Moran's I global para resíduos MT e LP
+4. Calcula LISA (Local Indicators of Spatial Association)
+5. Classifica municípios em quadrantes: Alto-Alto, Baixo-Baixo, Alto-Baixo, Baixo-Alto
+
+### Interpretação
+- Moran's I > 0 e p < 0.05: autocorrelação positiva (clusters espaciais)
+- Moran's I ≈ 0: resíduos independentes (modelo adequado)
+- Moran's I < 0: padrão alternado (raro em dados socioeconômicos)
+
+### Justificativa
+- Verifica pressuposto de independência dos resíduos
+- Se autocorrelação presente: modelo precisa incluir termos espaciais
+- Identifica clusters de municípios com desempenho similar
+
+## PASSO 15: Índice Composto de Vulnerabilidade (PCA)
+
+### Objetivo
+Criar indicador próprio combinando variáveis socioeconômicas e de proficiência.
+
+### Metodologia
+1. Inverte variáveis (menor proficiência = maior vulnerabilidade)
+2. Padroniza todas as variáveis (z-score)
+3. Executa PCA com 5 componentes
+4. Retém componentes até explicar ≥ 80% da variância
+5. PC1 como índice composto (maior variância explicada)
+6. Normaliza para escala 0-100
+7. Classifica em 4 níveis: Muito Baixa, Baixa, Alta, Muito Alta
+
+### Variáveis no PCA
+- INV_MT: -MEDIA_MT (inverso da proficiência MT)
+- INV_LP: -MEDIA_LP (inverso da proficiência LP)
+- INV_INSE: -INSE_MEDIO (inverso do INSE)
+- TIPO_PRIVADA: escola privada (0/1)
+- LOCAL_RURAL: escola rural (0/1)
+
+### Justificativa
+- INSE é índice sintético do INEP, mas pode não capturar todas as dimensões
+- Índice próprio permite combinar variáveis de forma transparente
+- Útil para classificação de escolas por vulnerabilidade
+- Informa políticas de intervenção direcionada
