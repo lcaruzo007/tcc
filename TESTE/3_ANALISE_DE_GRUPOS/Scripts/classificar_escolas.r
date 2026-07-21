@@ -45,9 +45,9 @@ detectar_raiz <- function() {
 RAIZ <- detectar_raiz()
 DIR_MICRODADOS <- file.path(RAIZ, "MICRODADOS_SAEB_2023/DADOS")
 DIR_TESTE <- file.path(RAIZ, "TESTE")
-DIR_SAIDA <- file.path(DIR_TESTE, "dados_por_escola")
+DIR_SAIDA <- file.path(DIR_TESTE, "1_LIMPEZA_E_TRANSFORMACAO/outputs")
 DIR_ANALISE <- file.path(DIR_TESTE, "3_ANALISE_DE_GRUPOS")
-DIR_PROCESSADOS <- file.path(DIR_ANALISE, "outputs_escolas")
+DIR_PROCESSADOS <- file.path(DIR_ANALISE, "outputs/metadados")
 
 # Criar diretório de saída se não existir
 if (!dir.exists(DIR_PROCESSADOS)) {

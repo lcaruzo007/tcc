@@ -86,14 +86,34 @@ library(car)
 # DETECÇÃO AUTOMÁTICA DE CAMINHOS
 # =============================================================================
 
-RAIZ <- "C:/Users/13756596699/tcc"
+detectar_raiz <- function() {
+  cwd <- getwd()
+  while (cwd != dirname(cwd)) {
+    if (dir.exists(file.path(cwd, "TESTE"))) {
+      message("✓ Projeto encontrado em: ", cwd)
+      return(cwd)
+    }
+    cwd <- dirname(cwd)
+  }
+  if (interactive()) {
+    raiz <- utils::choose.dir(default = getwd(),
+                              caption = "Selecione a pasta raiz do projeto TCC")
+    if (is.na(raiz) || raiz == "") stop("Caminho não selecionado.")
+    message("✓ Pasta selecionada: ", raiz)
+    return(raiz)
+  } else {
+    stop("Não foi possível detectar o caminho automaticamente.")
+  }
+}
+
+RAIZ <- detectar_raiz()
 
 ARQUIVO_DADOS_BRUTOS <- file.path(RAIZ, "MICRODADOS_SAEB_2023/DADOS/TS_ALUNO_34EM.csv")
 
-DIR_MODELOS      <- file.path(RAIZ, "TESTE/4_REGRESSAO_LINEAR/outputs_modelos")
-DIR_DIAGNOSTICOS <- file.path(RAIZ, "TESTE/4_REGRESSAO_LINEAR/outputs_diagnosticos")
-DIR_FIGURAS      <- file.path(RAIZ, "TESTE/4_REGRESSAO_LINEAR/outputs_figuras")
-DIR_TABELAS      <- file.path(RAIZ, "TESTE/4_REGRESSAO_LINEAR/outputs_tabelas")
+DIR_MODELOS      <- file.path(RAIZ, "TESTE/4_REGRESSAO_LINEAR/outputs/modelos")
+DIR_DIAGNOSTICOS <- file.path(RAIZ, "TESTE/4_REGRESSAO_LINEAR/outputs/diagnosticos")
+DIR_FIGURAS      <- file.path(RAIZ, "TESTE/4_REGRESSAO_LINEAR/outputs/figuras")
+DIR_TABELAS      <- file.path(RAIZ, "TESTE/4_REGRESSAO_LINEAR/outputs/tabelas")
 
 message("Arquivo de dados: ", ARQUIVO_DADOS_BRUTOS)
 message("Existe? ", file.exists(ARQUIVO_DADOS_BRUTOS))

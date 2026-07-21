@@ -272,10 +272,10 @@ ARQUIVO_DADOS_BRUTOS <- arquivo_mais_recente(DIR_DADOS_BRUTOS, "^TS_ALUNO_34EM\\
 
 # Subpastas próprias — separadas do script principal
 DIR_BASE <- file.path(RAIZ, "TESTE", "5_REGRESSAO_ITENS_BRUTOS")
-DIR_MODELOS     <- file.path(DIR_BASE, "outputs_modelos")
-DIR_DIAGNOSTICOS<- file.path(DIR_BASE, "outputs_diagnosticos")
-DIR_FIGURAS     <- file.path(DIR_BASE, "outputs_figuras")
-DIR_TABELAS     <- file.path(DIR_BASE, "outputs_tabelas")
+DIR_MODELOS     <- file.path(DIR_BASE, "outputs/modelos")
+DIR_DIAGNOSTICOS<- file.path(DIR_BASE, "outputs/diagnosticos")
+DIR_FIGURAS     <- file.path(DIR_BASE, "outputs/figuras")
+DIR_TABELAS     <- file.path(DIR_BASE, "outputs/tabelas")
 
 message("Caminhos configurados:")
 message("  Dados brutos : ", ARQUIVO_DADOS_BRUTOS)

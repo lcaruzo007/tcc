@@ -46,9 +46,9 @@ detectar_raiz <- function() {
 RAIZ <- detectar_raiz()
 DIR_TESTE <- file.path(RAIZ, "TESTE")
 DIR_ANALISE <- file.path(DIR_TESTE, "3_ANALISE_DE_GRUPOS")
-DIR_OUTPUTS_ESCOLAS <- file.path(DIR_ANALISE, "outputs_escolas")
-DIR_PROCESSADOS <- file.path(DIR_ANALISE, "outputs_escolas")
-DIR_FIGURAS <- file.path(DIR_ANALISE, "outputs_figuras")
+DIR_OUTPUTS_ESCOLAS <- file.path(DIR_ANALISE, "outputs/metadados")
+DIR_PROCESSADOS <- file.path(DIR_ANALISE, "outputs/metadados")
+DIR_FIGURAS <- file.path(DIR_ANALISE, "outputs/figuras")
 
 # Criar diretório de figuras se não existir
 if (!dir.exists(DIR_FIGURAS)) {
@@ -166,7 +166,9 @@ privada_lp <- metadados %>%
 
 comparacoes <- bind_rows(
   fazer_wilcoxon(publica_mt, privada_mt, "Pública", "Privada", "PROFICIÊNCIA_MT"),
-  fazer_wilcoxon(publica_lp, privada_lp, "Pública", "Privada", "PROFICIÊNCIA_LP")
+  fazer_wilcoxon(publica_lp, privada_lp, "Pública", "Privada", "PROFICIÊNCIA_LP"),
+  fazer_wilcoxon(privada_mt, publica_mt, "Privada", "Pública", "PROFICIÊNCIA_MT"),
+  fazer_wilcoxon(privada_lp, publica_lp, "Privada", "Pública", "PROFICIÊNCIA_LP")
 )
 
 print(comparacoes)
@@ -196,7 +198,9 @@ rural_lp <- metadados %>%
 comparacoes <- bind_rows(
   comparacoes,
   fazer_wilcoxon(urbana_mt, rural_mt, "Urbana", "Rural", "PROFICIÊNCIA_MT"),
-  fazer_wilcoxon(urbana_lp, rural_lp, "Urbana", "Rural", "PROFICIÊNCIA_LP")
+  fazer_wilcoxon(urbana_lp, rural_lp, "Urbana", "Rural", "PROFICIÊNCIA_LP"),
+  fazer_wilcoxon(rural_mt, urbana_mt, "Rural", "Urbana", "PROFICIÊNCIA_MT"),
+  fazer_wilcoxon(rural_lp, urbana_lp, "Rural", "Urbana", "PROFICIÊNCIA_LP")
 )
 
 # ============================================================================
@@ -224,7 +228,9 @@ interior_lp <- metadados %>%
 comparacoes <- bind_rows(
   comparacoes,
   fazer_wilcoxon(capital_mt, interior_mt, "Capital", "Interior", "PROFICIÊNCIA_MT"),
-  fazer_wilcoxon(capital_lp, interior_lp, "Capital", "Interior", "PROFICIÊNCIA_LP")
+  fazer_wilcoxon(capital_lp, interior_lp, "Capital", "Interior", "PROFICIÊNCIA_LP"),
+  fazer_wilcoxon(interior_mt, capital_mt, "Interior", "Capital", "PROFICIÊNCIA_MT"),
+  fazer_wilcoxon(interior_lp, capital_lp, "Interior", "Capital", "PROFICIÊNCIA_LP")
 )
 
 # ============================================================================
@@ -252,7 +258,9 @@ baixo_inse_lp <- metadados %>%
 comparacoes <- bind_rows(
   comparacoes,
   fazer_wilcoxon(alto_inse_mt, baixo_inse_mt, "Alto_INSE", "Baixo_INSE", "PROFICIÊNCIA_MT"),
-  fazer_wilcoxon(alto_inse_lp, baixo_inse_lp, "Alto_INSE", "Baixo_INSE", "PROFICIÊNCIA_LP")
+  fazer_wilcoxon(alto_inse_lp, baixo_inse_lp, "Alto_INSE", "Baixo_INSE", "PROFICIÊNCIA_LP"),
+  fazer_wilcoxon(baixo_inse_mt, alto_inse_mt, "Baixo_INSE", "Alto_INSE", "PROFICIÊNCIA_MT"),
+  fazer_wilcoxon(baixo_inse_lp, alto_inse_lp, "Baixo_INSE", "Alto_INSE", "PROFICIÊNCIA_LP")
 )
 
 # ============================================================================

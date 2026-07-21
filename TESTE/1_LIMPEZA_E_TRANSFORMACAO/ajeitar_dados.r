@@ -7,15 +7,38 @@ library(data.table)
 library(tidyverse)
 
 # =========================================================================
+# Detecção Automática de Caminhos
+# =========================================================================
+detectar_raiz <- function() {
+  cwd <- getwd()
+  while (cwd != dirname(cwd)) {
+    if (dir.exists(file.path(cwd, "TESTE"))) {
+      message("✓ Projeto encontrado em: ", cwd)
+      return(cwd)
+    }
+    cwd <- dirname(cwd)
+  }
+  if (interactive()) {
+    raiz <- utils::choose.dir(default = getwd(),
+                              caption = "Selecione a pasta raiz do projeto TCC")
+    if (is.na(raiz) || raiz == "") stop("Caminho não selecionado.")
+    message("✓ Pasta selecionada: ", raiz)
+    return(raiz)
+  } else {
+    stop("Não foi possível detectar o caminho automaticamente.")
+  }
+}
+
+# =========================================================================
 # Configuração de Caminhos
 # =========================================================================
-RAIZ <- "C:/Users/Usuario/Desktop/tcc"
+RAIZ <- detectar_raiz()
 DIR_MICRODADOS <- file.path(RAIZ, "MICRODADOS_SAEB_2023/DADOS")
 DIR_TESTE <- file.path(RAIZ, "TESTE")
-DIR_SAIDA_POR_ESCOLA <- file.path(DIR_TESTE, "dados_por_escola")
+DIR_SAIDA_POR_ESCOLA <- file.path(DIR_TESTE, "1_LIMPEZA_E_TRANSFORMACAO/outputs")
 DIR_SAIDA_RAIZ <- DIR_TESTE
 
-source(file.path(RAIZ, "DOCUMENTACAO", "utils_saeb.r"))
+source(file.path(RAIZ, "TESTE", "DOCUMENTACAO", "utils_saeb.r"))
 
 # Atalhos para os dicionários centralizados (compatibilidade com código existente)
 ordinais      <- ORDINAIS_SAEB
@@ -25,7 +48,7 @@ continuas     <- CONTINUAS_SAEB
 # -------------------------------------------------------------------------
 # Configuração — ajuste estes caminhos antes de executar
 # -------------------------------------------------------------------------
-arquivo_entrada        <- file.path(DIR_MICRODADOS, "TS_ALUNO_34EM_escola_61466120.csv")
+arquivo_entrada        <- file.path(DIR_MICRODADOS, "TS_ALUNO_34EM.csv")
 dir_saida_por_escola   <- DIR_SAIDA_POR_ESCOLA
 sobrescrever_por_escola <- FALSE
 

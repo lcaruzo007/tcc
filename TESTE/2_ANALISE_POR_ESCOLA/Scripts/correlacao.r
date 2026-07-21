@@ -49,8 +49,8 @@ detectar_raiz <- function() {
 RAIZ <- detectar_raiz()
 DIR_TESTE <- file.path(RAIZ, "TESTE")
 DIR_ANALISE_2 <- file.path(DIR_TESTE, "2_ANALISE_POR_ESCOLA")
-DIR_ENTRADA_ESCOLAS <- file.path(DIR_ANALISE_2, "dados_por_escola")
-DIR_SAIDA_RAIZ <- file.path(DIR_ANALISE_2, "outputs_correlacoes")
+DIR_ENTRADA_ESCOLAS <- file.path(DIR_TESTE, "1_LIMPEZA_E_TRANSFORMACAO/outputs")
+DIR_SAIDA_RAIZ <- file.path(DIR_ANALISE_2, "outputs")
 
 message("Caminhos configurados:")
 message("  RAIZ:             ", RAIZ)
@@ -62,7 +62,7 @@ if (!dir.exists(DIR_SAIDA_RAIZ)) {
   dir.create(DIR_SAIDA_RAIZ, showWarnings = FALSE, recursive = TRUE)
 }
 
-source(file.path(RAIZ, "DOCUMENTACAO", "utils_saeb.r"))
+source(file.path(RAIZ, "TESTE", "DOCUMENTACAO", "utils_saeb.r"))
 
 # -------------------------------------------------------------------------
 # Configuracao — importa padrões de utils_saeb.r
@@ -314,7 +314,11 @@ if (modo_execucao == "especificas") {
 
 if (modo_execucao == "pendentes") {
   pastas_escola <- pastas_escola[
-    !vapply(pastas_escola, pasta_tem_resultados_completos, logical(1))
+    !vapply(pastas_escola, function(p) {
+      id <- basename(p)
+      pasta_saida <- file.path(dir_saida_raiz, id)
+      pasta_tem_resultados_completos(pasta_saida)
+    }, logical(1))
   ]
 }
 
@@ -495,9 +499,14 @@ for (pasta_escola in sort(pastas_escola)) {
     stringsAsFactors  = FALSE
   )
 
-  # Gravar resultados
+  # Gravar resultados na pasta de saída da análise 2
+  pasta_saida_escola <- file.path(dir_saida_raiz, id_escola)
+  if (!dir.exists(pasta_saida_escola)) {
+    dir.create(pasta_saida_escola, showWarnings = FALSE, recursive = TRUE)
+  }
+  
   salvar <- function(df, nome) {
-    write.csv(df, file.path(pasta_escola, paste0(nome, ".csv")), row.names = FALSE)
+    write.csv(df, file.path(pasta_saida_escola, paste0(nome, ".csv")), row.names = FALSE)
   }
 
   salvar(df_motivos,      "variaveis_degeneradas")

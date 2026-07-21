@@ -51,8 +51,8 @@ RAIZ <- detectar_raiz()
 DIR_MICRODADOS <- file.path(RAIZ, "MICRODADOS_SAEB_2023/DADOS")
 DIR_TESTE <- file.path(RAIZ, "TESTE")
 DIR_ANALISE <- file.path(DIR_TESTE, "3_ANALISE_DE_GRUPOS")
-DIR_PROCESSADOS <- file.path(DIR_ANALISE, "outputs_escolas")
-DIR_COMPARACOES <- file.path(DIR_ANALISE, "outputs_comparacao")
+DIR_PROCESSADOS <- file.path(DIR_ANALISE, "outputs/metadados")
+DIR_COMPARACOES <- file.path(DIR_ANALISE, "outputs/comparacoes")
 
 # Timestamp
 timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")

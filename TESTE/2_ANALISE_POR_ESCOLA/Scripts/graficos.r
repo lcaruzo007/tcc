@@ -50,13 +50,13 @@ detectar_raiz <- function() {
 RAIZ <- detectar_raiz()
 DIR_TESTE <- file.path(RAIZ, "TESTE")
 DIR_ANALISE_2 <- file.path(DIR_TESTE, "2_ANALISE_POR_ESCOLA")
-DIR_RESULTADOS_POR_ESCOLA <- file.path(DIR_ANALISE_2, "dados_por_escola")
+DIR_RESULTADOS_POR_ESCOLA <- file.path(DIR_ANALISE_2, "outputs")
 
 message("Caminhos configurados:")
 message("  RAIZ:                   ", RAIZ)
 message("  Resultados por escola:  ", DIR_RESULTADOS_POR_ESCOLA)
 
-source(file.path(RAIZ, "DOCUMENTACAO", "utils_saeb.r"))
+source(file.path(RAIZ, "TESTE", "DOCUMENTACAO", "utils_saeb.r"))
 
 # -------------------------------------------------------------------------
 # Configuração
