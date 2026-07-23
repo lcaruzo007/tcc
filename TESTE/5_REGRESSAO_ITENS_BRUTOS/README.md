@@ -30,6 +30,14 @@ A Fase 5 substitui o INSE por seus itens brutos:
 
 ## 📁 Estrutura de Pastas
 
+> **Convenção de pastas datadas** (refatoração julho/2026): os outputs gerados
+> vão para `5_REGRESSAO_ITENS_BRUTOS/outputs/<YYYY-MM-DD>/<tipo>/<nome>_<HHMMSS>.<ext>`.
+> Os arquivos antigos deste módulo já foram migrados para pastas datadas
+> (vide `diario.md`). Os caminhos em `outputs_<tipo>/` listados abaixo
+> correspondem à estrutura LEGADA — mantida aqui para referência; serão
+> atualizados quando o script for migrado para o helper `caminho_saida()`
+> (Fase 3 pendente).
+
 ```
 5_REGRESSAO_ITENS_BRUTOS/
 ├── Scripts/

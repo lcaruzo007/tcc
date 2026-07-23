@@ -16,30 +16,42 @@ Com base em preditores categóricos (tipo de escola, localização, área) e con
 
 ## 📁 Estrutura de Pastas
 
+> **Convenção de pastas datadas** (refatoração julho/2026):
+> todos os outputs vão para `outputs/<YYYY-MM-DD>/<tipo>/<nome>_<HHMMSS>.<ext>`
+> via helper `caminho_saida()` (`TESTE/DOCUMENTACAO/utils_saeb.r`).
+
 ```
 4_REGRESSAO_LINEAR/
 ├── Scripts/
-│   ├── regressao_linear_multipla.r    [PRINCIPAL]
-│   └── testes_pressupostos.r          [COMPLEMENTAR]
-├── outputs_modelos/
-│   ├── modelo_MT_YYYYMMDD_HHMMSS.rds
-│   └── modelo_LP_YYYYMMDD_HHMMSS.rds
-├── outputs_tabelas/
-│   ├── resumo_modelos_*.csv
-│   ├── coeficientes_MT_*.csv
-│   └── coeficientes_LP_*.csv
-├── outputs_diagnosticos/
-│   ├── diagnosticos_MT_*.csv
-│   ├── diagnosticos_LP_*.csv
-│   ├── vif_MT_*.csv
-│   └── vif_LP_*.csv
-└── outputs_figuras/
-    ├── diagnosticos_residuos_MT_*.png
-    ├── diagnosticos_residuos_LP_*.png
-    ├── coeficientes_MT_*.png
-    ├── coeficientes_LP_*.png
-    ├── multicolinearidade_VIF_*.png
-    └── outliers_cooks_*.png
+│   ├── regressao_linear_multipla.r                 [PRINCIPAL]
+│   ├── grafico_coeficientes_referencia_oposta.r   [AUXILIAR — ref oposta Privada+Rural_Interior]
+│   └── testes_pressupostos.r                      [COMPLEMENTAR — verifique se existe]
+└── outputs/
+    └── <YYYY-MM-DD>/             (uma pasta por dia de execução)
+        ├── modelos/
+        │   ├── modelo_MT_<HHMMSS>.rds
+        │   └── modelo_LP_<HHMMSS>.rds
+        ├── tabelas/
+        │   ├── resumo_modelos_<HHMMSS>.csv
+        │   ├── base_escolas_agregada_<HHMMSS>.csv
+        │   ├── REFERENCIAS_MODELOS_<HHMMSS>.csv
+        │   ├── VIF_multicolinearidade_<HHMMSS>.csv
+        │   ├── coeficientes_MT_<HHMMSS>.csv / coeficientes_LP_<HHMMSS>.csv
+        │   ├── comparacao_todas_referencias_MT_<HHMMSS>.csv
+        │   ├── comparacao_todas_referencias_LP_<HHMMSS>.csv
+        │   └── coeficientes_referencia_oposta_{MT,LP}_<HHMMSS>.csv   (script auxiliar)
+        ├── diagnosticos/
+        │   ├── diagnosticos_MT_<HHMMSS>.csv
+        │   └── diagnosticos_LP_<HHMMSS>.csv
+        └── figuras/
+            ├── diagnosticos_residuos_MT_<HHMMSS>.png
+            ├── diagnosticos_residuos_LP_<HHMMSS>.png
+            ├── coeficientes_MT_<HHMMSS>.png / coeficientes_LP_<HHMMSS>.png
+            ├── coeficientes_TCC_color_<HHMMSS>.png
+            ├── coeficientes_TCC_PB_<HHMMSS>.png
+            ├── preditos_vs_observados_MT_<HHMMSS>.png / _LP_*.png
+            ├── resumo_qualidade_ajuste_<HHMMSS>.png
+            └── coeficientes_TCC_{color,PB}_referencia_oposta_<HHMMSS>.png  (auxiliar)
 ```
 
 ---
@@ -48,8 +60,9 @@ Com base em preditores categóricos (tipo de escola, localização, área) e con
 
 ### Pré-requisitos
 
-1. **Executar primeiro**: `3_ANALISE_DE_GRUPOS/Scripts/classificar_escolas.r`
-   - Gera: `metadados_escolas.csv`
+1. **Dados brutos**: `MICRODADOS_SAEB_2023/DADOS/TS_ALUNO_34EM.csv` disponível
+   na raiz do projeto (o script gera `base_escolas_agregada_<ts>.csv`
+   internamente). Não depende de `classificar_escolas.r`.
 2. **Dependências R**:
    ```r
    install.packages(c("tidyverse", "broom", "patchwork", "car", "lmtest"))
@@ -63,33 +76,52 @@ source("TESTE/4_REGRESSAO_LINEAR/Scripts/regressao_linear_multipla.r")
 ```
 
 **O que faz**:
-- ✓ Carrega metadados das escolas
-- ✓ Cria variáveis dummy automáticas:
-  - `TIPO_ESCOLA_Privada` (ref: Pública)
-  - `AREA_Rural` (ref: Urbana)
-  - `LOCALIZACAO_Interior` (ref: Capital)
-- ✓ Padroniza (z-score) variáveis contínuas
-- ✓ Ajusta 2 modelos de regressão (MT e LP)
-- ✓ Gera tabelas de coeficientes
-- ✓ Cria 8 gráficos de diagnóstico
+- ✓ Lê `TS_ALUNO_34EM.csv` e agrega por escola (`base_escolas_agregada_<ts>.csv`)
+- ✓ Cria variáveis dummy automáticas com referências explícitas:
+  - `TIPO_ESCOLA_Privada` (ref: **Publica**)
+  - `AREA_LOCAL_*` (ref: **Urbana_Capital**) — variável combinada de 4 categorias
+    (`Urbana_Capital`, `Urbana_Interior`, `Rural_Capital`, `Rural_Interior`)
+- ✓ Padroniza (z-score) o INSE
+- ✓ Ajusta 2 modelos de regressão (MT e LP) + 8 modelos com todas as
+  referências (comparações simétricas)
+- ✓ Gera tabelas de coeficientes, VIF, documentação de referências
+- ✓ Cria gráficos de diagnóstico + gráfico TCC colorido e P&B
 - ✓ Salva modelos em RDS para reutilização
 
-**Saídas geradas** (~8 arquivos):
+### Passo 1b: Gráfico de Coeficientes com Referência Oposta (Auxiliar)
+
+```r
+source("TESTE/4_REGRESSAO_LINEAR/Scripts/grafico_coeficientes_referencia_oposta.r")
 ```
-outputs_tabelas/
-  ├── resumo_modelos_20260525_143000.csv
-  ├── coeficientes_MT_20260525_143000.csv
-  └── coeficientes_LP_20260525_143000.csv
 
-outputs_modelos/
-  ├── modelo_MT_20260525_143000.rds
-  └── modelo_LP_20260525_143000.rds
+Reaproveita a `base_escolas_agregada_<ts>.csv` mais recente e reajusta os
+modelos com a referência oposta (`TIPO_ESCOLA=Privada`,
+`AREA_LOCAL=Rural_Interior`). Gera o mesmo gráfico TCC (colorido e P&B) sob
+essa perspectiva. O ponto de quebra do eixo X é calculado dinamicamente a
+partir dos ICs 95% dos coeficientes, evitando cortes visuais.
 
-outputs_figuras/
-  ├── diagnosticos_residuos_MT_*.png        [4 subplots cada]
-  └── diagnosticos_residuos_LP_*.png
-  ├── coeficientes_MT_*.png
-  └── coeficientes_LP_*.png
+**Saídas geradas** (~20 arquivos, em `outputs/<YYYY-MM-DD>/<tipo>/`):
+```
+tabelas/
+  ├── resumo_modelos_<HHMMSS>.csv
+  ├── base_escolas_agregada_<HHMMSS>.csv
+  ├── REFERENCIAS_MODELOS_<HHMMSS>.csv
+  ├── VIF_multicolinearidade_<HHMMSS>.csv
+  ├── coeficientes_MT_<HHMMSS>.csv / coeficientes_LP_<HHMMSS>.csv
+  └── comparacao_todas_referencias_{MT,LP}_<HHMMSS>.csv
+modelos/
+  ├── modelo_MT_<HHMMSS>.rds
+  └── modelo_LP_<HHMMSS>.rds
+diagnosticos/
+  ├── diagnosticos_MT_<HHMMSS>.csv
+  └── diagnosticos_LP_<HHMMSS>.csv
+figuras/
+  ├── diagnosticos_residuos_MT_<HHMMSS>.png   [4 subplots cada]
+  ├── diagnosticos_residuos_LP_<HHMMSS>.png
+  ├── coeficientes_MT_<HHMMSS>.png / coeficientes_LP_<HHMMSS>.png
+  ├── coeficientes_TCC_color_<HHMMSS>.png / coeficientes_TCC_PB_<HHMMSS>.png
+  ├── preditos_vs_observados_MT_<HHMMSS>.png / _LP_*.png
+  └── resumo_qualidade_ajuste_<HHMMSS>.png
 ```
 
 ### Passo 2: Validação de Pressupostos (Complementar)
@@ -223,11 +255,15 @@ Intervalo aceitável: [1.5, 2.5]
 No arquivo `regressao_linear_multipla.r`, ajustar:
 
 ```r
-# Variáveis categóricas a converter em dummy
-VARS_CATEGORICAS <- c("TIPO_ESCOLA", "AREA", "LOCALIZACAO")
+# Variáveis categóricas a converter em dummy (refatoração julho/2026:
+# AREA + LOCALIZACAO foram combinadas em AREA_LOCAL — 4 categorias)
+VARS_CATEGORICAS <- c("TIPO_ESCOLA", "AREA_LOCAL")
 
 # Variáveis contínuas (preditoras)
 VARS_CONTINUAS <- c("INSE_MEDIO")
+
+# Referências do modelo principal (passadas via criar_dummies_com_refs())
+refs_modelo <- list(TIPO_ESCOLA = "Publica", AREA_LOCAL = "Urbana_Capital")
 
 # Significância para estrelas
 ALPHA <- 0.05
@@ -239,7 +275,7 @@ ALPHA <- 0.05
 
 | Problema | Causa | Solução |
 |----------|-------|---------|
-| "metadados_escolas_*.csv não encontrado" | Pasta 4_REGRESSAO_LINEAR não está no local correto | Execute `classificar_escolas.r` primeiro |
+| "TS_ALUNO_34EM.csv não encontrado" | `MICRODADOS_SAEB_2023/DADOS/` fora da raiz | Verifique a detecção automática de `RAIZ` (`detectar_raiz()`) |
 | VIF > 10 para várias variáveis | Multicolinearidade severa | Remover variáveis correlacionadas, usar PCA |
 | p < 0.05 em Shapiro-Wilk | Resíduos não normais | Usar transformação (log, raiz) ou robust regression |
 | p < 0.05 em Breusch-Pagan | Heterocedasticidade | Usar erros padrão robustos (sandwich) |
@@ -288,9 +324,9 @@ graph TD
 Para erros ou dúvidas:
 1. Verificar logs de execução no console
 2. Conferir estrutura de pastas (`4_REGRESSAO_LINEAR/` deve estar em `TESTE/`)
-3. Garantir que `metadados_escolas_*.csv` foi gerado corretamente
+3. Garantir que `TS_ALUNO_34EM.csv` está em `MICRODADOS_SAEB_2023/DADOS/`
 4. Revisar pressupostos com `testes_pressupostos.r`
 
 ---
 
-**Versão**: 1.0 | **Data**: Maio 2026
+**Versão**: 2.1 (refatoração julho/2026 — pastas datadas, variável `AREA_LOCAL`, script auxiliar de referência oposta)

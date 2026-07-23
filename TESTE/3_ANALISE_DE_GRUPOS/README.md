@@ -27,31 +27,41 @@ source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/comparar_duas_escolas.r")
 source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/dendrograma_analise_completa.r")
 ```
 
-## Outputs
+## Outputs (pastas datadas)
+
+> **Convenção** (refatoração julho/2026): saídas com timestamp vão para
+> `<modulo>/outputs/<YYYY-MM-DD>/<tipo>/<nome>_<HHMMSS>.<ext>`. Os arquivos
+> antigos deste módulo já foram migrados para pastas datadas (vide
+> `diario.md`). Os scripts deste módulo ainda não usam o helper
+> `caminho_saida()` — pendente da Fase 3. Até lá, executar o script gera um
+> novo nível `outputs/<tipo>/` no estilo antigo além das pastas datadas já
+> migradas.
 
 ```
 outputs/
-├── metadados/
-│   ├── metadados_escolas_YYYYMMDD_HHMMSS.csv    (perfil de cada escola)
-│   ├── resultados_comparacao_YYYYMMDD_HHMMSS.csv (testes Wilcoxon)
-│   └── clusters_escolas_YYYYMMDD_HHMMSS.csv     (atribuição de clusters)
-│
-├── comparacoes/
-│   └── Escola_{A}_vs_{B}_{timestamp}/
-│       ├── Comparacao_Escola_A_vs_B_*.csv
-│       ├── Perfis_Escolas_*.csv
-│       └── visualizacao_comparacao_*.png
-│
-└── figuras/
-    ├── 01_boxplot_tipo_escola.png
-    ├── 02_boxplot_urbano_rural.png
-    ├── 03_boxplot_capital_interior.png
-    ├── 04_boxplot_inse.png
-    ├── dendrograma_geral_ALTO_BAIXO_*.png
-    ├── tabela_escolas_ALTO_BAIXO_*.csv
-    ├── capital_vs_interior/
-    ├── publica_vs_particular/
-    └── urbana_vs_rural/
++-- <YYYY-MM-DD>/               (uma pasta por dia, contém runs migradas/atuais)
+|   +-- metadados/
+|   |   +-- metadados_escolas_<HHMMSS>.csv       (perfil de cada escola)
+|   |   +-- resultados_comparacao_<HHMMSS>.csv    (testes Wilcoxon)
+|   |   +-- clusters_escolas_<HHMMSS>.csv        (atribuicao de clusters)
+|   +-- figuras/
+|       +-- dendrograma_geral_ALTO_BAIXO_<HHMMSS>.png
+|       +-- tabela_escolas_ALTO_BAIXO_<HHMMSS>.csv
+|
++-- comparacoes/                  (mantem subpasta por par - agrupa arquivos)
+|   +-- Escola_{A}_vs_{B}_{YYYYMMDD_HHMMSS}/
+|       +-- Comparacao_Escola_A_vs_B_*.csv
+|       +-- Perfis_Escolas_*.csv
+|       +-- visualizacao_comparacao_*.png
+|
++-- figuras/                      (boxplots sem timestamp - estilo antigo)
+    +-- 01_boxplot_tipo_escola.png
+    +-- 02_boxplot_urbano_rural.png
+    +-- 03_boxplot_capital_interior.png
+    +-- 04_boxplot_inse.png
+    +-- capital_vs_interior/      (dendrograma Modo 2)
+    +-- publica_vs_particular/
+    +-- urbana_vs_rural/
 ```
 
 ## Comparações realizadas (PASSO 5)

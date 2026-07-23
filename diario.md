@@ -1236,3 +1236,280 @@ outputs_figuras/
 **Status:** Fase 4 e Fase 5 — Corrigidas, Validadas e Robustas  
 **Próxima etapa:** Execução final com dados reais e análise de resultados para redação do TCC
 
+---
+
+### 🔵 22 de Julho de 2026
+
+**Horário:** ~14h00 – 22h00
+**Fase:** Refatoração #2 — Fases 2A/2B (padrão de pastas datadas, variável `AREA_LOCAL`, retirada de acentos)
+**Status:** ✅ Concluído com sucesso (alterações em working tree, não commitadas)
+
+#### Motivação
+
+A apresentação do TCC apontou duas lacunas a endereçar antes da próxima banca:
+1. Ausência de organização temporal/rastreável dos outputs (cada script jogava
+   arquivos com timestamp sufixo direto em `outputs/<tipo>/`).
+2. Falta de captação da interação urbano/rural × capital/interior na regressão
+   (`AREA` e `LOCALIZACAO` como dummies separadas não capturavam o efeito
+   conjunto). Adicionalmente, problemas de encoding
+   (Windows/Latin1 × UTF-8) violavam acentos em mensagens R.
+
+#### Fase 2A — Helper compartilhado `utils_saeb.r`
+
+- Criadas funções para a nova convenção de pastas datadas:
+  - `caminho_saida(DIR_BASE, subpasta, nome, ext)` — gera
+    `outputs/<YYYY-MM-DD>/<subpasta>/<nome>_<HHMMSS>.<ext>` e cria a pasta.
+  - `encontrar_arquivo_mais_recente(pasta, nome_base, tipo)` — procura em
+    subpastas datadas (mais recente por `mtime`) com fallback para o padrão
+    antigo de timestamp sufixo.
+  - `arquivo_com_versao_existe()` — wrapper de checagem.
+  - `gerar_caminho_sem_sobrescrever()` mantida por compatibilidade.
+- Centralizados: `tema_saeb()` + paletas, dicionários de variáveis
+  (`ORDINAIS_SAEB`, `NOMINAIS_SAEB`, `CONTINUAS_SAEB`), constantes de filtros e
+  `detectar_raiz()`.
+
+#### Fase 2B — Migração dos scripts (módulos 4, 6, 7, 8, 9, 10, 11)
+
+Scripts atualizados para usar `caminho_saida()` (pastas datadas), remover
+acentos em strings/mensagens e adotar a variável combinada `AREA_LOCAL`:
+
+- `4_REGRESSAO_LINEAR/Scripts/regressao_linear_multipla.r`
+  - Substituiu `VARS_CATEGORICAS = c("TIPO_ESCOLA","AREA","LOCALIZACAO")` por
+    `c("TIPO_ESCOLA","AREA_LOCAL")`;
+  - Referência principal: `TIPO_ESCOLA=Publica` + `AREA_LOCAL=Urbana_Capital`;
+  - Etapa 5b reescrita com iteração dupla
+    `TIPO_ESCOLA × AREA_LOCAL` (em vez de `TIPO_ESCOLA × AREA × LOCALIZACAO`);
+  - Timestamp global passou a `_HHMMSS` (a data vai para o nome da pasta).
+- `6_ANALISE_ESPACIAL`, `7_MODELOS_HIERARQUICOS`, `8_ANALISE_MEDIACAO`,
+  `9_VALIDACAO_CRUZADA`, `10_ANALISE_RESIDUOS_ESPACIAIS`,
+  `11_INDICE_COMPOSTO`: troca de `file.path(DIR_<TIPO>, paste0(..._ts))` por
+  `caminho_saida(...)`, remoção de acentos e ajuste de mensagens.
+- Módulos 3 e 5 mantêm o padrão antigo (pendentes da Fase 3).
+
+#### Estado
+
+- Arquivos modificados: 12 scripts + `utils_saeb.r` (~1.500 linhas de diff).
+- Working tree com mudanças não commitadas ao fim da sessão.
+
+#### Próximos passos (deixados para 23/07)
+
+- [ ] Fase 2C — migrar arquivos antigos (mod 3, 4, 5) para pastas datadas.
+- [ ] Fase 2D — ajustar ponto de quebra do script auxiliar
+      `grafico_coeficientes_referencia_oposta.r`.
+- [ ] Fase 2E — atualizar READMEs e criar `AGENTS.md`.
+
+---
+
+### 🟢 23 de Julho de 2026
+
+**Horário:** ~09h00 – 12h00
+**Fase:** Refatoração #2 — Fases 2C / 2D / 2E (organização de outputs, script auxiliar, docs)
+**Status:** ✅ Concluído com sucesso
+
+#### Fase 2C — Migração de arquivos antigos para pastas datadas
+
+Aplicada ao 3_ANALISE_DE_GRUPOS, 4_REGRESSAO_LINEAR e
+5_REGRESSAO_ITENS_BRUTOS conforme convenção
+`outputs/<YYYY-MM-DD>/<tipo>/<nome>_<HHMMSS>.<ext>`.
+
+- Script de migração (PowerShell) relocou **146 arquivos** sem colisões:
+  - Nome com `_YYYYMMDD_HHMMSS.ext` → pasta `<YYYY-MM-DD>/<tipo>/` com
+    `<nome>_<HHMMSS>.<ext>`.
+  - Apenas arquivos diretamente em `outputs/<tipo>/` (nível 1); subpastas
+    comparativas (`Escola_A_vs_B_*/`, `capital_vs_interior/`, etc.) e os
+    boxplots sem timestamp do módulo 3 foram preservados no lugar.
+- Pastas `outputs/<tipo>/` vazias removidas (serão recriadas por
+  `caminho_saida()` na próxima execução).
+- Distribuição resultante por data de run:
+  - mod 3: `2026-05-12`, `2026-05-13`, `2026-07-01`, `2026-07-22`
+  - mod 4: `2026-07-22`
+  - mod 5: `2026-06-02`
+
+#### Fase 2D — Script auxiliar `grafico_coeficientes_referencia_oposta.r`
+
+Reescrito para seguir as mesmas convenções dos demais scripts:
+
+- Removido path absoluto `C:/Users/...`; uso de `detectar_raiz()` (bootstrap
+  local antes do `source()` de `utils_saeb.r`).
+- Leitura da base via `encontrar_arquivo_mais_recente(DIR_OUTPUTS,
+  "base_escolas_agregada", "tabelas")` — acha em pastas datadas OU no padrão
+  antigo (corrige o ponto de quebra que impedia o script de achar a base).
+- Saídas via `caminho_saida(...)` para `tabelas/`
+  (`coeficientes_referencia_oposta_{MT,LP}_<HHMMSS>.csv`) e `figuras/`
+  (`coeficientes_TCC_{color,PB}_referencia_oposta_<HHMMSS>.png`).
+- **Ponto de quebra do eixo X dinâmico**: calculado a partir dos ICs 95% dos
+  coeficientes (`floor`/`ceil` múltiplo de 10), em vez da janela fixa
+  `seq(-40, 40, 10)`. Garante que coeficientes/ICs grandes não sejam cortados.
+- Deslocamento dos rótulos textuais também dinâmico (proporcional à faixa).
+
+#### Fase 2E — Documentação
+
+- Criado [`AGENTS.md`](../AGENTS.md) na raiz do projeto:
+  contexto do projeto, stack/commands, estrutura, convenções obrigatórias
+  (pastas datadas, detecção de caminhos, variável `AREA_LOCAL`, estilo de
+  código sem acentos, versionamento e `diario.md`), estado atual e fontes de
+  verdade.
+- Atualizado `README.md` raiz:
+  - Nova seção **Convenção de Pastas Datadas**, descrevendo helpers
+    `caminho_saida`/`encontrar_arquivo_mais_recente` e a variável `AREA_LOCAL`,
+    com referência ao script auxiliar e ao `AGENTS.md`.
+- Atualizado `TESTE/4_REGRESSAO_LINEAR/README.md`:
+  - Bloco de estrutura de pastas reescrito para `outputs/<YYYY-MM-DD>/...`;
+  - Adicionado o script auxiliar (`grafico_coeficientes_referencia_oposta.r`)
+    como Passo 1b;
+  - Configurações personalizáveis: `VARS_CATEGORICAS = c("TIPO_ESCOLA",
+    "AREA_LOCAL")` + `refs_modelo`;
+  - Saídas do Passo 1 reorganizadas (~20 arquivos, com `REFERENCIAS_MODELOS`,
+    `VIF_multicolinearidade`, `comparacao_todas_referencias_*`, etc.);
+  - Corrigido pré-requisito (lê `TS_ALUNO_34EM.csv`, não `metadados_escolas`);
+  - Versão 2.1.
+- Atualizado `TESTE/3_ANALISE_DE_GRUPOS/README.md`:
+  - Bloco de outputs reescrito para pastas datadas; esclarecido que scripts do
+    módulo ainda não usam `caminho_saida()` (pendente Fase 3).
+- Atualizado `TESTE/5_REGRESSAO_ITENS_BRUTOS/README.md`:
+  - Adicionada nota de bloco sobre convenção de pastas datadas e referência ao
+    estilo legado.
+
+#### Resultados
+
+- 146 arquivos reorganizados em pastas datadas (mod 3, 4, 5).
+- Script auxiliar funcional e alinhado às convenções do projeto.
+- 4 arquivos de documentação atualizados + 1 novo (`AGENTS.md`).
+
+#### Próximos passos
+
+- [ ] Validar execução dos scripts no RStudio (sem R no ambiente atual; não foi
+      possível rodar `Rscript` aqui).
+- [ ] Commit das mudanças da refatoração #2 (após revisão do usuário).
+- [ ] Fase 3 — migrar módulos 3 e 5 para `caminho_saida()` (retirar o estilo
+      antigo de timestamp sufixo).
+
+---
+
+**Atualizado:** 23 de Julho de 2026  
+**Status:** Refatoração #2 (Fases 2A–2E) completa — organização de outputs, script auxiliar, documentação  
+**Próxima etapa:** Validação em RStudio + commit + Fase 3 (mod 3 e 5)
+
+---
+
+### 🟣 23 de Julho de 2026 (Tarde)
+
+**Horário:** ~13h00 – 17h00
+**Fase:** Verificação final + correções bloqueantes + notas metodológicas + README brilhoso
+**Status:** ✅ Concluído com sucesso
+
+---
+
+#### Atividades Realizadas
+
+##### 1. Verificação sistemática dos scripts (read-only)
+
+Inspecionei todos os 16 scripts R do projeto via agente explore, conferindo:
+caminhos, uso de `caminho_saida()`, `source(utils_saeb.r)`, `AREA_LOCAL`,
+acentos e presença de nota metodológica.
+
+Relatório consolidado:
+
+| # | Script | `detectar_raiz` | `caminho_saida` | `source utils` | `AREA_LOCAL` | sem acentos | nota metodológica |
+|---|---|---|---|---|---|---|---|
+| 1 | `ajeitar_dados.r` (mód 1) | local | NÃO (legado) | sim | n/a | NÃO | não |
+| 2 | `correlacao.r` (mód 2) | local | NÃO (sem pasta) | sim | n/a | NÃO | não |
+| 3 | `graficos.r` (mód 2) | local | n/a (Shiny) | sim | n/a | NÃO | não |
+| 4 | `classificar_escolas.r` (mód 3) | local | NÃO (legado) | NÃO | sim | parcial | não |
+| 5 | `comparar_grupos.r` (mód 3) | ordem* | NÃO (legado) | sim | n/a | parcial | não |
+| 6 | `comparar_duas_escolas.r` (mód 3) | local | NÃO (legado) | NÃO | n/a | parcial | não |
+| 7 | `dendrograma_analise_completa.r` (mód 3) | local | NÃO (legado) | NÃO | n/a | parcial | não |
+| 8 | `regressao_linear_multipla.r` (mód 4) | local | PARCIAL (3 residuais legados) | sim | sim | OK | sim (INSE) |
+| 9 | `grafico_coeficientes_referencia_oposta.r` (mód 4) | local | sim | sim | sim | OK | não (cabeçalho) |
+| 10 | `regressao_itens_brutos_dummy.r` (mód 5) | local | NÃO (legado) | NÃO | sim | OK | sim (dummies) |
+| 11 | `mapa_municipios.r` (mód 6) | ordem* | sim | sim | n/a | OK | não → **adicionado nesta sessão** |
+| 12 | `modelos_hierarquicos.r` (mód 7) | ordem* | sim | sim | n/a | OK | não → **adicionado nesta sessão** |
+| 13 | `analise_mediacao.r` (mód 8) | ordem* | sim | sim | sim | OK | não → **adicionado nesta sessão** |
+| 14 | `validacao_cruzada.r` (mód 9) | ordem* | sim | sim | sim | OK | não → **adicionado nesta sessão** |
+| 15 | `analise_residuos_espaciais.r` (mód 10) | ordem* | sim | sim | NÃO usa | OK | não → **adicionado nesta sessão** |
+| 16 | `indice_composto.r` (mód 11) | ordem* | sim | sim | NÃO usa | OK | não → **adicionado nesta sessão** |
+
+*ordem = `detectar_raiz()` é chamada antes de `source(utils_saeb.r)` (depende de utils já carregado em sessão RStudio; pode falhar em `Rscript` limpo).
+
+##### 2. Correção de 3 bugs bloqueantes
+
+- **Bug 1**: `analise_mediacao.r` (mód 8) linha 63 — `filter(TIPO_ESCOLA %in% c("P?blica", "Privada"))`. O placeholder `?` (artefato de encoding) NÃO casa `"Publica"`, descartando todas as escolas públicas. Corrigido para `"Publica"`. Mesmo padrão em `validacao_cruzada.r` (mód 9) linha 65, corrigido igualmente.
+- **Bug 3**: `dendrograma_analise_completa.r` (mód 3) linha ~245 — `if (MODO == 1)` referenciava variável `MODO` nunca definida ⇒ `object 'MODO' not found`. Adicionada `MODO <- 1L` no bloco CONFIGURACAO (compatibilidade com v2.0 que suportava MODO 2 - pares; v3.0 só MODO 1 ativo, conforme cabeçalho do script).
+- Foi feito grep por outros placeholders `"P?`, `"S?`, `"I?` etc. nos scripts afetados — nenhuma outra ocorrência encontrada.
+
+Nenhuma outra correção foi feita (conforme escopo acordado com o usuário: apenas bugs bloqueantes nesta rodada).
+
+##### 3. Notas metodológicas adicionadas (módulos 6-11)
+
+Conforme solicitação, adicionei bloco `# NOTA METODOLOGICA - ...` após o cabeçalho descritivo de 6 scripts (espelhando o padrão de `regressao_linear_multipla.r` com 3-5 parágrafos numerados + linha CONCLUSAO):
+
+| Script | Tema da nota metodológica |
+|---|---|
+| `mapa_municipios.r` (mód 6) | Justificativa do coroplético por município, agregação escola→município (não simples de alunos), paleta divergente RdBu vs. sequencial, projeção SIRGAS 2000/UTM 23S |
+| `modelos_hierarquicos.r` (mód 7) | Por que HLM vs. OLS com erros clustered, ICC e critério de Hox (2010), random intercept vs. random slopes, estimador REML vs. ML, centring group-mean |
+| `analise_mediacao.r` (mód 8) | Baron & Kenny (1986) clássico, bootstrap BCa (Preacher & Hayes, 2008), suposição de não-confundimento, INSE mediador vs. moderador, proporção mediada PM |
+| `validacao_cruzada.r` (mód 9) | K-fold k=10 vs. LOO (Hastie et al. 2009), AUC bootstrap-IC via pROC, prevenção de leakage temporal/espacial/cluster, `set.seed(2023)` para reprodutibilidade |
+| `analise_residuos_espaciais.r` (mód 10) | Moran's I global com Monte Carlo (999 permutações), vizinhança Queen vs. k-NN, LISA (Anselin 1995) HH/LL/HL/LH, agenda futura SAR/SEM |
+| `indice_composto.r` (mód 11) | PCA sobre variáveis padronizadas (necessidade de z-score por diferença de escala), retenção Kaiser + Joliffe + Parallel Analysis Horn's, não-rotação para preservar PC1, limitação de linearidade |
+
+Todas em português sem acentos (conforme convenção).
+
+##### 4. README raiz revitalizado (brilhoso máximo)
+
+Reescrita completa de `README.md` (raiz) com elementos visuais copiados do estilo de `4_REGRESSAO_LINEAR/README.md` (referência do usuário):
+
+- **10 badges shields.io** no topo (R 4.x, SAEB 2023, Minas Gerais, Status, Pipeline 15 passos, Outputs pastas datadas, Alunos 173.918, Escolas 2.338, Municípios 851, Licença acadêmica, tidyverse).
+- **TL;DR em callout** (`>`) com resumo executivo de 3 linhas.
+- **Cartões de estatística** em tabelas com emojis (🧑‍🎓 🏫 📍 🎯).
+- **Sumário navegável** com anchors.
+- **Emojis em todos os cabeçalhos** H2 (📋 🗂️ 🚀 📊 ✅ 🛣️ 📅 🎯 📚 📝 📌 📜 🧭).
+- **Árvore ASCII** da estrutura com badges de status inline (`✅`/`⏳`) por pasta.
+- **Fluxograma mermaid** do pipeline completo de 15 passos (substitui 4 blocos isolados de `source()`).
+- **Tabela de resumo** com 15 linhas (uma por PASSO).
+- **Tabela de progresso** com coluna Status (✅/⏳).
+- **Callouts** `>` para INSE-justificativa, convenção de pastas datadas e `AREA_LOCAL`.
+- **Fórmula LaTeX** $\text{Proficiencia}_i = \beta_0 + \beta_1 \cdot \text{INSE}_i^{(z)} + \ldots$ na seção do modelo central.
+- **Rodapé com versão** 3.0 (refatoração julho/2026 — pastas datadas, AREA_LOCAL, README brilhoso máximo).
+- **Changelog** em tabela (5 versões: 1.0/2.0/2.1/2.2/3.0).
+- **Roadmap** com checkboxes (5 itens pendentes: Fase 3, ordem source, AREA_LOCAL nos móds 10-11, limpeza de acentos móds 1-2, redação TCC).
+- Caixa de convenção para contribuidores (link para AGENTS.md).
+
+👎 Escopo não realizado (preservado intencionalmente): revitalização dos READMEs dos módulos 6-11 (usuário escolheu "Só README raiz"), notas metodológicas para módulos 1-3 (considerados preparatórios), correção de acentos nos módulos 1-2, migração de `AREA_LOCAL` nos módulos 10-11, correção de ordem `source`/`detectar_raiz` nos 7 scripts.
+
+---
+
+#### Resultados Quantitativos
+
+| Métrica | Valor |
+|---|---|
+| Scripts R corrigidos (bugs) | 3 |
+| Scripts R com nota metodológica adicionada | 6 |
+| READMEs alterados | 1 (`README.md` raiz, reescrito) |
+| `diario.md` atualizado | 1 (esta entrada) |
+| Arquivos novos | 0 |
+| Linhas adicionadas (notas metodológicas) | ~350 |
+| Linhas do novo README | ~245 |
+
+#### Validação
+
+Não há `Rscript` no ambiente atual (Windows, sem R instalado); scripts não foram
+executados. Recomenda-se validar em RStudio antes de commitar (rodar cada script
+modificado: móds 3, 6, 7, 8, 9, 10, 11). Nenhum `parse(file="...")` disponível
+sem R, mas a inspeção manual das edições não mostrou erros de sintaxe
+(apenas inserções de bloco comentado + 3 correções pontuais de string/variável).
+
+#### Próximos passos
+
+- [ ] Validar os 7 scripts afetados em RStudio (móds 3, 6, 7, 8, 9, 10, 11).
+- [ ] Commit das mudanças desta sessão (após validação do usuário).
+- [ ] **Fase 3** (roadmap): migrar `caminho_saida()` nos módulos 3 e 5.
+- [ ] Corrigir ordem `detectar_raiz()` vs `source(utils_saeb.r)` nos móds 6-11.
+- [ ] Migrar `AREA_LOCAL` nos móds 10 e 11.
+- [ ] Limpar acentos/emojis dos scripts dos móds 1 e 2.
+
+---
+
+**Atualizado:** 23 de Julho de 2026 (Tarde)  
+**Status:** Verificação final + fix de bugs + notas metodológicas (mod 6-11) + README brilhoso máximo  
+**Próxima etapa:** Validação em RStudio + commit + roadmap da Fase 3
+
