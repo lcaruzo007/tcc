@@ -71,10 +71,33 @@ refs_oposta <- list(
   AREA_LOCAL  = "Rural_Interior"
 )
 
+# Categorias que ESPERAMOS encontrar em cada variavel categorica (ver nota
+# metodologica do script principal: AREA_LOCAL tem 4 niveis possiveis).
+# Serve so para gerar um aviso quando uma categoria some da base apos os
+# filtros - por exemplo Rural_Capital, que e rara e pode zerar dependendo
+# da amostra.
+categorias_esperadas <- list(
+  TIPO_ESCOLA = c("Publica", "Privada"),
+  AREA_LOCAL  = c("Rural_Capital", "Urbana_Capital", "Urbana_Interior", "Rural_Interior")
+)
+
 # == Funcao: criar dummies com referencia especifica ==========================
-criar_dummies_ref <- function(df, vars_cat, refs) {
+criar_dummies_ref <- function(df, vars_cat, refs, esperadas = NULL) {
   for (var in vars_cat) {
     valores <- sort(unique(na.omit(df[[var]])))
+    message("  ", var, " - categorias presentes na base: ", paste(valores, collapse = ", "))
+
+    if (!is.null(esperadas) && !is.null(esperadas[[var]])) {
+      sumidas <- setdiff(esperadas[[var]], valores)
+      if (length(sumidas) > 0) {
+        warning("Categoria(s) esperada(s) de ", var, " nao encontrada(s) na base final: ",
+                paste(sumidas, collapse = ", "),
+                " - provavelmente foram eliminadas pelos filtros de qualidade ",
+                "(MIN_ALUNOS_ESCOLA / MIN_ALUNOS_INSE) ou nao existem nesta amostra. ",
+                "Essa(s) categoria(s) NAO vai(vao) aparecer no grafico.")
+      }
+    }
+
     ref <- refs[[var]]
     if (!(ref %in% valores)) stop("Referencia '", ref, "' nao encontrada em ", var)
     for (valor in valores[valores != ref]) {
@@ -95,7 +118,8 @@ for (var in vars_cat) {
 dados_escola$INSE_MEDIO_norm <- as.numeric(scale(dados_escola$INSE_MEDIO))
 
 # Criar dummies
-dados_modelo <- criar_dummies_ref(dados_escola, vars_cat, refs_oposta)
+message("Verificando categorias antes de criar as dummies:")
+dados_modelo <- criar_dummies_ref(dados_escola, vars_cat, refs_oposta, categorias_esperadas)
 
 # Preditoras: dummies de AREA_LOCAL + TIPO_ESCOLA + INSE normalizado
 preditoras <- names(dados_modelo)[
@@ -151,32 +175,103 @@ n_escolas <- nrow(dados_modelo)
 r2_mt <- round(summary_mt$adj.r.squared * 100, 1)
 r2_lp <- round(summary_lp$adj.r.squared * 100, 1)
 
+# ---------------------------------------------------------------------------
+# Rotulos amigaveis conhecidos (usados so para deixar o eixo Y bonito).
+# Qualquer categoria que NAO esteja neste dicionario ainda assim aparece no
+# grafico (usando o proprio nome cru como rotulo) em vez de virar "NA" -
+# e um aviso e emitido no console para o usuario perceber a categoria nova.
+# ---------------------------------------------------------------------------
+rotulos_area <- c(
+  Rural_Capital   = "Rural da Capital",
+  Urbana_Capital  = "Urbana da Capital",
+  Urbana_Interior = "Urbana do Interior",
+  Rural_Interior  = "Rural do Interior"
+)
+rotulos_tipo <- c(
+  Publica = "Publica",
+  Privada = "Privada"
+)
+
+# Ordem de exibicao preferida (categorias fora desta lista sao anexadas ao final)
+ordem_area <- c("Localizacao combinada\nRural da Capital",
+                 "Localizacao combinada\nUrbana da Capital",
+                 "Localizacao combinada\nUrbana do Interior",
+                 "Localizacao combinada\nRural do Interior")
+ordem_tipo <- c("Tipo de escola\nPublica", "Tipo de escola\nPrivada")
+
 comparacao_simetrica <- bind_rows(
   coef_mt |> mutate(Modelo = "Matematica (MT)"),
   coef_lp |> mutate(Modelo = "Lingua Portuguesa (LP)")
 ) |>
   filter(Termo != "(Intercept)") |>
   mutate(
-    Variavel = case_when(
-      grepl("^TIPO_ESCOLA_",     Termo) ~ paste0("Tipo de escola\n",
-                                                 sub("^TIPO_ESCOLA_", "", Termo)),
-      grepl("^AREA_LOCAL_",       Termo) ~ paste0("Localizacao combinada\n",
-                                                 sub("^AREA_LOCAL_", "", Termo)),
-      Termo == "INSE_MEDIO_norm"        ~ "Nivel socioeconomico\n(INSE +1 desvio-padrao)",
-      TRUE ~ Termo
+    valor_bruto = case_when(
+      grepl("^TIPO_ESCOLA_", Termo) ~ sub("^TIPO_ESCOLA_", "", Termo),
+      grepl("^AREA_LOCAL_",  Termo) ~ sub("^AREA_LOCAL_",  "", Termo),
+      TRUE ~ NA_character_
     ),
-    Variavel = factor(Variavel, levels = c(
-      "Localizacao combinada\nRural_Capital",
-      "Localizacao combinada\nUrbana_Capital",
-      "Localizacao combinada\nUrbana_Interior",
-      "Tipo de escola\nPublica",
-      "Nivel socioeconomico\n(INSE +1 desvio-padrao)"
-    ))
+    Variavel = case_when(
+      grepl("^TIPO_ESCOLA_", Termo) ~ paste0(
+        "Tipo de escola\n",
+        ifelse(valor_bruto %in% names(rotulos_tipo), rotulos_tipo[valor_bruto], valor_bruto)
+      ),
+      grepl("^AREA_LOCAL_", Termo) ~ paste0(
+        "Localizacao combinada\n",
+        ifelse(valor_bruto %in% names(rotulos_area), rotulos_area[valor_bruto], valor_bruto)
+      ),
+      Termo == "INSE_MEDIO_norm" ~ "Nivel socioeconomico\n(INSE +1 desvio-padrao)",
+      TRUE ~ Termo   # fallback: nunca deixa cair em NA silenciosamente
+    )
   )
 
+# Aviso para categorias que apareceram nos dados mas nao estavam no dicionario
+# de rotulos conhecidos (sinal de que a base mudou / tem categoria nova)
+categorias_desconhecidas <- comparacao_simetrica |>
+  filter(!is.na(valor_bruto),
+         !(valor_bruto %in% c(names(rotulos_area), names(rotulos_tipo)))) |>
+  pull(valor_bruto) |>
+  unique()
+if (length(categorias_desconhecidas) > 0) {
+  warning("Categoria(s) nao mapeada(s) em rotulos_area/rotulos_tipo, exibida(s) com nome cru: ",
+          paste(categorias_desconhecidas, collapse = ", "))
+}
+
+# Levels do factor construidos DINAMICAMENTE a partir do que existe nos dados,
+# respeitando a ordem preferida quando possivel. Isso evita o bug de categorias
+# sumirem silenciosamente como "NA" quando a base tem mais/menos niveis do que
+# uma lista hardcoded esperava.
+niveis_area_presentes <- intersect(ordem_area, unique(comparacao_simetrica$Variavel))
+niveis_area_extra     <- setdiff(
+  unique(comparacao_simetrica$Variavel[grepl("^Localizacao combinada", comparacao_simetrica$Variavel)]),
+  niveis_area_presentes
+)
+
+niveis_tipo_presentes <- intersect(ordem_tipo, unique(comparacao_simetrica$Variavel))
+niveis_tipo_extra     <- setdiff(
+  unique(comparacao_simetrica$Variavel[grepl("^Tipo de escola", comparacao_simetrica$Variavel)]),
+  niveis_tipo_presentes
+)
+
+niveis_finais <- c(
+  niveis_area_presentes, niveis_area_extra,
+  niveis_tipo_presentes, niveis_tipo_extra,
+  "Nivel socioeconomico\n(INSE +1 desvio-padrao)"
+)
+niveis_finais <- intersect(niveis_finais, unique(comparacao_simetrica$Variavel))  # so os que existem de fato
+
+comparacao_simetrica <- comparacao_simetrica |>
+  mutate(Variavel = factor(Variavel, levels = niveis_finais)) |>
+  select(-valor_bruto)
+
 message("Termos unicos: ", paste(unique(comparacao_simetrica$Termo), collapse = "; "))
-message("Variaveis unicas: ", paste(unique(as.character(comparacao_simetrica$Variavel)), collapse = "; "))
-message("Variaveis NA: ", sum(is.na(comparacao_simetrica$Variavel)))
+message("Variaveis unicas (na ordem do grafico): ", paste(niveis_finais, collapse = "; "))
+n_variaveis_na <- sum(is.na(comparacao_simetrica$Variavel))
+if (n_variaveis_na > 0) {
+  warning(n_variaveis_na, " linha(s) ficaram com Variavel = NA mesmo apos o mapeamento dinamico. ",
+          "Investigue os Termos unicos acima.")
+} else {
+  message("OK Nenhuma variavel caiu em NA - todas as categorias presentes na base foram mapeadas.")
+}
 
 # == Ponto de quebra dinamico do eixo X =======================================
 # Calcula intervalo dos dados (coef + IC) e arredonda para o proximo multiplo de 10,
