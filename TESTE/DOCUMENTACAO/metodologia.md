@@ -118,22 +118,6 @@ Justificativas estatísticas das decisões metodológicas.
 | Multicolinearidade | Nenhuma | Severa → VIF |
 | Uso | Modelagem final | Exploração |
 
-## PASSO 10: Análise Espacial (Mapas Coropléticos)
-
-### Objetivo
-Visualizar padrões geográficos de proficiência e INSE por município de MG.
-
-### Metodologia
-1. Integra `metadados_escolas` com `TS_ESCOLA.csv` via `ID_ESCOLA` para obter `ID_MUNICIPIO`
-2. Agrega proficiência e INSE por município
-3. Download do shapefile de MG via `geobr::read_municipality(code_muni = "MG")`
-4. Gera mapas coropléticos com `tmap` (5 quantis)
-
-### Justificativa
-- Identifica padrões regionais não visíveis em análise agregada
-- Revela desigualdades intraestaduais
-- Complementa análise de grupos com perspectiva geográfica
-
 ## PASSO 11: Modelos Hierárquicos Lineares (HLM)
 
 ### Objetivo
@@ -203,28 +187,6 @@ Avaliar qualidade preditiva dos modelos e capacidade de classificação.
 - Testa robustez e generalização dos modelos
 - Evita overfitting
 - Quantifica capacidade de prever "alto desempenho"
-
-## PASSO 14: Análise de Resíduos Espaciais
-
-### Objetivo
-Testar autocorrelação espacial nos resíduos do modelo (Índice de Moran).
-
-### Metodologia
-1. Agrega resíduos por município (média dos resíduos das escolas)
-2. Cria matriz de vizinhança (queen contiguity) via `poly2nb()`
-3. Calcula Moran's I global para resíduos MT e LP
-4. Calcula LISA (Local Indicators of Spatial Association)
-5. Classifica municípios em quadrantes: Alto-Alto, Baixo-Baixo, Alto-Baixo, Baixo-Alto
-
-### Interpretação
-- Moran's I > 0 e p < 0.05: autocorrelação positiva (clusters espaciais)
-- Moran's I ≈ 0: resíduos independentes (modelo adequado)
-- Moran's I < 0: padrão alternado (raro em dados socioeconômicos)
-
-### Justificativa
-- Verifica pressuposto de independência dos resíduos
-- Se autocorrelação presente: modelo precisa incluir termos espaciais
-- Identifica clusters de municípios com desempenho similar
 
 ## PASSO 15: Índice Composto de Vulnerabilidade (PCA)
 

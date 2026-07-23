@@ -24,7 +24,7 @@
 > TCC de mestrado que modela o **impacto socioeconomico** sobre a **proficiencia escolar**
 > de alunos da 3a serie do EM em MG, usando o **INSE** como proxy socioeconomico.
 > Pipeline de **15 passos** em R (tidyverse), cobrindo limpeza, anMlise de grupos,
-> regressMo linear, modelos hierarquicos, mediMao, validMo cruzada, residuos espaciais
+> regressMo linear, modelos hierarquicos, mediMao, validMo cruzada
 > e PCB. Outputs organizados em **pastas datadas** `outputs/<YYYY-MM-DD>/<tipo>/`.
 
 ---
@@ -95,11 +95,9 @@ tcc/
     ├── 3_ANALISE_DE_GRUPOS/            (PASSO 4-7)          ⏳ mig. pendente
     ├── 4_REGRESSAO_LINEAR/             (PASSO 8)            ✅
     ├── 5_REGRESSAO_ITENS_BRUTOS/       (PASSO 9)            ⏳ mig. pendente
-    ├── 6_ANALISE_ESPACIAL/             (PASSO 10 — mapas)  ✅
     ├── 7_MODELOS_HIERARQUICOS/         (PASSO 11 — HLM)     ✅
     ├── 8_ANALISE_MEDIACAO/             (PASSO 12)           ✅
     ├── 9_VALIDACAO_CRUZADA/            (PASSO 13 — CV+ROC)  ✅
-    ├── 10_ANALISE_RESIDUOS_ESPACIAIS/  (PASSO 14 — Moran's I) ✅
     └── 11_INDICE_COMPOSTO/             (PASSO 15 — PCA)     ✅
 ```
 
@@ -120,11 +118,9 @@ graph TD
     P4 --> P7["7. dendrograma_analise_completa.r"]
     P7 --> P8["8. regressao_linear_multipla.r"]
     D --> P9["9. regressao_itens_brutos_dummy.r"]
-    P7 --> P10["10. mapa_municipios.r"]
     P4 --> P11["11. modelos_hierarquicos.r"]
     P4 --> P12["12. analise_mediacao.r"]
     P4 --> P13["13. validacao_cruzada.r"]
-    P4 --> P14["14. analise_residuos_espaciais.r"]
     P4 --> P15["15. indice_composto.r"]
     P8 -.-> AUX["aux.: grafico_coeficientes_referencia_oposta.r"]
 
@@ -159,14 +155,12 @@ source("TESTE/4_REGRESSAO_LINEAR/Scripts/grafico_coeficientes_referencia_oposta.
 source("TESTE/5_REGRESSAO_ITENS_BRUTOS/Scripts/regressao_itens_brutos_dummy.r")
 ```
 
-### Fase 4: Análises Avançadas (PASSO 10-15)
+### Fase 4: Análises Avançadas (PASSO 11-15)
 
 ```r
-source("TESTE/6_ANALISE_ESPACIAL/Scripts/mapa_municipios.r")
 source("TESTE/7_MODELOS_HIERARQUICOS/Scripts/modelos_hierarquicos.r")
 source("TESTE/8_ANALISE_MEDIACAO/Scripts/analise_mediacao.r")
 source("TESTE/9_VALIDACAO_CRUZADA/Scripts/validacao_cruzada.r")
-source("TESTE/10_ANALISE_RESIDUOS_ESPACIAIS/Scripts/analise_residuos_espaciais.r")
 source("TESTE/11_INDICE_COMPOSTO/Scripts/indice_composto.r")
 ```
 
@@ -195,16 +189,14 @@ com referências **`TIPO_ESCOLA = "Publica"`** e **`AREA_LOCAL = "Urbana_Capital
 | 7 | Clustering | Dendrogramas (Ward.D2) | `dendrograma_analise_completa.r` | 5 |
 | 8 | Regressão | Modelos lineares (INSE) | `regressao_linear_multipla.r` | 6-14 |
 | 9 | Itens brutos | Regressão com 72 itens | `regressao_itens_brutos_dummy.r` | 6-14 |
-| 10 | Mapas | Coropléticos por município | `mapa_municipios.r` | 16-18 |
 | 11 | HLM | Modelos hierárquicos | `modelos_hierarquicos.r` | 19-20 |
 | 12 | Mediação | INSE como mediador | `analise_mediacao.r` | 21-22 |
 | 13 | Validação CV | K-fold + ROC/AUC | `validacao_cruzada.r` | 23-25 |
-| 14 | Resíduos espaciais | Moran's I + LISA | `analise_residuos_espaciais.r` | 26-28 |
 | 15 | Índice composto | PCA + indicador próprio | `indice_composto.r` | 29-31 |
 
-> 📝 **Notas metodológicas**: Os scripts dos PASSOS 7, 8, 9 e 10-15 trazem blocos `# NOTA METODOLOGICA - ...`
+> 📝 **Notas metodológicas**: Os scripts dos PASSOS 7, 8, 9 e 11-15 trazem blocos `# NOTA METODOLOGICA - ...`
 > no cabeçalho justificando decisões substantivas (escolha do INSE, HLM, mediacao bootstrap,
-> k-fold vs LOO, vizinhança Queen, retenção de componentes em PCA, etc.).
+> k-fold vs LOO, retenção de componentes em PCA, etc.).
 
 ---
 
@@ -218,11 +210,9 @@ com referências **`TIPO_ESCOLA = "Publica"`** e **`AREA_LOCAL = "Urbana_Capital
 | 8 | Regressão linear | `regressao_linear_multipla.r` | ✅ |
 | 8b | Regressão (ref. oposta) | `grafico_coeficientes_referencia_oposta.r` | ✅ |
 | 9 | Itens brutos | `regressao_itens_brutos_dummy.r` | ⏳ mig. `caminho_saida()` |
-| 10 | Mapas | `mapa_municipios.r` | ✅ |
 | 11 | HLM | `modelos_hierarquicos.r` | ✅ |
 | 12 | Mediação | `analise_mediacao.r` | ✅ |
 | 13 | Validação CV | `validacao_cruzada.r` | ✅ |
-| 14 | Moran's I | `analise_residuos_espaciais.r` | ✅ |
 | 15 | PCA | `indice_composto.r` | ✅ |
 
 Legenda: ✅ concluído · ⏳ migração parcial pendente (Fase 3, vide `diario.md`)
@@ -299,7 +289,7 @@ arq <- encontrar_arquivo_mais_recente(DIR_OUTPUTS, "base_escolas_agregada", "tab
 - ✅ PASSO 5 gera comparações bidirecionais (Pública→Privada E Privada→Pública)
 - ✅ Gráficos em DPI 600, fundo branco (qualidade para impressão)
 - ✅ Convenção sem acentos em strings/mensagens R (encoding Windows/UTF-8/Latin1)
-- ✅ Notas metodológicas nos scripts de decisão substantiva (PASSOS 7, 8, 9, 10-15)
+- ✅ Notas metodológicas nos scripts de decisão substantiva (PASSOS 7, 8, 9, 11-15)
 
 ---
 
@@ -325,6 +315,7 @@ Antes de editar código ou documentação, leia [`AGENTS.md`](AGENTS.md). Resumo
 | Julho 2026 | 2.1 | `utils_saeb.r` + pastas datadas + `AREA_LOCAL` |
 | Julho 2026 | 2.2 | Migração de outputs antigos (mod 3, 4, 5) + script auxiliar ref. oposta |
 | Julho 2026 | **3.0** | ✨ Fix bugs de encoding (`P?blica`) + `MODO` indefinido + notas metodológicas (mod 6-11) + README brilhoso máximo |
+| Julho 2026 | **3.1** | 🗑️ Remoção módulos 6 (mapas) e 10 (Moran's I) — dados SAEB anonimizam municípios, inviabilizando análises espaciais |
 
 Detalhes completos: [`diario.md`](diario.md)
 
@@ -333,8 +324,7 @@ Detalhes completos: [`diario.md`](diario.md)
 ## 🧭 Roadmap
 
 - [ ] **Fase 3**: migrar scripts dos módulos 3 e 5 para `caminho_saida()` (estilo antigo → datado)
-- [ ] **Convenção**: corrigir ordem de `detectar_raiz()` vs `source(utils_saeb.r)` nos móds 6-11
-- [ ] **Convenção**: migrar `AREA_LOCAL` nos módulos 10 e 11 (ainda usam `LOCAL_RURAL`/`TIPO_PRIVADA` separados)
+- [ ] **Convenção**: migrar `AREA_LOCAL` no módulo 11 (ainda usa `LOCAL_RURAL`/`TIPO_PRIVADA` separados)
 - [ ] **Limpeza**: remover acentos e emojis dos scripts dos módulos 1 e 2
 - [ ] **Redação**: integrar resultados na escrita final do TCC
 

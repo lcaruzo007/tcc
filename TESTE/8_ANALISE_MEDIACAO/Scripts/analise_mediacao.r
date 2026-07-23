@@ -77,7 +77,7 @@ library(data.table)
 RAIZ <- detectar_raiz()
 DIR_TESTE <- file.path(RAIZ, "TESTE")
 DIR_ANALISE <- file.path(DIR_TESTE, "3_ANALISE_DE_GRUPOS")
-DIR_METADADOS <- file.path(DIR_ANALISE, "outputs/metadados")
+DIR_OUTPUTS_ANALISE <- file.path(DIR_ANALISE, "outputs")
 
 DIR_BASE <- file.path(DIR_TESTE, "8_ANALISE_MEDIACAO")
 
@@ -107,7 +107,7 @@ message(strrep("=", 70))
 message("ANALISE DE MEDIACAO - INSE como mediador")
 message(strrep("=", 70))
 
-arq_meta <- encontrar_arquivo_mais_recente(DIR_METADADOS, "metadados_escolas")
+arq_meta <- encontrar_arquivo_mais_recente(DIR_OUTPUTS_ANALISE, "metadados_escolas", tipo = "metadados")
 if (is.null(arq_meta)) stop("metadados_escolas_*.csv nao encontrado.")
 
 metadados <- read_csv(arq_meta, show_col_types = FALSE) %>%
@@ -282,7 +282,9 @@ message("\n>>> Gerando figuras...")
 # -------------------------------------------------------------------------
 criar_diagrama_mediacao <- function(var_indep, mediador, disciplina,
                                      efeito_a, efeito_b, efeito_cp,
-                                     r2_med, r2_dep, fig_num) {
+                                     r2_med, r2_dep, fig_num,
+                                     categoria_referencia = NULL,
+                                     nome_grupo = NULL) {
   
   # Dados para o diagrama
   dados_diag <- tibble(
@@ -293,8 +295,50 @@ criar_diagrama_mediacao <- function(var_indep, mediador, disciplina,
   )
   
   # Calcular proporcao mediada
-  efeito_total <- efeito_a * efeito_b + efeito_cp
-  prop_med <- abs(efeito_a * efeito_b) / abs(efeito_total) * 100
+  efeito_indireto <- efeito_a * efeito_b
+  efeito_total <- efeito_indireto + efeito_cp
+  prop_med <- abs(efeito_indireto) / abs(efeito_total) * 100
+  
+  # Deteccao automatica de supressao: c' e a*b com sinais opostos.
+  # Nesse caso a "proporcao mediada" pode exceder 100% ou nao ter leitura
+  # direta como porcentagem (ver NOTA METODOLOGICA, ponto 5, no cabecalho
+  # deste script) - substituimos o rotulo por um aviso em vez do numero.
+  houve_supressao <- sign(efeito_cp) != sign(efeito_indireto) &&
+    efeito_cp != 0 && efeito_indireto != 0
+  
+  rotulo_efeito <- if (houve_supressao) {
+    paste0("Efeito indireto (axb) = ", round(efeito_indireto, 3),
+           " | \u26A0 Supressao: c' e axb tem sinais opostos - ",
+           "'Mediacao' nao e interpretavel como % (ver nota metodologica)")
+  } else {
+    paste0("Efeito indireto (axb) = ", round(efeito_indireto, 3),
+           " | Mediacao = ", round(prop_med, 1), "%")
+  }
+  cor_rotulo <- if (houve_supressao) "#C0392B" else "#555555"
+  
+  # -----------------------------------------------------------------------
+  # Traducao automatica de a, b e c' para linguagem simples (rodape/caption)
+  # -----------------------------------------------------------------------
+  # nome_grupo = rotulo curto do grupo-tratamento (ex: "Privada"). Se nao
+  # informado, usa a primeira linha de var_indep (antes da quebra "\n").
+  grupo <- if (!is.null(nome_grupo)) nome_grupo else strsplit(var_indep, "\n")[[1]][1]
+  ref   <- if (!is.null(categoria_referencia)) categoria_referencia else "grupo de referencia"
+  
+  dir_a  <- if (efeito_a  >= 0) "maior"   else "menor"
+  dir_b  <- if (efeito_b  >= 0) "a mais"  else "a menos"
+  dir_cp <- if (efeito_cp >= 0) "a mais"  else "a menos"
+  
+  texto_interpretacao <- paste0(
+    "a = ", round(efeito_a, 3), " -> escolas '", grupo, "' tem, em media, ",
+    mediador, " ", abs(round(efeito_a, 3)), " pontos ", dir_a, " que '", ref, "'.\n",
+    "b = ", round(efeito_b, 3), " -> mantendo o grupo fixo, cada ponto de ",
+    mediador, " esta associado a ", abs(round(efeito_b, 3)), " pontos ", dir_b,
+    " em ", disciplina, " (vale para os dois grupos).\n",
+    "c' = ", round(efeito_cp, 3), " -> comparando uma escola '", grupo,
+    "' com uma '", ref, "' de mesmo ", mediador, ", a '", grupo,
+    "' tem em media ", abs(round(efeito_cp, 3)), " pontos ", dir_cp, " em ",
+    disciplina, " (efeito direto, controlando o mediador)."
+  )
   
   p <- ggplot() +
     # Caixas
@@ -322,23 +366,34 @@ criar_diagrama_mediacao <- function(var_indep, mediador, disciplina,
     annotate("text", x = 2, y = 1.4,
              label = paste0("c' = ", round(efeito_cp, 3), " (direto)"),
              size = 3.8, fontface = "bold", color = "#3498DB") +
-    # Informacoes
+    # Informacoes (rotulo muda para aviso quando ha supressao)
     annotate("text", x = 2, y = 0.5,
-             label = paste0("Efeito indireto (axb) = ", round(efeito_a * efeito_b, 3),
-                            " | Mediacao = ", round(prop_med, 1), "%"),
-             size = 3.5, color = "#555555") +
+             label = rotulo_efeito,
+             size = 3.5, color = cor_rotulo,
+             fontface = if (houve_supressao) "bold" else "plain") +
     labs(
       title = paste0("Figura ", fig_num, " - Diagrama de Mediacao (", disciplina, ")"),
-      subtitle = paste0(var_indep, " -> ", mediador, " -> Proficiencia ",
-                        " | R2(mediador) = ", round(r2_med, 3),
-                        " | R2(proficiencia) = ", round(r2_dep, 3))
+      subtitle = paste0(
+        var_indep, " -> ", mediador, " -> Proficiencia ",
+        " | R2(mediador) = ", round(r2_med, 3),
+        " | R2(proficiencia) = ", round(r2_dep, 3),
+        if (!is.null(categoria_referencia)) {
+          paste0(" | Referencia (0): ", categoria_referencia)
+        } else {
+          ""
+        }
+      ),
+      caption = texto_interpretacao
     ) +
     tema_saeb() +
     theme(
       axis.title = element_blank(),
       axis.text = element_blank(),
       axis.ticks = element_blank(),
-      panel.grid = element_blank()
+      panel.grid = element_blank(),
+      plot.caption = element_text(hjust = 0, size = 8.5, lineheight = 1.4,
+                                   color = "#333333", margin = margin(t = 12)),
+      plot.margin = margin(t = 5.5, r = 5.5, b = 10, l = 5.5)
     ) +
     coord_cartesian(xlim = c(-1.5, 5.5), ylim = c(0, 3))
   
@@ -355,11 +410,13 @@ p21 <- criar_diagrama_mediacao(
   efeito_cp = coef(modelo_b_mt)["TIPO_PRIVADA"],
   r2_med = summary(modelo_a_mt)$r.squared,
   r2_dep = summary(modelo_b_mt)$r.squared,
-  fig_num = 21
+  fig_num = 21,
+  categoria_referencia = "Publica",
+  nome_grupo = "Privada"
 )
 
 ggsave(caminho_saida(DIR_BASE, "figuras", "caminhos_mediacao_MT", "png"),
-       plot = p21, width = 14, height = 7, dpi = DPI_PADRAO, bg = "white")
+       plot = p21, width = 14, height = 8.2, dpi = DPI_PADRAO, bg = "white")
 
 message("   OK Figura 21: caminhos_mediacao_MT_", ts_global, ".png")
 
@@ -373,11 +430,13 @@ p22 <- criar_diagrama_mediacao(
   efeito_cp = coef(modelo_b_lp)["TIPO_PRIVADA"],
   r2_med = summary(modelo_a_lp)$r.squared,
   r2_dep = summary(modelo_b_lp)$r.squared,
-  fig_num = 22
+  fig_num = 22,
+  categoria_referencia = "Publica",
+  nome_grupo = "Privada"
 )
 
 ggsave(caminho_saida(DIR_BASE, "figuras", "caminhos_mediacao_LP", "png"),
-       plot = p22, width = 14, height = 7, dpi = DPI_PADRAO, bg = "white")
+       plot = p22, width = 14, height = 8.2, dpi = DPI_PADRAO, bg = "white")
 
 message("   OK Figura 22: caminhos_mediacao_LP_", ts_global, ".png")
 

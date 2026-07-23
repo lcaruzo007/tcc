@@ -79,7 +79,7 @@ library(data.table)
 RAIZ <- detectar_raiz()
 DIR_TESTE <- file.path(RAIZ, "TESTE")
 DIR_ANALISE <- file.path(DIR_TESTE, "3_ANALISE_DE_GRUPOS")
-DIR_METADADOS <- file.path(DIR_ANALISE, "outputs/metadados")
+DIR_OUTPUTS_ANALISE <- file.path(DIR_ANALISE, "outputs")
 
 DIR_BASE <- file.path(DIR_TESTE, "11_INDICE_COMPOSTO")
 
@@ -110,7 +110,7 @@ message(strrep("=", 70))
 message("INDICE COMPOSTO DE VULNERABILIDADE SOCIOEDUCACIONAL (PCA)")
 message(strrep("=", 70))
 
-arq_meta <- encontrar_arquivo_mais_recente(DIR_METADADOS, "metadados_escolas")
+arq_meta <- encontrar_arquivo_mais_recente(DIR_OUTPUTS_ANALISE, "metadados_escolas", tipo = "metadados")
 if (is.null(arq_meta)) stop("metadados_escolas_*.csv nao encontrado.")
 
 metadados <- read_csv(arq_meta, show_col_types = FALSE) %>%
@@ -309,8 +309,12 @@ message("   OK Figura 30: pca_biplot_", ts_global, ".png")
 p31 <- dados_pca %>%
   ggplot(aes(x = IC_VULN_NORM, fill = NIVEL_VULN)) +
   geom_histogram(bins = 30, alpha = 0.8, color = "white", linewidth = 0.3) +
-  scale_fill_manual(values = c("Muito Baixa" = "#27AE60", "Baixa" = "#F39C12",
-                               "Alta" = "#E67E22", "Muito Alta" = "#E74C3C")) +
+  scale_fill_manual(
+    name = "Nivel de Vulnerabilidade",
+    values = c("Muito Baixa" = "#27AE60", "Baixa" = "#F39C12",
+               "Alta" = "#E67E22", "Muito Alta" = "#E74C3C"),
+    breaks = c("Muito Baixa", "Baixa", "Alta", "Muito Alta")
+  ) +
   geom_vline(xintercept = median(dados_pca$IC_VULN_NORM), linetype = "dashed",
              color = "gray40", linewidth = 0.8) +
   annotate("text", x = median(dados_pca$IC_VULN_NORM), y = Inf,
@@ -326,7 +330,7 @@ p31 <- dados_pca %>%
     fill = "Nivel"
   ) +
   tema_saeb() +
-  theme(legend.position = "none")
+  theme(legend.position = "bottom")
 
 ggsave(caminho_saida(DIR_BASE, "figuras", "indice_mapa_distribuicao", "png"),
        plot = p31, width = 14, height = 8, dpi = DPI_PADRAO, bg = "white")

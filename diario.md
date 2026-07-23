@@ -1513,3 +1513,74 @@ sem R, mas a inspeção manual das edições não mostrou erros de sintaxe
 **Status:** Verificação final + fix de bugs + notas metodológicas (mod 6-11) + README brilhoso máximo  
 **Próxima etapa:** Validação em RStudio + commit + roadmap da Fase 3
 
+---
+
+## 23 de Julho de 2026 (Noite) — Remoção dos Módulos 6 e 10 (Análises Espaciais)
+
+### Contexto
+
+Os módulos 6 (`6_ANALISE_ESPACIAL`) e 10 (`10_ANALISE_RESIDUOS_ESPACIAIS`) foram
+removidos da pipeline devido à **anonimização dos municípios nos microdados do SAEB 2023**.
+
+### Problema Identificado
+
+- O arquivo `TS_ESCOLA.csv` contém `ID_MUNICIPIO` com códigos internos do SAEB
+  (ex.: `6324414`, `6324415`), **não** os códigos IBGE de 7 dígitos (ex.: `3100104`).
+- Os shapefiles do IBGE (via `geobr` ou download direto) usam códigos IBGE.
+- **Não há arquivo de mapeamento** (`TS_MUNICIPIO.csv`) disponível — o usuário
+  confirmou que excluiu esse arquivo por não ser relevante para o TCC.
+- Sem correspondência entre `ID_MUNICIPIO` (SAEB) e `code_muni` (IBGE), os
+  mapas coropléticos e a análise de autocorrelação espacial (Moran's I) são
+  **inviáveis**.
+
+### Módulos Removidos
+
+| Módulo | Script | Figuras | Função Original |
+|--------|--------|---------|-----------------|
+| 6 | `mapa_municipios.r` | 16-18 | Mapas coropléticos de proficiência e INSE por município |
+| 10 | `analise_residuos_espaciais.r` | 26-28 | Moran's I global, scatterplot de Moran, clusters LISA |
+
+### Justificativa Metodológica
+
+> Os dados do SAEB anonimiza os municípios para proteger a privacidade das
+> escolas. Sem coordenadas geográficas reais ou códigos IBGE, não é possível
+> construir matrizes de vizinhança espacial nem calcular estatísticas de
+> autocorrelação (Moran's I, LISA). As análises espaciais foram planejadas
+> originalmente, mas tornaram-se **inaplicáveis** devido à natureza dos dados.
+
+### Arquivos Deletados
+
+- `TESTE/6_ANALISE_ESPACIAL/` (diretório completo)
+- `TESTE/10_ANALISE_RESIDUOS_ESPACIAIS/` (diretório completo)
+
+### Documentação Atualizada
+
+- `AGENTS.md`: removidas linhas 49 e 53 da árvore de diretórios
+- `README.md`: removidas referências nos comandos de execução, diagrama mermaid,
+  tabelas de resumo e progresso, roadmap
+- `TESTE/DOCUMENTACAO/metodologia.md`: removidas seções PASSO 10 e PASSO 14
+- `TESTE/DOCUMENTACAO/referencia_outputs.md`: removidas seções PASSO 10 e PASSO 14
+- `TESTE/DOCUMENTACAO/README.md`: removidas referências no fluxo e tabela
+- `TESTE/DOCUMENTACAO/requisitos.md`: removidos pacotes `sf`, `geobr`, `tmap`, `spdep`
+  (não são mais usados por nenhum módulo restante)
+
+### Impacto na Pipeline
+
+- **Nenhum outro módulo depende** dos módulos 6 e 10 (verificado via grep).
+- Os módulos restantes (7, 8, 9, 11) funcionam independentemente.
+- As figuras 16-18 e 26-28 não serão geradas; a numeração das demais figuras
+  (19-25, 29-31) é mantida para consistência com o TCC.
+
+### Próximos Passos
+
+- [ ] Commit das mudanças (após validação do usuário)
+- [ ] Atualizar a escrita do TCC para refletir a remoção das análises espaciais
+- [ ] Considerar adicionar uma nota na metodologia explicando por que as análises
+      espaciais não foram realizadas (anonimização dos dados)
+
+---
+
+**Atualizado:** 23 de Julho de 2026 (Noite)  
+**Status:** Módulos 6 e 10 removidos + documentação atualizada  
+**Próxima etapa:** Commit + redação final do TCC
+

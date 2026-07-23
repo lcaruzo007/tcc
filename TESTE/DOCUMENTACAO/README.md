@@ -28,15 +28,11 @@ MICRODADOS → [PASSO 1] → 1_LIMPEZA/outputs/{ID}/
                               ↓
                 [PASSO 9] → 5_ITENS/outputs/
                               ↓
-                [PASSO 10] → 6_ESPACIAL/outputs/ (mapas)
-                              ↓
                 [PASSO 11] → 7_HLM/outputs/ (modelos hierárquicos)
                               ↓
                 [PASSO 12] → 8_MEDIACAO/outputs/ (mediação)
                               ↓
                 [PASSO 13] → 9_CV/outputs/ (validação cruzada)
-                              ↓
-                [PASSO 14] → 10_RESIDUOS/outputs/ (Moran's I)
                               ↓
                 [PASSO 15] → 11_INDICE/outputs/ (PCA)
 ```
@@ -54,19 +50,17 @@ MICRODADOS → [PASSO 1] → 1_LIMPEZA/outputs/{ID}/
 | 7 | `3_GRUPOS/` | `dendrograma_analise_completa.r` | `outputs/metadados/` | `outputs/figuras/` |
 | 8 | `4_REGRESSAO/` | `regressao_linear_multipla.r` | MICRODADOS | `outputs/{modelos,tabelas,figuras}/` |
 | 9 | `5_ITENS/` | `regressao_itens_brutos_dummy.r` | MICRODADOS | `outputs/{modelos,tabelas,figuras}/` |
-| 10 | `6_ESPACIAL/` | `mapa_municipios.r` | metadados + TS_ESCOLA | `outputs/figuras/mapa_*.png` |
 | 11 | `7_HLM/` | `modelos_hierarquicos.r` | MICRODADOS | `outputs/{tabelas,figuras}/` |
 | 12 | `8_MEDIACAO/` | `analise_mediacao.r` | metadados | `outputs/{tabelas,figuras}/` |
 | 13 | `9_CV/` | `validacao_cruzada.r` | metadados | `outputs/{tabelas,figuras}/` |
-| 14 | `10_RESIDUOS/` | `analise_residuos_espaciais.r` | metadados + shapefile | `outputs/{tabelas,figuras}/` |
 | 15 | `11_INDICE/` | `indice_composto.r` | metadados | `outputs/{tabelas,figuras}/` |
 
 ## Ordem de execução
 
 ```
 PASSO 1 → PASSO 2 → [PASSO 3] → PASSO 4 → PASSO 5 → [PASSO 6] → PASSO 7 → PASSO 8 → [PASSO 9]
-                                                                                              ↓
-                                                                            PASSO 10 → PASSO 11 → PASSO 12 → PASSO 13 → PASSO 14 → PASSO 15
+                                                                                               ↓
+                                                                             PASSO 11 → PASSO 12 → PASSO 13 → PASSO 15
 ```
 
 Passos entre colchetes são opcionais.
@@ -102,4 +96,3 @@ ID_ESCOLA_B <- 61466120        # Altere para a escola desejada
 | "metadados_escolas não encontrado" | Execute PASSO 4 antes |
 | "dados_FINAL não encontrado" | Execute PASSO 2 antes |
 | Demora muito | Normal: 173k registros na primeira execução |
-| Erro ao baixar shapefile | Verificar conexão com internet |

@@ -74,13 +74,13 @@ library(data.table)
 # CAMINHOS
 # =========================================================================
 
+source(file.path("C:/Users/13756596699/tcc/TESTE/DOCUMENTACAO", "utils_saeb.r"))
+
 RAIZ <- detectar_raiz()
 DIR_TESTE <- file.path(RAIZ, "TESTE")
 DIR_MICRODADOS <- file.path(RAIZ, "MICRODADOS_SAEB_2023/DADOS")
 
 DIR_BASE <- file.path(DIR_TESTE, "7_MODELOS_HIERARQUICOS")
-
-source(file.path(RAIZ, "TESTE", "DOCUMENTACAO", "utils_saeb.r"))
 
 ts_global <- format(Sys.time(), "%H%M%S")
 
@@ -113,17 +113,14 @@ message("\n>>> Carregando dados brutos...")
 dados_alunos <- fread(file.path(DIR_MICRODADOS, "TS_ALUNO_34EM.csv"))
 message("Alunos carregados: ", nrow(dados_alunos))
 
-# Selecionar colunas relevantes
-dados_hlm <- dados_alunos %>%
-  select(ID_ESCOLA, PROFICIENCIA_MT_SAEB, PROFICIENCIA_LP_SAEB,
-         INSE_ALUNO, TX_RESP_Q01, TX_RESP_Q04) %>%
-  mutate(
-    PROFICIENCIA_MT_SAEB = as.numeric(PROFICIENCIA_MT_SAEB),
-    PROFICIENCIA_LP_SAEB = as.numeric(PROFICIENCIA_LP_SAEB),
-    INSE_ALUNO = as.numeric(INSE_ALUNO)
-  ) %>%
-  filter(!is.na(PROFICIENCIA_MT_SAEB), !is.na(PROFICIENCIA_LP_SAEB)) %>%
-  filter(!is.na(ID_ESCOLA))
+# Selecionar colunas relevantes (sintaxe data.table)
+dados_hlm <- dados_alunos[!is.na(PROFICIENCIA_MT_SAEB) & !is.na(PROFICIENCIA_LP_SAEB) & 
+                           !is.na(ID_ESCOLA) & !is.na(INSE_ALUNO),
+                          .(ID_ESCOLA, 
+                            PROFICIENCIA_MT_SAEB = as.numeric(PROFICIENCIA_MT_SAEB),
+                            PROFICIENCIA_LP_SAEB = as.numeric(PROFICIENCIA_LP_SAEB),
+                            INSE_ALUNO = as.numeric(INSE_ALUNO),
+                            TX_RESP_Q01, TX_RESP_Q04)]
 
 message("Alunos validos: ", nrow(dados_hlm))
 message("Escolas: ", length(unique(dados_hlm$ID_ESCOLA)))
@@ -146,16 +143,29 @@ modelo_nulo_lp <- lmer(PROFICIENCIA_LP_SAEB ~ 1 + (1 | ID_ESCOLA), data = dados_
 icc_mt <- performance::icc(modelo_nulo_mt)
 icc_lp <- performance::icc(modelo_nulo_lp)
 
+# Extrair valores ICC (tratamento para diferentes formatos de retorno)
+if (is.data.frame(icc_mt) || is.list(icc_mt)) {
+  icc_mt_val <- icc_mt$ICC_adjusted
+} else {
+  icc_mt_val <- as.numeric(icc_mt[1])
+}
+
+if (is.data.frame(icc_lp) || is.list(icc_lp)) {
+  icc_lp_val <- icc_lp$ICC_adjusted
+} else {
+  icc_lp_val <- as.numeric(icc_lp[1])
+}
+
 message("\n>>> ICC (Coeficiente de Correlacao Intraclasse):")
-message("  MT: ", round(icc_mt$ICC_adjusted, 4), " (", 
-        round(icc_mt$ICC_adjusted * 100, 1), "% da variancia entre escolas)")
-message("  LP: ", round(icc_lp$ICC_adjusted, 4), " (", 
-        round(icc_lp$ICC_adjusted * 100, 1), "% da variancia entre escolas)")
+message("  MT: ", round(icc_mt_val, 4), " (", 
+        round(icc_mt_val * 100, 1), "% da variancia entre escolas)")
+message("  LP: ", round(icc_lp_val, 4), " (", 
+        round(icc_lp_val * 100, 1), "% da variancia entre escolas)")
 
 message("\nInterpretacao:")
-if (icc_mt$ICC_adjusted > 0.20) {
+if (icc_mt_val > 0.20) {
   message("  OK ICC alto (>20%): estrutura hierarquica importante - HLM necessario")
-} else if (icc_mt$ICC_adjusted > 0.10) {
+} else if (icc_mt_val > 0.10) {
   message("  ! ICC moderado (10-20%): HLM recomendado")
 } else {
   message("  ? ICC baixo (<10%): estrutura hierarquica menos relevante")
@@ -188,21 +198,18 @@ message("\n", strrep("-", 50))
 message("MODELO 2: + Variaveis de contexto")
 message(strrep("-", 50))
 
-# Preparar variaveis de contexto (agregar por escola)
-contexto_escola <- dados_hlm %>%
-  group_by(ID_ESCOLA) %>%
-  summarise(
-    INSE_MEDIO = mean(INSE_ALUNO, na.rm = TRUE),
-    N_ALUNOS = n(),
-    .groups = "drop"
-  )
+# Preparar variaveis de contexto (agregar por escola - sintaxe data.table)
+contexto_escola <- dados_hlm[, .(INSE_MEDIO = mean(INSE_ALUNO, na.rm = TRUE),
+                                  N_ALUNOS = .N),
+                              by = ID_ESCOLA]
 
-dados_hlm2 <- dados_hlm %>%
-  left_join(contexto_escola, by = "ID_ESCOLA")
+# Adicionar colunas de contexto diretamente em dados_hlm (preserva numero de linhas)
+dados_hlm[contexto_escola, on = "ID_ESCOLA", INSE_MEDIO := i.INSE_MEDIO]
+dados_hlm[contexto_escola, on = "ID_ESCOLA", N_ALUNOS_ESCOLA := i.N_ALUNOS]
 
-# Modelo 2: INSE individual + INSE medio da escola
-modelo2_mt <- lmer(PROFICIENCIA_MT_SAEB ~ INSE_ALUNO + INSE_MEDIO + (1 | ID_ESCOLA), data = dados_hlm2)
-modelo2_lp <- lmer(PROFICIENCIA_LP_SAEB ~ INSE_ALUNO + INSE_MEDIO + (1 | ID_ESCOLA), data = dados_hlm2)
+# Modelo 2: INSE individual + INSE medio da escola (usa mesmo dataset)
+modelo2_mt <- lmer(PROFICIENCIA_MT_SAEB ~ INSE_ALUNO + INSE_MEDIO + (1 | ID_ESCOLA), data = dados_hlm)
+modelo2_lp <- lmer(PROFICIENCIA_LP_SAEB ~ INSE_ALUNO + INSE_MEDIO + (1 | ID_ESCOLA), data = dados_hlm)
 
 message("\n>>> Modelo 2 - MT:")
 message("  R2 marginal: ", round(performance::r2(modelo2_mt)$R2_marginal, 4))
@@ -239,12 +246,12 @@ message("\n>>> Exportando resultados...")
 # Tabela de ICC
 icc_df <- tibble(
   Disciplina = c("Matematica", "Lingua Portuguesa"),
-  ICC = c(icc_mt$ICC_adjusted, icc_lp$ICC_adjusted),
-  Variancia_Entre_Escolas = c(icc_mt$ICC_adjusted * 100, icc_lp$ICC_adjusted * 100),
-  Variancia_Dentro_Escola = c((1 - icc_mt$ICC_adjusted) * 100, (1 - icc_lp$ICC_adjusted) * 100),
+  ICC = c(icc_mt_val, icc_lp_val),
+  Variancia_Entre_Escolas = c(icc_mt_val * 100, icc_lp_val * 100),
+  Variancia_Dentro_Escola = c((1 - icc_mt_val) * 100, (1 - icc_lp_val) * 100),
   Interpretacao = c(
-    ifelse(icc_mt$ICC_adjusted > 0.20, "Alto", ifelse(icc_mt$ICC_adjusted > 0.10, "Moderado", "Baixo")),
-    ifelse(icc_lp$ICC_adjusted > 0.20, "Alto", ifelse(icc_lp$ICC_adjusted > 0.10, "Moderado", "Baixo"))
+    ifelse(icc_mt_val > 0.20, "Alto", ifelse(icc_mt_val > 0.10, "Moderado", "Baixo")),
+    ifelse(icc_lp_val > 0.20, "Alto", ifelse(icc_lp_val > 0.10, "Moderado", "Baixo"))
   )
 )
 
@@ -365,8 +372,8 @@ message(strrep("=", 70))
 message("Alunos analisados: ", nrow(dados_hlm))
 message("Escolas: ", length(unique(dados_hlm$ID_ESCOLA)))
 message("\nICC:")
-message("  MT: ", round(icc_mt$ICC_adjusted * 100, 1), "% da variancia entre escolas")
-message("  LP: ", round(icc_lp$ICC_adjusted * 100, 1), "% da variancia entre escolas")
+message("  MT: ", round(icc_mt_val * 100, 1), "% da variancia entre escolas")
+message("  LP: ", round(icc_lp_val * 100, 1), "% da variancia entre escolas")
 message("\nFiguras geradas:")
 message("  - Figura 19: icc_varianca_", ts_global, ".png")
 message("  - Figura 20: efeitos_aleatorios_", ts_global, ".png")

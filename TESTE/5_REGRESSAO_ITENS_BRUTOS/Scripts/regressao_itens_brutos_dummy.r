@@ -18,19 +18,18 @@
 # ENTRADA:
 #   - TS_ALUNO_34EM.csv  (dados brutos SAEB - nivel aluno)
 #
-# SAIDA (pasta outputs_itens_brutos/):
-#   - base_escolas_itens_<ts>.csv
-#   - resumo_modelos_itens_<ts>.csv
-#   - coeficientes_MT_itens_<ts>.csv / coeficientes_LP_itens_<ts>.csv
-#   - diagnosticos_MT_itens_<ts>.csv / diagnosticos_LP_itens_<ts>.csv
-#   - diagnosticos_residuos_MT_itens_<ts>.png / _LP_itens_<ts>.png
-#   - preditos_vs_observados_MT_itens_<ts>.png / _LP_itens_<ts>.png
-#   - resumo_qualidade_ajuste_itens_<ts>.png
-#   - coeficientes_todos_MT_itens_<ts>.png / _LP_itens_<ts>.png
-#   - mapa_calor_vif_itens_<ts>.png
-#   - missings_por_item_<ts>.png
+# SAIDA (outputs/<YYYY-MM-DD>/<tipo>/<nome>_<HHMMSS>.<ext>):
+#   - tabelas/base_escolas_itens, resumo_modelos_itens,
+#     coeficientes_MT_itens / coeficientes_LP_itens,
+#     log_eliminadas_var0, log_vif_removidos
+#   - diagnosticos/diagnosticos_MT_itens / diagnosticos_LP_itens
+#   - figuras/diagnosticos_residuos_MT_itens / _LP_itens,
+#     preditos_vs_observados_MT_itens / _LP_itens,
+#     resumo_qualidade_ajuste_itens, mapa_calor_vif_itens,
+#     coef_grupo_MT_IMAGEMNN / coef_grupo_LP_IMAGEMNN (por grupo tematico)
+#   - modelos/modelo_MT_itens.rds / modelo_LP_itens.rds
 #
-# VERSAO: 1.1 - Maio 2026
+# VERSAO: 1.2 - Julho 2026 (migracao para caminho_saida() - pastas datadas)
 #
 # ---------------------------------------------------------------------------
 # NOTA METODOLOGICA - USO DE DUMMIES DOS ITENS BRUTOS E CRITERIOS DE ELIMINACAO
@@ -270,18 +269,25 @@ RAIZ                 <- detectar_raiz()
 DIR_DADOS_BRUTOS     <- file.path(RAIZ, "MICRODADOS_SAEB_2023", "DADOS")
 ARQUIVO_DADOS_BRUTOS <- arquivo_mais_recente(DIR_DADOS_BRUTOS, "^TS_ALUNO_34EM\\.csv$")
 
-# Subpastas proprias - separadas do script principal
+# Subpastas proprias - separadas do script principal.
+# DIR_BASE e base para caminho_saida(); DIR_* legacy sao mantidos apenas
+# para mensagens de log e fallback de leitura (compatibilidade com run
+# antigas). As escritas usam caminho_saida() -> outputs/<YYYY-MM-DD>/<tipo>/
 DIR_BASE <- file.path(RAIZ, "TESTE", "5_REGRESSAO_ITENS_BRUTOS")
 DIR_MODELOS     <- file.path(DIR_BASE, "outputs/modelos")
 DIR_DIAGNOSTICOS<- file.path(DIR_BASE, "outputs/diagnosticos")
 DIR_FIGURAS     <- file.path(DIR_BASE, "outputs/figuras")
 DIR_TABELAS     <- file.path(DIR_BASE, "outputs/tabelas")
 
+# Helpers compartilhados (caminho_saida, encontrar_arquivo_mais_recente,
+# tema_saeb, detectar_raiz, paletas, dicionarios)
+source(file.path(RAIZ, "TESTE", "DOCUMENTACAO", "utils_saeb.r"))
+
 message("Caminhos configurados:")
 message("  Dados brutos : ", ARQUIVO_DADOS_BRUTOS)
-message("  Modelos      : ", DIR_MODELOS)
-message("  Figuras      : ", DIR_FIGURAS)
-message("  Tabelas      : ", DIR_TABELAS, "\n")
+message("  Modulo (base): ", DIR_BASE)
+message("  Saidas       : ", DIR_BASE, "/outputs/<YYYY-MM-DD>/<tipo>/")
+message("  (legacy)     : ", DIR_TABELAS, " | ", DIR_FIGURAS, "\n")
 
 # =============================================================================
 # CONFIGURACOES
@@ -404,10 +410,10 @@ eliminar_por_vif <- function(df_modelo, resposta, limiar = LIMIAR_VIF) {
 # INICIALIZACAO
 # =============================================================================
 
+# Pastas datadas sao criadas automaticamente por caminho_saida().
+# Os DIR_* legacy seguintes so existem para mensagens de log/fallback.
 for (d in c(DIR_MODELOS, DIR_DIAGNOSTICOS, DIR_FIGURAS, DIR_TABELAS))
   dir.create(d, showWarnings = FALSE, recursive = TRUE)
-
-ts_global <- format(Sys.time(), "%Y%m%d_%H%M%S")
 
 message(strrep("=", 70))
 message("REGRESSAO COM ITENS BRUTOS (DUMMIES) - DADOS SAEB")
@@ -658,6 +664,7 @@ message("Dummies mantidas para o modelo: ", length(vars_var_ok))
 
 # Salvar log das variaveis eliminadas na etapa B (variancia zero / missing)
 vars_eliminadas_var0 <- setdiff(vars_candidatas, vars_var_ok)
+arq_log_var0 <- caminho_saida(DIR_BASE, "tabelas", "log_eliminadas_var0", "csv")
 write_csv(
   tibble(
     Predictor_Removido = vars_eliminadas_var0,
@@ -670,12 +677,12 @@ write_csv(
       }
     })
   ),
-  file.path(DIR_TABELAS, paste0("log_eliminadas_var0_", ts_global, ".csv"))
+  arq_log_var0
 )
 
-write_csv(dados_escola,
-          file.path(DIR_TABELAS, paste0("base_escolas_itens_", ts_global, ".csv")))
-message("Base escola salva: base_escolas_itens_", ts_global, ".csv")
+arq_base_escolas <- caminho_saida(DIR_BASE, "tabelas", "base_escolas_itens", "csv")
+write_csv(dados_escola, arq_base_escolas)
+message("Base escola salva: ", basename(arq_base_escolas))
 
 # =============================================================================
 # ETAPA 7: CONTROLE DE MULTICOLINEARIDADE (VIF ITERATIVO)
@@ -711,7 +718,7 @@ message("Removidas pelo VIF           : ", length(log_vif))
 # Salvar log de remocao por VIF
 write_csv(
   tibble(Predictor_Removido = log_vif),
-  file.path(DIR_TABELAS, paste0("log_vif_removidos_", ts_global, ".csv"))
+  caminho_saida(DIR_BASE, "tabelas", "log_vif_removidos", "csv")
 )
 
 # =============================================================================
@@ -785,9 +792,9 @@ coef_mt <- extrair_coef(modelo_mt)
 coef_lp <- extrair_coef(modelo_lp)
 
 write_csv(coef_mt,
-          file.path(DIR_TABELAS, paste0("coeficientes_MT_itens_", ts_global, ".csv")))
+          caminho_saida(DIR_BASE, "tabelas", "coeficientes_MT_itens", "csv"))
 write_csv(coef_lp,
-          file.path(DIR_TABELAS, paste0("coeficientes_LP_itens_", ts_global, ".csv")))
+          caminho_saida(DIR_BASE, "tabelas", "coeficientes_LP_itens", "csv"))
 
 message("Coeficientes MT (top 15):")
 print(head(coef_mt, 15), n = 15)
@@ -822,9 +829,9 @@ diag_mt <- extrair_diag(modelo_mt, summary_mt)
 diag_lp <- extrair_diag(modelo_lp, summary_lp)
 
 write_csv(diag_mt,
-          file.path(DIR_DIAGNOSTICOS, paste0("diagnosticos_MT_itens_", ts_global, ".csv")))
+          caminho_saida(DIR_BASE, "diagnosticos", "diagnosticos_MT_itens", "csv"))
 write_csv(diag_lp,
-          file.path(DIR_DIAGNOSTICOS, paste0("diagnosticos_LP_itens_", ts_global, ".csv")))
+          caminho_saida(DIR_BASE, "diagnosticos", "diagnosticos_LP_itens", "csv"))
 
 tabela_resumo <- tibble(
   Modelo      = c("MEDIA_MT", "MEDIA_LP"),
@@ -842,7 +849,7 @@ tabela_resumo <- tibble(
 )
 
 write_csv(tabela_resumo,
-          file.path(DIR_TABELAS, paste0("resumo_modelos_itens_", ts_global, ".csv")))
+          caminho_saida(DIR_BASE, "tabelas", "resumo_modelos_itens", "csv"))
 message("Resumo dos modelos:")
 print(tabela_resumo)
 
@@ -937,15 +944,13 @@ p_diag_mt <- gerar_graficos_residuos(modelo_mt, "MEDIA_MT", "#1f77b4")
 p_diag_lp <- gerar_graficos_residuos(modelo_lp, "MEDIA_LP", "#ff7f0e")
 
 ggsave(
-  file.path(DIR_FIGURAS,
-            paste0("diagnosticos_residuos_MT_itens_", ts_global, ".png")),
+  caminho_saida(DIR_BASE, "figuras", "diagnosticos_residuos_MT_itens", "png"),
   p_diag_mt, width = 14, height = 10, dpi = 180, bg = "white"
 )
 message("Figura salva: diagnosticos_residuos_MT_itens")
 
 ggsave(
-  file.path(DIR_FIGURAS,
-            paste0("diagnosticos_residuos_LP_itens_", ts_global, ".png")),
+  caminho_saida(DIR_BASE, "figuras", "diagnosticos_residuos_LP_itens", "png"),
   p_diag_lp, width = 14, height = 10, dpi = 180, bg = "white"
 )
 message("Figura salva: diagnosticos_residuos_LP_itens")
@@ -1070,9 +1075,8 @@ for (grupo_nome in names(grupos_tematicos)) {
   res_mt <- gerar_grafico_grupo(coef_mt, "MEDIA_MT", "#E65100",
                                 grupo_nome, itens_grupo)
   if (!is.null(res_mt)) {
-    arq <- file.path(DIR_FIGURAS,
-                     sprintf("coef_grupo_MT_IMAGEM%02d_%s.png",
-                             contador_mt, ts_global))
+    arq <- caminho_saida(DIR_BASE, "figuras",
+                         sprintf("coef_grupo_MT_IMAGEM%02d", contador_mt), "png")
     ggsave(arq, res_mt$plot, width = 12, height = res_mt$altura,
            dpi = 180, bg = "white", limitsize = FALSE)
     message("Salvo: ", basename(arq), "  (", res_mt$n, " coefs) - ", grupo_nome)
@@ -1080,14 +1084,13 @@ for (grupo_nome in names(grupos_tematicos)) {
   } else {
     message("!?  Sem coefs significativos: MT - ", grupo_nome)
   }
-  
+
   # LP
   res_lp <- gerar_grafico_grupo(coef_lp, "MEDIA_LP", "#1B5E20",
                                 grupo_nome, itens_grupo)
   if (!is.null(res_lp)) {
-    arq <- file.path(DIR_FIGURAS,
-                     sprintf("coef_grupo_LP_IMAGEM%02d_%s.png",
-                             contador_lp, ts_global))
+    arq <- caminho_saida(DIR_BASE, "figuras",
+                         sprintf("coef_grupo_LP_IMAGEM%02d", contador_lp), "png")
     ggsave(arq, res_lp$plot, width = 12, height = res_lp$altura,
            dpi = 180, bg = "white", limitsize = FALSE)
     message("Salvo: ", basename(arq), "  (", res_lp$n, " coefs) - ", grupo_nome)
@@ -1097,7 +1100,8 @@ for (grupo_nome in names(grupos_tematicos)) {
   }
 }
 
-message("\n? Graficos gerados em: ", DIR_FIGURAS)
+message("\n? Graficos gerados em: ",
+        file.path(DIR_BASE, "outputs", format(Sys.Date(), FORMATO_DATA_PASTA), "figuras"))
 message("   MT: ", contador_mt - 1L, " imagens")
 message("   LP: ", contador_lp - 1L, " imagens")
 
@@ -1156,8 +1160,7 @@ p_pred_lp <- gerar_pred_obs(modelo_lp, summary_lp, "MEDIA_LP", "#ff7f0e")
 
 if (!is.null(p_pred_mt)) {
   ggsave(
-    file.path(DIR_FIGURAS,
-              paste0("preditos_vs_observados_MT_itens_", ts_global, ".png")),
+    caminho_saida(DIR_BASE, "figuras", "preditos_vs_observados_MT_itens", "png"),
     p_pred_mt, width = 9, height = 9, dpi = 180, bg = "white"
   )
   message("Figura salva: preditos_vs_observados_MT_itens")
@@ -1167,8 +1170,7 @@ if (!is.null(p_pred_mt)) {
 
 if (!is.null(p_pred_lp)) {
   ggsave(
-    file.path(DIR_FIGURAS,
-              paste0("preditos_vs_observados_LP_itens_", ts_global, ".png")),
+    caminho_saida(DIR_BASE, "figuras", "preditos_vs_observados_LP_itens", "png"),
     p_pred_lp, width = 9, height = 9, dpi = 180, bg = "white"
   )
   message("Figura salva: preditos_vs_observados_LP_itens")
@@ -1226,8 +1228,7 @@ p_r2 <- ggplot(dados_r2, aes(x = Modelo, y = R2, fill = Modelo)) +
   )
 
 ggsave(
-  file.path(DIR_FIGURAS,
-            paste0("resumo_qualidade_ajuste_itens_", ts_global, ".png")),
+  caminho_saida(DIR_BASE, "figuras", "resumo_qualidade_ajuste_itens", "png"),
   p_r2, width = 8, height = 6, dpi = 180, bg = "white"
 )
 message("Figura salva: resumo_qualidade_ajuste_itens")
@@ -1288,8 +1289,7 @@ if (is.null(vif_final) || length(vif_final) == 0L) {
     theme(legend.position = "right")
 
   ggsave(
-    file.path(DIR_FIGURAS,
-              paste0("mapa_calor_vif_itens_", ts_global, ".png")),
+    caminho_saida(DIR_BASE, "figuras", "mapa_calor_vif_itens", "png"),
     p_vif, width = 12, height = max(8, n_barras * 0.25), dpi = 180, bg = "white"
   )
   message("Figura salva: mapa_calor_vif_itens")
@@ -1301,9 +1301,9 @@ if (is.null(vif_final) || length(vif_final) == 0L) {
 # =============================================================================
 
 saveRDS(modelo_mt,
-        file.path(DIR_MODELOS, paste0("modelo_MT_itens_", ts_global, ".rds")))
+        caminho_saida(DIR_BASE, "modelos", "modelo_MT_itens", "rds"))
 saveRDS(modelo_lp,
-        file.path(DIR_MODELOS, paste0("modelo_LP_itens_", ts_global, ".rds")))
+        caminho_saida(DIR_BASE, "modelos", "modelo_LP_itens", "rds"))
 
 # =============================================================================
 # RELATORIO FINAL
@@ -1326,12 +1326,10 @@ message("  MT - R2aj: ", round(summary_mt$adj.r.squared, 4),
 message("  LP - R2aj: ", round(summary_lp$adj.r.squared, 4),
         " | RMSE: ", round(sqrt(mean(summary_lp$residuals^2)), 2))
 message("\nArquivos de log gerados:")
-message("  log_eliminadas_var0_", ts_global, ".csv  (etapa B)")
-message("  log_vif_removidos_",   ts_global, ".csv  (etapa C)")
-message("\nArquivos gerados em:")
-message("  ", DIR_TABELAS)
-message("  ", DIR_FIGURAS)
-message("  ", DIR_MODELOS)
+message("  log_eliminadas_var0  (etapa B)")
+message("  log_vif_removidos    (etapa C)")
+message("\nArquivos gerados em (pastas datadas):")
+message("  ", file.path(DIR_BASE, "outputs", format(Sys.Date(), FORMATO_DATA_PASTA)))
 message("\n? MELHORIAS v1.1:")
 message("  ? Grafico de coeficientes exibe TODAS as preditoras (nao apenas top 20)")
 message("  ? Altura do grafico calculada dinamicamente pelo n? de preditoras")

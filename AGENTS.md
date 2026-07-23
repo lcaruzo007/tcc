@@ -46,11 +46,9 @@ tcc/
     +-- 3_ANALISE_DE_GRUPOS/              PASSO 4-7
     +-- 4_REGRESSAO_LINEAR/               PASSO 8
     +-- 5_REGRESSAO_ITENS_BRUTOS/         PASSO 9
-    +-- 6_ANALISE_ESPACIAL/               PASSO 10
     +-- 7_MODELOS_HIERARQUICOS/           PASSO 11 (HLM)
     +-- 8_ANALISE_MEDIACAO/               PASSO 12
     +-- 9_VALIDACAO_CRUZADA/              PASSO 13
-    +-- 10_ANALISE_RESIDUOS_ESPACIAIS/    PASSO 14 (Moran's I)
     +-- 11_INDICE_COMPOSTO/               PASSO 15 (PCA)
 ```
 
@@ -125,7 +123,7 @@ capital/interior identificada como lacuna na apresentacao do TCC.
 
 ## Estado atual (Julho 2026)
 
-- Scripts dos modulos 4, 6, 7, 8, 9, 10, 11 ja usam `caminho_saida()`
+- Scripts dos modulos 4, 7, 8, 9, 11 ja usam `caminho_saida()`
   (pastas datadas).
 - Modulo 3 (classificar_escolas, comparar_grupos, dendrograma) e modulo 5
   (regressao_itens_brutos_dummy) ainda usam o padrao antigo de sufixo -

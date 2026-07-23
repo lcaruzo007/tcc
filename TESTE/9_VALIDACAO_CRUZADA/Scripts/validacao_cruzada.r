@@ -76,7 +76,7 @@ library(data.table)
 RAIZ <- detectar_raiz()
 DIR_TESTE <- file.path(RAIZ, "TESTE")
 DIR_ANALISE <- file.path(DIR_TESTE, "3_ANALISE_DE_GRUPOS")
-DIR_METADADOS <- file.path(DIR_ANALISE, "outputs/metadados")
+DIR_OUTPUTS_ANALISE <- file.path(DIR_ANALISE, "outputs")
 
 DIR_BASE <- file.path(DIR_TESTE, "9_VALIDACAO_CRUZADA")
 
@@ -107,7 +107,7 @@ message(strrep("=", 70))
 message("VALIDACAO CRUZADA + CURVA ROC")
 message(strrep("=", 70))
 
-arq_meta <- encontrar_arquivo_mais_recente(DIR_METADADOS, "metadados_escolas")
+arq_meta <- encontrar_arquivo_mais_recente(DIR_OUTPUTS_ANALISE, "metadados_escolas", tipo = "metadados")
 if (is.null(arq_meta)) stop("metadados_escolas_*.csv nao encontrado.")
 
 metadados <- read_csv(arq_meta, show_col_types = FALSE) %>%
