@@ -2,23 +2,23 @@
 # SCRIPT: regressao_itens_brutos_dummy.r
 #
 # FUNCIONALIDADE:
-#   Regressão Linear Múltipla com variáveis dummy geradas a partir dos
-#   itens brutos do questionário socioeconômico SAEB (TX_RESP_Q01–Q25).
+#   Regressao Linear Multipla com variaveis dummy geradas a partir dos
+#   itens brutos do questionario socioeconomico SAEB (TX_RESP_Q01-Q25).
 #   Agrega por escola e modela MEDIA_MT e MEDIA_LP.
 #
-# DIFERENÇA EM RELAÇÃO AO SCRIPT PRINCIPAL (regressao_linear_multipla.r):
+# DIFERENCA EM RELACAO AO SCRIPT PRINCIPAL (regressao_linear_multipla.r):
 #   O script principal usa INSE_MEDIO (score TRI calculado pelo INEP) como
-#   proxy socioeconômico. Este script substitui o INSE pelos próprios itens
-#   brutos do questionário, convertidos em variáveis dummy (n_cats − 1 por
-#   item, com a categoria "A" como referência). O objetivo é explorar quais
-#   dimensões específicas do nível socioeconômico (bens domésticos, escolaridade
-#   dos pais, hábitos culturais etc.) apresentam efeito independente sobre a
-#   proficiência, algo que o INSE agrega em um único índice.
+#   proxy socioeconomico. Este script substitui o INSE pelos proprios itens
+#   brutos do questionario, convertidos em variaveis dummy (n_cats ? 1 por
+#   item, com a categoria "A" como referencia). O objetivo e explorar quais
+#   dimensoes especificas do nivel socioeconomico (bens domesticos, escolaridade
+#   dos pais, habitos culturais etc.) apresentam efeito independente sobre a
+#   proficiencia, algo que o INSE agrega em um unico indice.
 #
 # ENTRADA:
-#   - TS_ALUNO_34EM.csv  (dados brutos SAEB — nível aluno)
+#   - TS_ALUNO_34EM.csv  (dados brutos SAEB - nivel aluno)
 #
-# SAÍDA (pasta outputs_itens_brutos/):
+# SAIDA (pasta outputs_itens_brutos/):
 #   - base_escolas_itens_<ts>.csv
 #   - resumo_modelos_itens_<ts>.csv
 #   - coeficientes_MT_itens_<ts>.csv / coeficientes_LP_itens_<ts>.csv
@@ -30,203 +30,203 @@
 #   - mapa_calor_vif_itens_<ts>.png
 #   - missings_por_item_<ts>.png
 #
-# VERSÃO: 1.1 — Maio 2026
+# VERSAO: 1.1 - Maio 2026
 #
 # ---------------------------------------------------------------------------
-# NOTA METODOLÓGICA — USO DE DUMMIES DOS ITENS BRUTOS E CRITÉRIOS DE ELIMINAÇÃO
+# NOTA METODOLOGICA - USO DE DUMMIES DOS ITENS BRUTOS E CRITERIOS DE ELIMINACAO
 # ---------------------------------------------------------------------------
 #
-# Os itens do questionário (TX_RESP_Q01 a TX_RESP_Q25 com subitens) são
-# variáveis categóricas ordinais codificadas como letras (A, B, C…).
-# A abordagem adotada aqui é:
+# Os itens do questionario (TX_RESP_Q01 a TX_RESP_Q25 com subitens) sao
+# variaveis categoricas ordinais codificadas como letras (A, B, C...).
+# A abordagem adotada aqui e:
 #
-# 1. CODIFICAÇÃO DUMMY (one-hot com referência)
-#    Para cada item, a categoria "A" (menor grau da escala) é tomada como
-#    referência. Para um item com k categorias válidas são geradas k−1
-#    dummies binárias. No total, os itens geram ~169 dummies.
-#    Respostas codificadas como "." (não respondeu) ou "*" (inválido) são
-#    tratadas como NA antes da criação das dummies.
+# 1. CODIFICACAO DUMMY (one-hot com referencia)
+#    Para cada item, a categoria "A" (menor grau da escala) e tomada como
+#    referencia. Para um item com k categorias validas sao geradas k?1
+#    dummies binarias. No total, os itens geram ~169 dummies.
+#    Respostas codificadas como "." (nao respondeu) ou "*" (invalido) sao
+#    tratadas como NA antes da criacao das dummies.
 #
-# 2. AGREGAÇÃO POR ESCOLA (proporção de respostas)
-#    Como a unidade de análise é a escola (não o aluno), cada dummy é
-#    agregada como a PROPORÇÃO de alunos da escola que respondeu aquela
-#    categoria. Isso transforma valores binários individuais em variáveis
-#    contínuas [0, 1] no nível escola — interpretáveis como "fração de
+# 2. AGREGACAO POR ESCOLA (proporcao de respostas)
+#    Como a unidade de analise e a escola (nao o aluno), cada dummy e
+#    agregada como a PROPORCAO de alunos da escola que respondeu aquela
+#    categoria. Isso transforma valores binarios individuais em variaveis
+#    continuas [0, 1] no nivel escola - interpretaveis como "fracao de
 #    alunos com perfil X".
 #
 # ---------------------------------------------------------------------------
-# CRITÉRIOS DE ELIMINAÇÃO DE VARIÁVEIS (TRÊS ETAPAS SEQUENCIAIS)
+# CRITERIOS DE ELIMINACAO DE VARIAVEIS (TRES ETAPAS SEQUENCIAIS)
 # ---------------------------------------------------------------------------
 #
-# As dummies geradas passam por três filtros sequenciais antes de entrar
-# no modelo final. O número de variáveis eliminadas em cada etapa é
-# registrado no relatório final e nos arquivos de log.
+# As dummies geradas passam por tres filtros sequenciais antes de entrar
+# no modelo final. O numero de variaveis eliminadas em cada etapa e
+# registrado no relatorio final e nos arquivos de log.
 #
-# ETAPA A — RESPOSTAS INVÁLIDAS (antes da geração das dummies)
-#    Respostas codificadas como "." (ausência de resposta) ou "*" (código
-#    inválido/inconsistente conforme dicionário SAEB) são convertidas para
-#    NA antes de qualquer operação. Além disso, escolas onde um item tem
-#    menos de MIN_RESP_ITEM (padrão = 3) respostas válidas recebem NA para
-#    todas as dummies daquele item naquela escola — evitando proporções
-#    calculadas sobre amostras ínfimas e potencialmente não representativas.
-#    Critério: n_respostas_validas_por_escola < MIN_RESP_ITEM → NA.
+# ETAPA A - RESPOSTAS INVALIDAS (antes da geracao das dummies)
+#    Respostas codificadas como "." (ausencia de resposta) ou "*" (codigo
+#    invalido/inconsistente conforme dicionario SAEB) sao convertidas para
+#    NA antes de qualquer operacao. Alem disso, escolas onde um item tem
+#    menos de MIN_RESP_ITEM (padrao = 3) respostas validas recebem NA para
+#    todas as dummies daquele item naquela escola - evitando proporcoes
+#    calculadas sobre amostras infimas e potencialmente nao representativas.
+#    Criterio: n_respostas_validas_por_escola < MIN_RESP_ITEM -> NA.
 #
-# ETAPA B — FILTRO DE VARIÂNCIA ZERO / QUASE-ZERO (nível escola)
-#    Após a agregação por escola, dummies cujas proporções apresentam
-#    variância menor que LIMIAR_VAR_ZERO (padrão = 0,001) entre escolas,
-#    ou cujo percentual de missings supera 50%, são descartadas.
+# ETAPA B - FILTRO DE VARIANCIA ZERO / QUASE-ZERO (nivel escola)
+#    Apos a agregacao por escola, dummies cujas proporcoes apresentam
+#    variancia menor que LIMIAR_VAR_ZERO (padrao = 0,001) entre escolas,
+#    ou cujo percentual de missings supera 50%, sao descartadas.
 #    Esse filtro elimina:
-#      • Categorias de resposta raramente escolhidas (quase ninguém
-#        respondeu "E" em determinado item → dummy TX_RESP_Q07a_E ≈ 0
-#        em todas as escolas → variância ≈ 0 → sem poder discriminatório).
-#      • Dummies com dados ausentes na maioria das escolas, que
-#        introduziriam viés de seleção ao exigir descarte de muitas escolas.
-#    Critério: var(dummy, na.rm=TRUE) ≤ LIMIAR_VAR_ZERO
-#              OU mean(is.na(dummy)) > 0,50 → eliminada.
+#      ? Categorias de resposta raramente escolhidas (quase ninguem
+#        respondeu "E" em determinado item -> dummy TX_RESP_Q07a_E ~ 0
+#        em todas as escolas -> variancia ~ 0 -> sem poder discriminatorio).
+#      ? Dummies com dados ausentes na maioria das escolas, que
+#        introduziriam vies de selecao ao exigir descarte de muitas escolas.
+#    Criterio: var(dummy, na.rm=TRUE) <= LIMIAR_VAR_ZERO
+#              OU mean(is.na(dummy)) > 0,50 -> eliminada.
 #
-# ETAPA C — CONTROLE DE MULTICOLINEARIDADE VIA VIF ITERATIVO
-#    Com dezenas a centenas de preditores contínuos derivados de itens
-#    correlacionados entre si (p. ex., itens de bens domésticos Q07a–Q07e
-#    tendem a co-variar), a multicolinearidade é estruturalmente esperada.
-#    O script aplica eliminação iterativa pelo Variance Inflation Factor:
+# ETAPA C - CONTROLE DE MULTICOLINEARIDADE VIA VIF ITERATIVO
+#    Com dezenas a centenas de preditores continuos derivados de itens
+#    correlacionados entre si (p. ex., itens de bens domesticos Q07a-Q07e
+#    tendem a co-variar), a multicolinearidade e estruturalmente esperada.
+#    O script aplica eliminacao iterativa pelo Variance Inflation Factor:
 #      i.   Ajusta o modelo com todos os preditores restantes.
 #      ii.  Calcula o VIF de cada preditor via car::vif().
 #      iii. Identifica o preditor com maior VIF.
-#      iv.  Se VIF_max > LIMIAR_VIF (padrão = 10): remove esse preditor,
+#      iv.  Se VIF_max > LIMIAR_VIF (padrao = 10): remove esse preditor,
 #           registra em log e volta ao passo i.
-#      v.   Encerra quando todos os VIFs ≤ LIMIAR_VIF.
-#    O limiar VIF = 10 é o critério conservador clássico (Hair et al., 2019);
-#    valores > 10 indicam que mais de 90% da variância do preditor é
-#    explicada pelos demais, tornando sua estimativa instável.
-#    A eliminação é feita com base no modelo MEDIA_MT e o conjunto de
-#    preditoras resultante é reutilizado para MEDIA_LP, garantindo
+#      v.   Encerra quando todos os VIFs <= LIMIAR_VIF.
+#    O limiar VIF = 10 e o criterio conservador classico (Hair et al., 2019);
+#    valores > 10 indicam que mais de 90% da variancia do preditor e
+#    explicada pelos demais, tornando sua estimativa instavel.
+#    A eliminacao e feita com base no modelo MEDIA_MT e o conjunto de
+#    preditoras resultante e reutilizado para MEDIA_LP, garantindo
 #    comparabilidade direta entre os dois modelos.
-#    O log completo das variáveis removidas nesta etapa (nome e VIF no
-#    momento da remoção) é salvo em log_vif_removidos_<ts>.csv.
-#    Critério: VIF > LIMIAR_VIF → preditor de maior VIF é removido
-#              iterativamente até todos estarem abaixo do limiar.
+#    O log completo das variaveis removidas nesta etapa (nome e VIF no
+#    momento da remocao) e salvo em log_vif_removidos_<ts>.csv.
+#    Criterio: VIF > LIMIAR_VIF -> preditor de maior VIF e removido
+#              iterativamente ate todos estarem abaixo do limiar.
 #
-# RESUMO DO FLUXO DE ELIMINAÇÃO:
+# RESUMO DO FLUXO DE ELIMINACAO:
 #    Dummies brutas (~169)
-#      → [A] NA por resposta inválida / escola com < MIN_RESP_ITEM respostas
-#      → [B] Remoção por variância ≈ 0 ou > 50% missing
-#      → [C] Remoção iterativa por VIF > LIMIAR_VIF
-#      → Preditoras finais no modelo
+#      -> [A] NA por resposta invalida / escola com < MIN_RESP_ITEM respostas
+#      -> [B] Remocao por variancia ~ 0 ou > 50% missing
+#      -> [C] Remocao iterativa por VIF > LIMIAR_VIF
+#      -> Preditoras finais no modelo
 #
 # ---------------------------------------------------------------------------
-# 3. INTERPRETAÇÃO DOS COEFICIENTES
+# 3. INTERPRETACAO DOS COEFICIENTES
 #    Cada coeficiente representa o efeito estimado (em pontos SAEB) de
 #    uma escola ter mais alunos respondendo a categoria X em vez da
-#    categoria de referência "A", mantendo todos os demais preditores
+#    categoria de referencia "A", mantendo todos os demais preditores
 #    constantes. Por exemplo, Q02_B = +5.2 significa que escolas onde
-#    a fração de alunos respondendo "B" na Q02 é maior em 1 unidade
-#    (i.e., 100% vs 0%) têm proficiência 5.2 pontos maior, ceteris paribus.
-#    O gráfico de coeficientes exibe TODAS as preditoras mantidas no modelo
-#    (após os três filtros), ordenadas pelo valor absoluto do coeficiente,
+#    a fracao de alunos respondendo "B" na Q02 e maior em 1 unidade
+#    (i.e., 100% vs 0%) tem proficiencia 5.2 pontos maior, ceteris paribus.
+#    O grafico de coeficientes exibe TODAS as preditoras mantidas no modelo
+#    (apos os tres filtros), ordenadas pelo valor absoluto do coeficiente,
 #    de forma a revelar tanto os efeitos de maior magnitude quanto os
-#    estatisticamente não significativos.
+#    estatisticamente nao significativos.
 #
-# REFERÊNCIA: INEP (2021). Nota Técnica — Indicador de Nível
-# Socioeconômico das Escolas de Educação Básica (INSE).
-# Hair, J. F. et al. (2019). Multivariate Data Analysis (8ª ed.).
+# REFERENCIA: INEP (2021). Nota Tecnica - Indicador de Nivel
+# Socioeconomico das Escolas de Educacao Basica (INSE).
+# Hair, J. F. et al. (2019). Multivariate Data Analysis (8? ed.).
 # ---------------------------------------------------------------------------
 ################################################################################
 # ---------------------------------------------------------------------------
-# ALGORITMOS E MÉTODOS ESTATÍSTICOS UTILIZADOS
+# ALGORITMOS E METODOS ESTATISTICOS UTILIZADOS
 # ---------------------------------------------------------------------------
 #
-# 1. TRANSFORMAÇÃO DE VARIÁVEIS CATEGÓRICAS (ONE-HOT ENCODING)
-#    Algoritmo: Para cada variável categórica (item do questionário) com
-#    k categorias válidas, geram-se k−1 variáveis binárias dummy.
-#    Implementação: loops sobre itens, geração de colunas lógicas transformadas
-#    em proporções por escola. Categoria "A" é tomada como referência (omitida).
+# 1. TRANSFORMACAO DE VARIAVEIS CATEGORICAS (ONE-HOT ENCODING)
+#    Algoritmo: Para cada variavel categorica (item do questionario) com
+#    k categorias validas, geram-se k?1 variaveis binarias dummy.
+#    Implementacao: loops sobre itens, geracao de colunas logicas transformadas
+#    em proporcoes por escola. Categoria "A" e tomada como referencia (omitida).
 #
-# 2. AGREGAÇÃO HIERÁRQUICA (NÍVEL: ALUNO → ESCOLA)
-#    Método: Cálculo de proporções por escola (mean na dummy binária do aluno).
-#    Transformação: valores binários individuais {0,1} → contínuos [0,1] no
-#    nível escola. Filtragem: escolas com menos de MIN_RESP_ITEM (padrão=3)
-#    respostas válidas por item recebem NA, evitando estimativas instáveis.
+# 2. AGREGACAO HIERARQUICA (NIVEL: ALUNO -> ESCOLA)
+#    Metodo: Calculo de proporcoes por escola (mean na dummy binaria do aluno).
+#    Transformacao: valores binarios individuais {0,1} -> continuos [0,1] no
+#    nivel escola. Filtragem: escolas com menos de MIN_RESP_ITEM (padrao=3)
+#    respostas validas por item recebem NA, evitando estimativas instaveis.
 #
-# 3. FILTRAGEM DE VARIÂNCIA ZERO (LIMIAR ADAPTATIVO)
-#    Método: Cálculo de var(X) para cada variável candidata no nível escola.
-#    Critério: Removes são variáveis com var < 0,001 ou >50% dados faltantes,
-#    sem poder discriminatório entre escolas.
-#    Implementação: sapply() com var() e mean(is.na()).
+# 3. FILTRAGEM DE VARIANCIA ZERO (LIMIAR ADAPTATIVO)
+#    Metodo: Calculo de var(X) para cada variavel candidata no nivel escola.
+#    Criterio: Removes sao variaveis com var < 0,001 ou >50% dados faltantes,
+#    sem poder discriminatorio entre escolas.
+#    Implementacao: sapply() com var() e mean(is.na()).
 #
-# 4. CONTROLE DE MULTICOLINEARIDADE — VIF ITERATIVO
-#    Algoritmo: Procedimento iterativo de eliminação progressiva:
+# 4. CONTROLE DE MULTICOLINEARIDADE - VIF ITERATIVO
+#    Algoritmo: Procedimento iterativo de eliminacao progressiva:
 #      a) Ajustar modelo completo via OLS (Ordinary Least Squares)
 #      b) Calcular VIF usando car::vif() para cada preditora
-#      c) Identificar preditora com VIF máximo
+#      c) Identificar preditora com VIF maximo
 #      d) Se VIF_max > limiar: remover, registrar em log, retornar a (a)
-#      e) Parar quando todos VIF ≤ limiar
-#    VIF = 1 / (1 − R²_j), onde R²_j é o R² da regressão da preditora j
-#    contra todas as demais. VIF > 10 indica >90% variância colinear.
-#    Implementação: repeat{ } loop com tryCatch para robustez.
+#      e) Parar quando todos VIF <= limiar
+#    VIF = 1 / (1 ? R2_j), onde R2_j e o R2 da regressao da preditora j
+#    contra todas as demais. VIF > 10 indica >90% variancia colinear.
+#    Implementacao: repeat{ } loop com tryCatch para robustez.
 #
-# 5. REGRESSÃO LINEAR MÚLTIPLA (MÍNIMOS QUADRADOS ORDINÁRIOS — OLS)
-#    Modelo: Y = β₀ + β₁X₁ + β₂X₂ + ⋯ + βₚXₚ + ε
-#    Estimação: lm(formula, data) ajusta via decomposição QR.
+# 5. REGRESSAO LINEAR MULTIPLA (MINIMOS QUADRADOS ORDINARIOS - OLS)
+#    Modelo: Y = beta0 + beta1X1 + beta2X2 + ? + beta?X? + ?
+#    Estimacao: lm(formula, data) ajusta via decomposicao QR.
 #    Pressupostos testados graficamente:
-#      • Linearidade: gráfico Resíduos vs Ajustados
-#      • Normalidade dos erros: Q-Q plot (qqplot)
-#      • Homocedasticidade: Scale-Location plot
-#      • Independência: suposição por design (escolas independentes)
-#    Implementação: stats::lm() função base R.
+#      ? Linearidade: grafico Residuos vs Ajustados
+#      ? Normalidade dos erros: Q-Q plot (qqplot)
+#      ? Homocedasticidade: Scale-Location plot
+#      ? Independencia: suposicao por design (escolas independentes)
+#    Implementacao: stats::lm() funcao base R.
 #
-# 6. DIAGNÓSTICO DE RESÍDUOS (GRÁFICOS EXPLORATÓRIOS)
-#    Procedimentos gráficos (ggplot2 + patchwork):
-#      i.    Resíduos vs Ajustados: detecta não-linearidade e heteroced.
-#      ii.   Q-Q plot: avalia normalidade dos erros via quantis teóricos
-#      iii.  Scale-Location: √|resíduos padronizados| vs ajustados
-#      iv.   Histograma de resíduos: visualiza simetria e curtose
-#    Implementação: fitted(), residuals(), rstandard(), stat_qq().
+# 6. DIAGNOSTICO DE RESIDUOS (GRAFICOS EXPLORATORIOS)
+#    Procedimentos graficos (ggplot2 + patchwork):
+#      i.    Residuos vs Ajustados: detecta nao-linearidade e heteroced.
+#      ii.   Q-Q plot: avalia normalidade dos erros via quantis teoricos
+#      iii.  Scale-Location: ?|residuos padronizados| vs ajustados
+#      iv.   Histograma de residuos: visualiza simetria e curtose
+#    Implementacao: fitted(), residuals(), rstandard(), stat_qq().
 #
-# 7. ÍNDICES DE AJUSTE E QUALIDADE DO MODELO
-#    • R² ajustado = 1 − [(n−1)/(n−p−1)] × (1 − R²)
-#      Corrige viés de R² crescente com número de preditores; comparável
-#      entre modelos com diferentes números de variáveis.
-#    • RMSE (Root Mean Square Error) = √[Σ(eᵢ)² / n]
-#      Erro médio de predição nas mesmas unidades da resposta; penaliza
+# 7. INDICES DE AJUSTE E QUALIDADE DO MODELO
+#    ? R2 ajustado = 1 ? [(n?1)/(n?p?1)] x (1 ? R2)
+#      Corrige vies de R2 crescente com numero de preditores; comparavel
+#      entre modelos com diferentes numeros de variaveis.
+#    ? RMSE (Root Mean Square Error) = ?[?(e?)2 / n]
+#      Erro medio de predicao nas mesmas unidades da resposta; penaliza
 #      erros grandes exponencialmente.
-#    • AIC (Akaike Information Criterion) = 2k − 2ln(L)
+#    ? AIC (Akaike Information Criterion) = 2k ? 2ln(L)
 #      Balanceia ajuste vs complexidade; menor = melhor modelo relativo.
-#    • BIC (Bayesian IC) = k×ln(n) − 2ln(L)
-#      Similar ao AIC com penalização maior por número de parâmetros;
-#      preferível para grandes amostras.
-#    Implementação: summary(lm), AIC(), BIC() base R.
+#    ? BIC (Bayesian IC) = kxln(n) ? 2ln(L)
+#      Similar ao AIC com penalizacao maior por numero de parametros;
+#      preferivel para grandes amostras.
+#    Implementacao: summary(lm), AIC(), BIC() base R.
 #
-# 8. TESTES DE SIGNIFICÂNCIA DOS COEFICIENTES
-#    Método: Teste t de Student para cada coeficiente.
-#    Hipótese nula: H₀: βⱼ = 0 (sem efeito da preditora j).
-#    Estatística: tⱼ = βⱼ / SE(βⱼ) ~ t_{n−p−1} sob H₀.
-#    p-valor bilateral: P(|T| ≥ |tⱼ|).
-#    Limiar α = 0,05 (padrão).
-#    Implementação: summary(lm)$coefficients + tidy(broom).
+# 8. TESTES DE SIGNIFICANCIA DOS COEFICIENTES
+#    Metodo: Teste t de Student para cada coeficiente.
+#    Hipotese nula: H0: beta? = 0 (sem efeito da preditora j).
+#    Estatistica: t? = beta? / SE(beta?) ~ t_{n?p?1} sob H0.
+#    p-valor bilateral: P(|T| >= |t?|).
+#    Limiar alfa = 0,05 (padrao).
+#    Implementacao: summary(lm)$coefficients + tidy(broom).
 #
-# 9. INTERVALO DE CONFIANÇA (IC 95%)
-#    Cálculo: IC = β̂ ± 1,96 × SE(β̂) [aproximação normal, n grande].
-#    Interpretação: Intervalo de 95% de confiança para o parâmetro populacional.
-#    Visualização: barras de erro nos gráficos de coeficientes.
-#    Implementação: estimate ± 1.96 * std.error.
+# 9. INTERVALO DE CONFIANCA (IC 95%)
+#    Calculo: IC = beta? +/- 1,96 x SE(beta?) [aproximacao normal, n grande].
+#    Interpretacao: Intervalo de 95% de confianca para o parametro populacional.
+#    Visualizacao: barras de erro nos graficos de coeficientes.
+#    Implementacao: estimate +/- 1.96 * std.error.
 #
-# 10. VALIDAÇÃO E ESTRATIFICAÇÃO
-#     Partição por escola: análise independente por grupo de contraste
-#     (Pública vs Privada, Capital vs Interior, Urbana vs Rural).
-#     Estratificação temática: agrupa itens por dimensão socioeconômica
-#     (Q01–Q09, Q10–Q14, Q15–Q20, Q21–Q25) para facilitar interpretação
-#     e reduzir problema de múltiplos testes.
-#     Implementação: filter(), group_by(), facet estratificação em ggplot2.
+# 10. VALIDACAO E ESTRATIFICACAO
+#     Particao por escola: analise independente por grupo de contraste
+#     (Publica vs Privada, Capital vs Interior, Urbana vs Rural).
+#     Estratificacao tematica: agrupa itens por dimensao socioeconomica
+#     (Q01-Q09, Q10-Q14, Q15-Q20, Q21-Q25) para facilitar interpretacao
+#     e reduzir problema de multiplos testes.
+#     Implementacao: filter(), group_by(), facet estratificacao em ggplot2.
 #
-# REFERÊNCIAS TEÓRICAS:
-# • Hair, J. F. et al. (2019). Multivariate Data Analysis (8ª ed.).
-#   Pearson. — Caps. 4–5: regressão, multicolinearidade, diagnóstico.
-# • Wooldridge, J. M. (2020). Introductory Econometrics: A Modern Approach
-#   (7ª ed.). Cengage. — Cap. 3: estimação OLS, pressupostos, testes.
-# • James, G. et al. (2021). An Introduction to Statistical Learning
-#   (2ª ed.). Springer. — Cap. 3: regressão linear, interpretação, validação.
-# • Fox, J. (2016). Applied Regression Analysis & Generalized Linear Models
-#   (3ª ed.). SAGE. — Cap. 6: diagnóstico, multicolinearidade, VIF.
+# REFERENCIAS TEORICAS:
+# ? Hair, J. F. et al. (2019). Multivariate Data Analysis (8? ed.).
+#   Pearson. - Caps. 4-5: regressao, multicolinearidade, diagnostico.
+# ? Wooldridge, J. M. (2020). Introductory Econometrics: A Modern Approach
+#   (7? ed.). Cengage. - Cap. 3: estimacao OLS, pressupostos, testes.
+# ? James, G. et al. (2021). An Introduction to Statistical Learning
+#   (2? ed.). Springer. - Cap. 3: regressao linear, interpretacao, validacao.
+# ? Fox, J. (2016). Applied Regression Analysis & Generalized Linear Models
+#   (3? ed.). SAGE. - Cap. 6: diagnostico, multicolinearidade, VIF.
 #
 # --------------------------------------------------------------------------
 
@@ -236,27 +236,27 @@ library(patchwork)
 library(car)
 
 # =============================================================================
-# DETECÇÃO AUTOMÁTICA DE CAMINHOS
+# DETECCAO AUTOMATICA DE CAMINHOS
 # =============================================================================
 
 detectar_raiz <- function() {
   cwd <- getwd()
   while (cwd != dirname(cwd)) {
     if (dir.exists(file.path(cwd, "TESTE"))) {
-      message("✓ Projeto encontrado em: ", cwd)
+      message("OK Projeto encontrado em: ", cwd)
       return(cwd)
     }
     cwd <- dirname(cwd)
   }
-  message("⚠️  Pasta 'TESTE' não encontrada automaticamente.")
+  message("!?  Pasta 'TESTE' nao encontrada automaticamente.")
   if (interactive()) {
     raiz <- utils::choose.dir(default = getwd(),
                               caption = "Selecione a pasta raiz do projeto TCC")
-    if (is.na(raiz) || raiz == "") stop("Caminho não selecionado. Encerrando.")
-    message("✓ Pasta selecionada: ", raiz)
+    if (is.na(raiz) || raiz == "") stop("Caminho nao selecionado. Encerrando.")
+    message("OK Pasta selecionada: ", raiz)
     return(raiz)
   } else {
-    stop("Script não pode rodar em modo não-interativo sem encontrar o caminho.")
+    stop("Script nao pode rodar em modo nao-interativo sem encontrar o caminho.")
   }
 }
 
@@ -270,7 +270,7 @@ RAIZ                 <- detectar_raiz()
 DIR_DADOS_BRUTOS     <- file.path(RAIZ, "MICRODADOS_SAEB_2023", "DADOS")
 ARQUIVO_DADOS_BRUTOS <- arquivo_mais_recente(DIR_DADOS_BRUTOS, "^TS_ALUNO_34EM\\.csv$")
 
-# Subpastas próprias — separadas do script principal
+# Subpastas proprias - separadas do script principal
 DIR_BASE <- file.path(RAIZ, "TESTE", "5_REGRESSAO_ITENS_BRUTOS")
 DIR_MODELOS     <- file.path(DIR_BASE, "outputs/modelos")
 DIR_DIAGNOSTICOS<- file.path(DIR_BASE, "outputs/diagnosticos")
@@ -284,18 +284,18 @@ message("  Figuras      : ", DIR_FIGURAS)
 message("  Tabelas      : ", DIR_TABELAS, "\n")
 
 # =============================================================================
-# CONFIGURAÇÕES
+# CONFIGURACOES
 # =============================================================================
 
-MIN_ALUNOS_ESCOLA  <- 5      # escolas com menos alunos são descartadas
-PROF_MIN           <- 150    # limite inferior de proficiência válida
-PROF_MAX           <- 800    # limite superior de proficiência válida
-MIN_RESP_ITEM      <- 3      # alunos mínimos respondendo um item por escola
-LIMIAR_VIF         <- 10     # VIF máximo tolerado (eliminação iterativa)
-LIMIAR_VAR_ZERO    <- 0.001  # variância mínima de uma dummy no nível escola
+MIN_ALUNOS_ESCOLA  <- 5      # escolas com menos alunos sao descartadas
+PROF_MIN           <- 150    # limite inferior de proficiencia valida
+PROF_MAX           <- 800    # limite superior de proficiencia valida
+MIN_RESP_ITEM      <- 3      # alunos minimos respondendo um item por escola
+LIMIAR_VIF         <- 10     # VIF maximo tolerado (eliminacao iterativa)
+LIMIAR_VAR_ZERO    <- 0.001  # variancia minima de uma dummy no nivel escola
 ALPHA              <- 0.05
 
-# Itens brutos do questionário socioeconômico
+# Itens brutos do questionario socioeconomico
 ITENS_QUEST <- c(
   "TX_RESP_Q01", "TX_RESP_Q02", "TX_RESP_Q03", "TX_RESP_Q04",
   "TX_RESP_Q05a","TX_RESP_Q05b","TX_RESP_Q05c",
@@ -320,13 +320,13 @@ ITENS_QUEST <- c(
   "TX_RESP_Q24", "TX_RESP_Q25"
 )
 
-# Variáveis estruturais da escola (mantidas como controle)
+# Variaveis estruturais da escola (mantidas como controle)
 VARS_ESTRUTURAIS <- c("TIPO_ESCOLA", "AREA", "LOCALIZACAO")
 
 VARIAVEL_DEPENDENTE <- c("MEDIA_MT", "MEDIA_LP")
 
 # =============================================================================
-# FUNÇÕES UTILITÁRIAS
+# FUNCOES UTILITARIAS
 # =============================================================================
 
 tema_saeb <- function(base_size = 11) {
@@ -356,10 +356,10 @@ formatar_pvalor <- function(p) {
   )
 }
 
-# Função auxiliar: validar dados antes de plotar
+# Funcao auxiliar: validar dados antes de plotar
 validar_dados_plot <- function(df, nome_grafico) {
   if (is.null(df) || nrow(df) == 0) {
-    warning("⚠️  ", nome_grafico, ": nenhum dado para plotar. Gráfico não será gerado.")
+    warning("!?  ", nome_grafico, ": nenhum dado para plotar. Grafico nao sera gerado.")
     return(FALSE)
   }
   TRUE
@@ -367,7 +367,7 @@ validar_dados_plot <- function(df, nome_grafico) {
 
 
 
-# Eliminação iterativa de preditores com VIF > limiar
+# Eliminacao iterativa de preditores com VIF > limiar
 eliminar_por_vif <- function(df_modelo, resposta, limiar = LIMIAR_VIF) {
   preds <- setdiff(names(df_modelo), resposta)
   log_removidos <- character(0)
@@ -380,11 +380,11 @@ eliminar_por_vif <- function(df_modelo, resposta, limiar = LIMIAR_VIF) {
     vif_vals   <- tryCatch(car::vif(modelo_tmp), error = function(e) NULL)
 
     if (is.null(vif_vals)) {
-      message("  ⚠️  VIF não pôde ser calculado — encerrando eliminação.")
+      message("  !?  VIF nao pode ser calculado - encerrando eliminacao.")
       break
     }
 
-    # vif() pode retornar matrix (quando há fatores); pegar primeira coluna
+    # vif() pode retornar matrix (quando ha fatores); pegar primeira coluna
     if (is.matrix(vif_vals)) vif_vals <- vif_vals[, 1]
 
     max_vif  <- max(vif_vals, na.rm = TRUE)
@@ -401,7 +401,7 @@ eliminar_por_vif <- function(df_modelo, resposta, limiar = LIMIAR_VIF) {
 }
 
 # =============================================================================
-# INICIALIZAÇÃO
+# INICIALIZACAO
 # =============================================================================
 
 for (d in c(DIR_MODELOS, DIR_DIAGNOSTICOS, DIR_FIGURAS, DIR_TABELAS))
@@ -410,7 +410,7 @@ for (d in c(DIR_MODELOS, DIR_DIAGNOSTICOS, DIR_FIGURAS, DIR_TABELAS))
 ts_global <- format(Sys.time(), "%Y%m%d_%H%M%S")
 
 message(strrep("=", 70))
-message("REGRESSÃO COM ITENS BRUTOS (DUMMIES) — DADOS SAEB")
+message("REGRESSAO COM ITENS BRUTOS (DUMMIES) - DADOS SAEB")
 message(strrep("=", 70))
 
 # =============================================================================
@@ -423,12 +423,12 @@ message(strrep("-", 50))
 
 if (is.null(ARQUIVO_DADOS_BRUTOS) || !file.exists(ARQUIVO_DADOS_BRUTOS)) {
   stop(
-    "Arquivo TS_ALUNO*.csv não encontrado em:\n  ", DIR_DADOS_BRUTOS,
+    "Arquivo TS_ALUNO*.csv nao encontrado em:\n  ", DIR_DADOS_BRUTOS,
     "\nVerifique se a pasta MICRODADOS_SAEB_2023/DADOS existe na raiz do projeto."
   )
 }
 
-# Colunas necessárias: proficiência + estrutura da escola + itens do questionário
+# Colunas necessarias: proficiencia + estrutura da escola + itens do questionario
 colunas_fixas <- cols(
   ID_ESCOLA            = col_character(),
   IN_PUBLICA           = col_integer(),
@@ -439,7 +439,7 @@ colunas_fixas <- cols(
   PROFICIENCIA_MT_SAEB = col_double(),
   PROFICIENCIA_LP_SAEB = col_double(),
   IN_PREENCHIMENTO_QUESTIONARIO = col_integer(),
-  .default             = col_character()   # itens do questionário são char
+  .default             = col_character()   # itens do questionario sao char
 )
 
 dados_brutos <- read_csv(
@@ -448,7 +448,7 @@ dados_brutos <- read_csv(
   show_col_types = FALSE
 )
 
-# Converter colunas numéricas que vieram como character por causa do .default
+# Converter colunas numericas que vieram como character por causa do .default
 dados_brutos <- dados_brutos |>
   mutate(
     IN_PROFICIENCIA_MT   = as.integer(IN_PROFICIENCIA_MT),
@@ -460,7 +460,7 @@ dados_brutos <- dados_brutos |>
     ID_LOCALIZACAO       = as.integer(ID_LOCALIZACAO)
   )
 
-# Tratar "." e "*" como NA nos itens do questionário
+# Tratar "." e "*" como NA nos itens do questionario
 itens_presentes <- intersect(ITENS_QUEST, names(dados_brutos))
 dados_brutos <- dados_brutos |>
   mutate(across(all_of(itens_presentes),
@@ -472,11 +472,11 @@ message("Escolas    : ", n_distinct(dados_brutos$ID_ESCOLA))
 message("Itens lidos: ", length(itens_presentes))
 
 # =============================================================================
-# ETAPA 2: MÉDIAS DE PROFICIÊNCIA POR ESCOLA
+# ETAPA 2: MEDIAS DE PROFICIENCIA POR ESCOLA
 # =============================================================================
 
 message("\n", strrep("-", 50))
-message("ETAPA 2: MÉDIAS DE PROFICIÊNCIA POR ESCOLA")
+message("ETAPA 2: MEDIAS DE PROFICIENCIA POR ESCOLA")
 message(strrep("-", 50))
 
 media_prof <- dados_brutos |>
@@ -495,10 +495,10 @@ media_prof <- dados_brutos |>
   ) |>
   filter(N_ALUNOS_MT >= MIN_ALUNOS_ESCOLA)
 
-message("Escolas com proficiência válida: ", nrow(media_prof))
+message("Escolas com proficiencia valida: ", nrow(media_prof))
 
 # =============================================================================
-# ETAPA 3: VARIÁVEIS ESTRUTURAIS DA ESCOLA
+# ETAPA 3: VARIAVEIS ESTRUTURAIS DA ESCOLA
 # =============================================================================
 
 categ_escola <- dados_brutos |>
@@ -512,9 +512,10 @@ categ_escola <- dados_brutos |>
   mutate(
     TIPO_ESCOLA = if_else(IN_PUBLICA == 1, "Publica", "Privada"),
     AREA        = if_else(ID_AREA == 1,    "Capital", "Interior"),
-    LOCALIZACAO = if_else(ID_LOCALIZACAO == 1, "Urbana", "Rural")
+    LOCALIZACAO = if_else(ID_LOCALIZACAO == 1, "Urbana", "Rural"),
+    AREA_LOCAL  = paste0(LOCALIZACAO, "_", AREA)
   ) |>
-  select(ID_ESCOLA, TIPO_ESCOLA, AREA, LOCALIZACAO)
+  select(ID_ESCOLA, TIPO_ESCOLA, AREA, LOCALIZACAO, AREA_LOCAL)
 
 # =============================================================================
 # ETAPA 4: CRIAR DUMMIES DOS ITENS BRUTOS E AGREGAR POR ESCOLA
@@ -580,11 +581,11 @@ message("Dummies geradas: ", length(todas_dummies))
 message("Escolas: ", nrow(props_escola))
 
 # =============================================================================
-# ETAPA 5: DIAGNÓSTICO DE MISSINGS POR ITEM (CORRIGIDO)
+# ETAPA 5: DIAGNOSTICO DE MISSINGS POR ITEM (CORRIGIDO)
 # =============================================================================
 
 message("\n", strrep("-", 50))
-message("ETAPA 5: DIAGNÓSTICO DE MISSINGS")
+message("ETAPA 5: DIAGNOSTICO DE MISSINGS")
 message(strrep("-", 50))
 
 miss_info <- map_dfr(itens_presentes, function(item) {
@@ -608,11 +609,11 @@ miss_info <- map_dfr(itens_presentes, function(item) {
   arrange(desc(Pct_NA_Escolas))
 
 # =============================================================================
-# ETAPA 6: MONTAR BASE ESCOLA E REMOVER DUMMIES COM VARIÂNCIA ZERO
+# ETAPA 6: MONTAR BASE ESCOLA E REMOVER DUMMIES COM VARIANCIA ZERO
 # =============================================================================
 
 message("\n", strrep("-", 50))
-message("ETAPA 6: BASE ESCOLA — FILTRO DE VARIÂNCIA ZERO")
+message("ETAPA 6: BASE ESCOLA - FILTRO DE VARIANCIA ZERO")
 message(strrep("-", 50))
 
 dados_escola <- media_prof |>
@@ -621,19 +622,26 @@ dados_escola <- media_prof |>
 
 message("Escolas na base final: ", nrow(dados_escola))
 
-# Dummies de variáveis estruturais (TIPO_ESCOLA, AREA, LOCALIZACAO)
+# Dummies estruturais (TIPO_ESCOLA + AREA_LOCAL combinada, ref = Urbana_Capital)
+# Substitui AREA_Interior e LOCALIZACAO_Rural por 3 dummies de AREA_LOCAL,
+# capturando interacoes Urbana/Rural x Capital/Interior (lacuna apontada na
+# apresentacao do TCC para investigacao futura)
 dados_escola <- dados_escola |>
   mutate(
-    TIPO_ESCOLA_Privada = as.integer(TIPO_ESCOLA == "Privada"),
-    AREA_Interior       = as.integer(AREA == "Interior"),
-    LOCALIZACAO_Rural   = as.integer(LOCALIZACAO == "Rural")
+    TIPO_ESCOLA_Privada        = as.integer(TIPO_ESCOLA == "Privada"),
+    AREA_LOCAL_Rural_Interior  = as.integer(AREA_LOCAL == "Rural_Interior"),
+    AREA_LOCAL_Rural_Capital   = as.integer(AREA_LOCAL == "Rural_Capital"),
+    AREA_LOCAL_Urbana_Interior = as.integer(AREA_LOCAL == "Urbana_Interior")
   )
 
-dummies_estruturais <- c("TIPO_ESCOLA_Privada", "AREA_Interior", "LOCALIZACAO_Rural")
+dummies_estruturais <- c("TIPO_ESCOLA_Privada",
+                         "AREA_LOCAL_Rural_Interior",
+                         "AREA_LOCAL_Rural_Capital",
+                         "AREA_LOCAL_Urbana_Interior")
 
-# todas_dummies agora é o vetor de colunas efetivamente presentes em props_escola
+# todas_dummies agora e o vetor de colunas efetivamente presentes em props_escola
 # (atualizado no final da Etapa 4)
-# Identificar e remover dummies de itens com variância quase-zero
+# Identificar e remover dummies de itens com variancia quase-zero
 vars_candidatas <- c(dummies_estruturais, todas_dummies)
 vars_candidatas <- intersect(vars_candidatas, names(dados_escola))
 
@@ -645,10 +653,10 @@ vars_var_ok <- vars_candidatas[
 ]
 
 n_removidas_var0 <- length(vars_candidatas) - length(vars_var_ok)
-message("Dummies removidas por variância ≈ 0 ou >50% missing: ", n_removidas_var0)
+message("Dummies removidas por variancia ~ 0 ou >50% missing: ", n_removidas_var0)
 message("Dummies mantidas para o modelo: ", length(vars_var_ok))
 
-# Salvar log das variáveis eliminadas na etapa B (variância zero / missing)
+# Salvar log das variaveis eliminadas na etapa B (variancia zero / missing)
 vars_eliminadas_var0 <- setdiff(vars_candidatas, vars_var_ok)
 write_csv(
   tibble(
@@ -658,7 +666,7 @@ write_csv(
       if (mean(is.na(x)) > 0.5) {
         paste0(">50% missing (", round(mean(is.na(x)) * 100, 1), "%)")
       } else {
-        paste0("variância ≈ 0 (var=", round(var(x, na.rm = TRUE), 6), ")")
+        paste0("variancia ~ 0 (var=", round(var(x, na.rm = TRUE), 6), ")")
       }
     })
   ),
@@ -674,20 +682,20 @@ message("Base escola salva: base_escolas_itens_", ts_global, ".csv")
 # =============================================================================
 
 message("\n", strrep("-", 50))
-message("ETAPA 7: CONTROLE DE MULTICOLINEARIDADE — VIF ITERATIVO")
+message("ETAPA 7: CONTROLE DE MULTICOLINEARIDADE - VIF ITERATIVO")
 message(strrep("-", 50))
 message("Limiar VIF: ", LIMIAR_VIF,
-        " | Preditores antes da eliminação: ", length(vars_var_ok))
+        " | Preditores antes da eliminacao: ", length(vars_var_ok))
 
 # Trabalha com complete cases para o VIF
 df_completo <- dados_escola |>
   select(MEDIA_MT, MEDIA_LP, all_of(vars_var_ok)) |>
   drop_na()
 
-message("Observações (escolas) com dados completos: ", nrow(df_completo))
+message("Observacoes (escolas) com dados completos: ", nrow(df_completo))
 
-# Eliminação para MEDIA_MT (o resultado serve para ambos os modelos,
-# pois as preditoras são as mesmas)
+# Eliminacao para MEDIA_MT (o resultado serve para ambos os modelos,
+# pois as preditoras sao as mesmas)
 resultado_vif <- eliminar_por_vif(
   df_modelo = df_completo |> select(-MEDIA_LP),
   resposta  = "MEDIA_MT",
@@ -697,10 +705,10 @@ resultado_vif <- eliminar_por_vif(
 preditoras_finais <- resultado_vif$preditoras
 log_vif           <- resultado_vif$removidos
 
-message("\nPreditoras após eliminação VIF: ", length(preditoras_finais))
+message("\nPreditoras apos eliminacao VIF: ", length(preditoras_finais))
 message("Removidas pelo VIF           : ", length(log_vif))
 
-# Salvar log de remoção por VIF
+# Salvar log de remocao por VIF
 write_csv(
   tibble(Predictor_Removido = log_vif),
   file.path(DIR_TABELAS, paste0("log_vif_removidos_", ts_global, ".csv"))
@@ -727,17 +735,17 @@ modelo_lp <- lm(formula_lp, data = df_completo)
 summary_mt <- summary(modelo_mt)
 summary_lp <- summary(modelo_lp)
 
-message("\n>>> MODELO MEDIA_MT (Matemática) <<<")
-message("  Observações    : ", nrow(df_completo))
+message("\n>>> MODELO MEDIA_MT (Matematica) <<<")
+message("  Observacoes    : ", nrow(df_completo))
 message("  Preditoras     : ", length(preditoras_finais))
-message("  R² ajustado    : ", round(summary_mt$adj.r.squared, 4))
+message("  R2 ajustado    : ", round(summary_mt$adj.r.squared, 4))
 message("  F-statistic    : ", round(summary_mt$fstatistic[1], 2))
 message("  RMSE           : ", round(sqrt(mean(summary_mt$residuals^2)), 2))
 
-message("\n>>> MODELO MEDIA_LP (Língua Portuguesa) <<<")
-message("  Observações    : ", nrow(df_completo))
+message("\n>>> MODELO MEDIA_LP (Lingua Portuguesa) <<<")
+message("  Observacoes    : ", nrow(df_completo))
 message("  Preditoras     : ", length(preditoras_finais))
-message("  R² ajustado    : ", round(summary_lp$adj.r.squared, 4))
+message("  R2 ajustado    : ", round(summary_lp$adj.r.squared, 4))
 message("  F-statistic    : ", round(summary_lp$fstatistic[1], 2))
 message("  RMSE           : ", round(sqrt(mean(summary_lp$residuals^2)), 2))
 
@@ -785,16 +793,16 @@ message("Coeficientes MT (top 15):")
 print(head(coef_mt, 15), n = 15)
 
 # =============================================================================
-# ETAPA 10: TABELA RESUMO DE DIAGNÓSTICOS
+# ETAPA 10: TABELA RESUMO DE DIAGNOSTICOS
 # =============================================================================
 
 message("\n", strrep("-", 50))
-message("ETAPA 10: DIAGNÓSTICOS DOS MODELOS")
+message("ETAPA 10: DIAGNOSTICOS DOS MODELOS")
 message(strrep("-", 50))
 
 extrair_diag <- function(modelo, summary_mod) {
   tibble(
-    Diagnostico = c("R² ajustado", "RMSE", "AIC", "BIC"),
+    Diagnostico = c("R2 ajustado", "RMSE", "AIC", "BIC"),
     Valor       = c(
       round(summary_mod$adj.r.squared, 4),
       round(sqrt(mean(summary_mod$residuals^2)), 2),
@@ -802,10 +810,10 @@ extrair_diag <- function(modelo, summary_mod) {
       round(BIC(modelo), 2)
     ),
     Descricao = c(
-      "Proporção da variância explicada (ajustada pelo número de preditores)",
-      "Erro médio de predição nas mesmas unidades da variável resposta",
+      "Proporcao da variancia explicada (ajustada pelo numero de preditores)",
+      "Erro medio de predicao nas mesmas unidades da variavel resposta",
       "Qualidade relativa do modelo penalizando complexidade (menor = melhor)",
-      "Similar ao AIC com penalização maior por complexidade (menor = melhor)"
+      "Similar ao AIC com penalizacao maior por complexidade (menor = melhor)"
     )
   )
 }
@@ -839,11 +847,11 @@ message("Resumo dos modelos:")
 print(tabela_resumo)
 
 # =============================================================================
-# ETAPA 11: GRÁFICOS DE DIAGNÓSTICO DE RESÍDUOS
+# ETAPA 11: GRAFICOS DE DIAGNOSTICO DE RESIDUOS
 # =============================================================================
 
 message("\n", strrep("-", 50))
-message("ETAPA 11: GRÁFICOS DE DIAGNÓSTICO DE RESÍDUOS")
+message("ETAPA 11: GRAFICOS DE DIAGNOSTICO DE RESIDUOS")
 message(strrep("-", 50))
 
 gerar_graficos_residuos <- function(modelo, nome, cor) {
@@ -861,10 +869,10 @@ gerar_graficos_residuos <- function(modelo, nome, cor) {
     geom_smooth(method = "loess", se = TRUE, colour = "#2CA02C",
                 fill = "#2CA02C", alpha = 0.20, linewidth = 1) +
     labs(
-      title    = paste0("Resíduos vs Ajustados (", nome, ")"),
-      subtitle = "Dispersão aleatória em torno de zero indica bom ajuste",
+      title    = paste0("Residuos vs Ajustados (", nome, ")"),
+      subtitle = "Dispersao aleatoria em torno de zero indica bom ajuste",
       x        = "Valores ajustados",
-      y        = "Resíduos"
+      y        = "Residuos"
     ) +
     tema_saeb()
 
@@ -872,9 +880,9 @@ gerar_graficos_residuos <- function(modelo, nome, cor) {
     stat_qq(alpha = 0.55, size = 2.2, colour = cor, stroke = 0.3) +
     stat_qq_line(colour = "#D62728", linewidth = 1.2) +
     labs(
-      title    = paste0("Q-Q Plot dos Resíduos (", nome, ")"),
-      subtitle = "Aderência dos resíduos à distribuição normal",
-      x        = "Quantis teóricos",
+      title    = paste0("Q-Q Plot dos Residuos (", nome, ")"),
+      subtitle = "Aderencia dos residuos a distribuicao normal",
+      x        = "Quantis teoricos",
       y        = "Quantis amostrais"
     ) +
     tema_saeb()
@@ -887,7 +895,7 @@ gerar_graficos_residuos <- function(modelo, nome, cor) {
       title    = paste0("Scale-Location (", nome, ")"),
       subtitle = "Verifica homocedasticidade",
       x        = "Valores ajustados",
-      y        = "√|Resíduos padronizados|"
+      y        = "?|Residuos padronizados|"
     ) +
     tema_saeb()
 
@@ -896,23 +904,23 @@ gerar_graficos_residuos <- function(modelo, nome, cor) {
     geom_vline(xintercept = 0, linetype = "dashed",
                colour = "#D62728", linewidth = 1.1) +
     labs(
-      title    = paste0("Distribuição dos Resíduos (", nome, ")"),
-      subtitle = "Histograma dos erros de predição",
-      x        = "Resíduos",
-      y        = "Frequência"
+      title    = paste0("Distribuicao dos Residuos (", nome, ")"),
+      subtitle = "Histograma dos erros de predicao",
+      x        = "Residuos",
+      y        = "Frequencia"
     ) +
     tema_saeb()
 
   (p1 + p2) / (p3 + p4) +
     plot_annotation(
-      title    = paste0("Diagnóstico do Modelo ", nome,
-                        " — Itens Brutos (Dummies)"),
-      subtitle = "Análise gráfica dos resíduos e do ajuste do modelo de regressão",
+      title    = paste0("Diagnostico do Modelo ", nome,
+                        " - Itens Brutos (Dummies)"),
+      subtitle = "Analise grafica dos residuos e do ajuste do modelo de regressao",
       caption  = paste(
-        "① Resíduos vs Ajustados: sem padrão sistemático = bom.",
-        "② Q-Q Plot: pontos sobre a diagonal = resíduos normais.",
-        "③ Scale-Location: dispersão uniforme = homocedasticidade.",
-        "④ Histograma: sino centrado em zero = sem viés sistemático.",
+        "? Residuos vs Ajustados: sem padrao sistematico = bom.",
+        "? Q-Q Plot: pontos sobre a diagonal = residuos normais.",
+        "? Scale-Location: dispersao uniforme = homocedasticidade.",
+        "? Histograma: sino centrado em zero = sem vies sistematico.",
         sep = "\n"
       ),
       theme = theme(
@@ -943,18 +951,18 @@ ggsave(
 message("Figura salva: diagnosticos_residuos_LP_itens")
 
 # =============================================================================
-# ETAPA 12: GRÁFICOS DE COEFICIENTES — DIVIDIDOS POR GRUPO TEMÁTICO
+# ETAPA 12: GRAFICOS DE COEFICIENTES - DIVIDIDOS POR GRUPO TEMATICO
 # =============================================================================
 
 grupos_tematicos <- list(
-  "Contexto Socioeconômico e Familiar — Parte 1\n(Q01–Q09)" = 
+  "Contexto Socioeconomico e Familiar - Parte 1\n(Q01-Q09)" = 
     c("TX_RESP_Q01", "TX_RESP_Q02", "TX_RESP_Q03", "TX_RESP_Q04",
       "TX_RESP_Q05a","TX_RESP_Q05b","TX_RESP_Q05c",
       "TX_RESP_Q06",
       "TX_RESP_Q07a","TX_RESP_Q07b","TX_RESP_Q07c","TX_RESP_Q07d","TX_RESP_Q07e",
       "TX_RESP_Q08","TX_RESP_Q09"),
 
-  "Contexto Socioeconômico e Familiar — Parte 2\n(Q10–Q14)" = 
+  "Contexto Socioeconomico e Familiar - Parte 2\n(Q10-Q14)" = 
     c("TX_RESP_Q10a","TX_RESP_Q10b","TX_RESP_Q10c","TX_RESP_Q10d",
       "TX_RESP_Q10e","TX_RESP_Q10f",
       "TX_RESP_Q11a","TX_RESP_Q11b","TX_RESP_Q11c",
@@ -964,25 +972,25 @@ grupos_tematicos <- list(
       "TX_RESP_Q13e","TX_RESP_Q13f","TX_RESP_Q13g","TX_RESP_Q13h","TX_RESP_Q13i",
       "TX_RESP_Q14"),
 
-  "Contexto Socioeconômico e Familiar — Parte 3\n(Q15–Q20)" = 
+  "Contexto Socioeconomico e Familiar - Parte 3\n(Q15-Q20)" = 
     c("TX_RESP_Q15a","TX_RESP_Q15b",
       "TX_RESP_Q16","TX_RESP_Q17","TX_RESP_Q18","TX_RESP_Q19","TX_RESP_Q20"),
 
-  "Práticas Escolares e Tecnologia — Parte 1\n(Q21–Q22)" = 
+  "Praticas Escolares e Tecnologia - Parte 1\n(Q21-Q22)" = 
     c("TX_RESP_Q21a","TX_RESP_Q21b","TX_RESP_Q21c","TX_RESP_Q21d","TX_RESP_Q21e",
       "TX_RESP_Q22a","TX_RESP_Q22b","TX_RESP_Q22c","TX_RESP_Q22d",
       "TX_RESP_Q22e","TX_RESP_Q22f","TX_RESP_Q22g","TX_RESP_Q22h"),
 
-  "Práticas Escolares e Tecnologia — Parte 2\n(Q23–Q25)" = 
+  "Praticas Escolares e Tecnologia - Parte 2\n(Q23-Q25)" = 
     c("TX_RESP_Q23a","TX_RESP_Q23b","TX_RESP_Q23c","TX_RESP_Q23d",
       "TX_RESP_Q23e","TX_RESP_Q23f","TX_RESP_Q23g","TX_RESP_Q23h","TX_RESP_Q23i",
       "TX_RESP_Q24","TX_RESP_Q25"),
 
-  "Variáveis Estruturais da Escola" = 
+  "Variaveis Estruturais da Escola" = 
     c("TIPO_ESCOLA","AREA","LOCALIZACAO")
 )
 
-# ── FUNÇÃO ────────────────────────────────────────────────────────────────────
+# ?? FUNCAO ????????????????????????????????????????????????????????????????????
 gerar_grafico_grupo <- function(coef_df, nome_modelo, cor_sig,
                                 grupo_nome, itens_grupo) {
   
@@ -1017,16 +1025,16 @@ gerar_grafico_grupo <- function(coef_df, nome_modelo, cor_sig,
       labels = function(x) paste0(ifelse(x > 0, "+", ""), x)
     ) +
     labs(
-      title    = paste0(grupo_nome, " — Modelo ", nome_modelo),
+      title    = paste0(grupo_nome, " - Modelo ", nome_modelo),
       subtitle = paste0(
         n_preds, " coeficientes significativos (p < 0,05) | ",
-        "ordenados por |coeficiente| | categoria A = referência"
+        "ordenados por |coeficiente| | categoria A = referencia"
       ),
       x       = NULL,
-      y       = "Coeficiente (pontos de proficiência SAEB)",
+      y       = "Coeficiente (pontos de proficiencia SAEB)",
       caption = paste0(
-        "Coef > 0: categoria aumenta proficiência vs referência 'A'  |  ",
-        "Coef < 0: reduz proficiência\n",
+        "Coef > 0: categoria aumenta proficiencia vs referencia 'A'  |  ",
+        "Coef < 0: reduz proficiencia\n",
         "Barras de erro = IC 95%  |  *** p<0,001  ** p<0,01  * p<0,05"
       )
     ) +
@@ -1050,7 +1058,7 @@ gerar_grafico_grupo <- function(coef_df, nome_modelo, cor_sig,
   list(plot = p, altura = altura_fig, n = n_preds)
 }
 
-# ── Gerar com numeração sequencial por modelo ─────────────────────────────────
+# ?? Gerar com numeracao sequencial por modelo ?????????????????????????????????
 contador_mt <- 1L
 contador_lp <- 1L
 
@@ -1067,10 +1075,10 @@ for (grupo_nome in names(grupos_tematicos)) {
                              contador_mt, ts_global))
     ggsave(arq, res_mt$plot, width = 12, height = res_mt$altura,
            dpi = 180, bg = "white", limitsize = FALSE)
-    message("Salvo: ", basename(arq), "  (", res_mt$n, " coefs) — ", grupo_nome)
+    message("Salvo: ", basename(arq), "  (", res_mt$n, " coefs) - ", grupo_nome)
     contador_mt <- contador_mt + 1L
   } else {
-    message("⚠️  Sem coefs significativos: MT — ", grupo_nome)
+    message("!?  Sem coefs significativos: MT - ", grupo_nome)
   }
   
   # LP
@@ -1082,14 +1090,14 @@ for (grupo_nome in names(grupos_tematicos)) {
                              contador_lp, ts_global))
     ggsave(arq, res_lp$plot, width = 12, height = res_lp$altura,
            dpi = 180, bg = "white", limitsize = FALSE)
-    message("Salvo: ", basename(arq), "  (", res_lp$n, " coefs) — ", grupo_nome)
+    message("Salvo: ", basename(arq), "  (", res_lp$n, " coefs) - ", grupo_nome)
     contador_lp <- contador_lp + 1L
   } else {
-    message("⚠️  Sem coefs significativos: LP — ", grupo_nome)
+    message("!?  Sem coefs significativos: LP - ", grupo_nome)
   }
 }
 
-message("\n✅ Gráficos gerados em: ", DIR_FIGURAS)
+message("\n? Graficos gerados em: ", DIR_FIGURAS)
 message("   MT: ", contador_mt - 1L, " imagens")
 message("   LP: ", contador_lp - 1L, " imagens")
 
@@ -1108,7 +1116,7 @@ gerar_pred_obs <- function(modelo, summary_mod, nome, cor) {
     Predito   = fitted(modelo)
   )
 
-  if (!validar_dados_plot(dados_po, paste0("Preditos vs Observados — ", nome))) {
+  if (!validar_dados_plot(dados_po, paste0("Preditos vs Observados - ", nome))) {
     return(NULL)
   }
 
@@ -1123,20 +1131,20 @@ gerar_pred_obs <- function(modelo, summary_mod, nome, cor) {
     geom_smooth(method = "lm", se = FALSE,
                 colour = "#2CA02C", linewidth = 1.1) +
     annotate("label", x = Inf, y = -Inf,
-             label = paste0("R² = ", r2, "\nRMSE = ", rmse,
+             label = paste0("R2 = ", r2, "\nRMSE = ", rmse,
                             "\nCorr = ", corr),
              hjust = 1.05, vjust = -0.3, size = 4.2, fontface = "bold",
              colour = "#1A1A1A", fill = "#FFFFEE", label.size = 0.5) +
     coord_fixed(ratio = 1) +
     labs(
       title    = paste0("Preditos vs Observados (", nome,
-                        ") — Itens Brutos"),
+                        ") - Itens Brutos"),
       subtitle = "Linha vermelha = ajuste perfeito | Linha verde = ajuste do modelo",
-      x        = "Proficiência observada (média da escola)",
-      y        = "Proficiência predita",
+      x        = "Proficiencia observada (media da escola)",
+      y        = "Proficiencia predita",
       caption  = paste0(
-        "Pontos sobre a diagonal = predição perfeita.\n",
-        "Acima da linha = subestimação | Abaixo = superestimação."
+        "Pontos sobre a diagonal = predicao perfeita.\n",
+        "Acima da linha = subestimacao | Abaixo = superestimacao."
       )
     ) +
     tema_saeb() +
@@ -1154,7 +1162,7 @@ if (!is.null(p_pred_mt)) {
   )
   message("Figura salva: preditos_vs_observados_MT_itens")
 } else {
-  message("⚠️  Gráfico preditos_MT não pôde ser gerado")
+  message("!?  Grafico preditos_MT nao pode ser gerado")
 }
 
 if (!is.null(p_pred_lp)) {
@@ -1165,15 +1173,15 @@ if (!is.null(p_pred_lp)) {
   )
   message("Figura salva: preditos_vs_observados_LP_itens")
 } else {
-  message("⚠️  Gráfico preditos_LP não pôde ser gerado")
+  message("!?  Grafico preditos_LP nao pode ser gerado")
 }
 
 # =============================================================================
-# ETAPA 14: GRÁFICO COMPARATIVO DE R²
+# ETAPA 14: GRAFICO COMPARATIVO DE R2
 # =============================================================================
 
 dados_r2 <- tibble(
-  Modelo = c("MEDIA_MT\n(Matemática)", "MEDIA_LP\n(Língua Portuguesa)"),
+  Modelo = c("MEDIA_MT\n(Matematica)", "MEDIA_LP\n(Lingua Portuguesa)"),
   R2     = c(summary_mt$adj.r.squared, summary_lp$adj.r.squared),
   Cor    = c("#1f77b4", "#ff7f0e")
 )
@@ -1188,11 +1196,11 @@ p_r2 <- ggplot(dados_r2, aes(x = Modelo, y = R2, fill = Modelo)) +
              colour = "#FFA500", linewidth = 1.1) +
   geom_hline(yintercept = 0.70, linetype = "dotted",
              colour = "#D62728", linewidth = 1.1) +
-  annotate("text", x = 0.55, y = 0.31, label = "30% — razoável",
+  annotate("text", x = 0.55, y = 0.31, label = "30% - razoavel",
            size = 3.8, colour = "#2CA02C", hjust = 0, fontface = "bold") +
-  annotate("text", x = 0.55, y = 0.51, label = "50% — bom",
+  annotate("text", x = 0.55, y = 0.51, label = "50% - bom",
            size = 3.8, colour = "#8B6914", hjust = 0, fontface = "bold") +
-  annotate("text", x = 0.55, y = 0.71, label = "70% — excelente",
+  annotate("text", x = 0.55, y = 0.71, label = "70% - excelente",
            size = 3.8, colour = "#D62728", hjust = 0, fontface = "bold") +
   scale_y_continuous(
     limits = c(0, max(dados_r2$R2) * 1.2),
@@ -1201,14 +1209,14 @@ p_r2 <- ggplot(dados_r2, aes(x = Modelo, y = R2, fill = Modelo)) +
   scale_fill_manual(values = setNames(dados_r2$Cor, dados_r2$Modelo),
                     guide = "none") +
   labs(
-    title    = "Qualidade do Ajuste: R² Ajustado — Itens Brutos (Dummies)",
-    subtitle = "Percentual da variância da proficiência explicado pelos itens do questionário",
+    title    = "Qualidade do Ajuste: R2 Ajustado - Itens Brutos (Dummies)",
+    subtitle = "Percentual da variancia da proficiencia explicado pelos itens do questionario",
     x        = NULL,
-    y        = "R² Ajustado",
+    y        = "R2 Ajustado",
     caption  = paste0(
-      "Modelo usa proporções por escola das dummies dos itens Q01–Q25,\n",
-      "após eliminação iterativa de multicolinearidade (VIF > ", LIMIAR_VIF, ").\n",
-      "R² ajustado penaliza a inclusão de variáveis irrelevantes."
+      "Modelo usa proporcoes por escola das dummies dos itens Q01-Q25,\n",
+      "apos eliminacao iterativa de multicolinearidade (VIF > ", LIMIAR_VIF, ").\n",
+      "R2 ajustado penaliza a inclusao de variaveis irrelevantes."
     )
   ) +
   tema_saeb() +
@@ -1225,7 +1233,7 @@ ggsave(
 message("Figura salva: resumo_qualidade_ajuste_itens")
 
 # =============================================================================
-# ETAPA 15: MAPA DE CALOR — VIF DAS PREDITORAS FINAIS
+# ETAPA 15: MAPA DE CALOR - VIF DAS PREDITORAS FINAIS
 # =============================================================================
 
 message("\n", strrep("-", 50))
@@ -1235,13 +1243,13 @@ message(strrep("-", 50))
 vif_final <- tryCatch(
   car::vif(modelo_mt),
   error = function(e) {
-    message("  ⚠️  VIF não pôde ser calculado para o modelo final: ", conditionMessage(e))
+    message("  !?  VIF nao pode ser calculado para o modelo final: ", conditionMessage(e))
     NULL
   }
 )
 
 if (is.null(vif_final) || length(vif_final) == 0L) {
-  message("  ⚠️  Pulando mapa de calor VIF — sem preditoras suficientes.")
+  message("  !?  Pulando mapa de calor VIF - sem preditoras suficientes.")
 } else {
 
   if (is.matrix(vif_final)) vif_final <- vif_final[, 1]
@@ -1254,7 +1262,7 @@ if (is.null(vif_final) || length(vif_final) == 0L) {
     mutate(Item = if_else(is.na(Item), Predictor, Item)) |>
     arrange(desc(VIF))
 
-  # Número de barras: min entre 40 e total de preditoras
+  # Numero de barras: min entre 40 e total de preditoras
   n_barras <- min(40L, nrow(df_vif))
 
   p_vif <- ggplot(df_vif |> slice_max(VIF, n = n_barras),
@@ -1269,8 +1277,8 @@ if (is.null(vif_final) || length(vif_final) == 0L) {
     scale_y_continuous(breaks = c(1, 2, 5, LIMIAR_VIF)) +
     labs(
       title    = paste0("VIF das Preditoras Finais (Top ", n_barras,
-                        ") — Modelo MEDIA_MT"),
-      subtitle = "Após eliminação iterativa: todas as preditoras mantidas têm VIF ≤ limiar",
+                        ") - Modelo MEDIA_MT"),
+      subtitle = "Apos eliminacao iterativa: todas as preditoras mantidas tem VIF <= limiar",
       x        = NULL,
       y        = "Variance Inflation Factor (VIF)",
       caption  = paste0("Linha vermelha = limiar VIF = ", LIMIAR_VIF,
@@ -1298,24 +1306,24 @@ saveRDS(modelo_lp,
         file.path(DIR_MODELOS, paste0("modelo_LP_itens_", ts_global, ".rds")))
 
 # =============================================================================
-# RELATÓRIO FINAL
+# RELATORIO FINAL
 # =============================================================================
 
 message("\n", strrep("=", 70))
-message("RELATÓRIO FINAL — ITENS BRUTOS (DUMMIES)")
+message("RELATORIO FINAL - ITENS BRUTOS (DUMMIES)")
 message(strrep("=", 70))
-message("\nPré-processamento:")
+message("\nPre-processamento:")
 message("  Alunos no raw            : ", nrow(dados_brutos))
 message("  Escolas na base final    : ", nrow(df_completo))
 message("  Dummies geradas (total)  : ", length(todas_dummies))
-message("  [A] Respostas inválidas  : tratadas como NA antes da geração das dummies")
-message("  [B] Removidas (var ≈ 0)  : ", n_removidas_var0)
+message("  [A] Respostas invalidas  : tratadas como NA antes da geracao das dummies")
+message("  [B] Removidas (var ~ 0)  : ", n_removidas_var0)
 message("  [C] Removidas (VIF > ",  LIMIAR_VIF, ")    : ", length(log_vif))
 message("  Preditoras no modelo     : ", length(preditoras_finais))
 message("\nModelos:")
-message("  MT — R²aj: ", round(summary_mt$adj.r.squared, 4),
+message("  MT - R2aj: ", round(summary_mt$adj.r.squared, 4),
         " | RMSE: ", round(sqrt(mean(summary_mt$residuals^2)), 2))
-message("  LP — R²aj: ", round(summary_lp$adj.r.squared, 4),
+message("  LP - R2aj: ", round(summary_lp$adj.r.squared, 4),
         " | RMSE: ", round(sqrt(mean(summary_lp$residuals^2)), 2))
 message("\nArquivos de log gerados:")
 message("  log_eliminadas_var0_", ts_global, ".csv  (etapa B)")
@@ -1324,14 +1332,14 @@ message("\nArquivos gerados em:")
 message("  ", DIR_TABELAS)
 message("  ", DIR_FIGURAS)
 message("  ", DIR_MODELOS)
-message("\n✅ MELHORIAS v1.1:")
-message("  • Gráfico de coeficientes exibe TODAS as preditoras (não apenas top 20)")
-message("  • Altura do gráfico calculada dinamicamente pelo nº de preditoras")
-message("  • limitsize = FALSE para acomodar figuras muito altas")
-message("  • Log das variáveis eliminadas por variância zero salvo em CSV (etapa B)")
-message("  • Nota metodológica expandida com os 3 critérios de eliminação")
-message("  • Relatório final discrimina as 3 etapas de eliminação [A], [B], [C]")
+message("\n? MELHORIAS v1.1:")
+message("  ? Grafico de coeficientes exibe TODAS as preditoras (nao apenas top 20)")
+message("  ? Altura do grafico calculada dinamicamente pelo n? de preditoras")
+message("  ? limitsize = FALSE para acomodar figuras muito altas")
+message("  ? Log das variaveis eliminadas por variancia zero salvo em CSV (etapa B)")
+message("  ? Nota metodologica expandida com os 3 criterios de eliminacao")
+message("  ? Relatorio final discrimina as 3 etapas de eliminacao [A], [B], [C]")
 
 message("\n", strrep("=", 70))
-message("CONCLUÍDO COM SUCESSO!")
+message("CONCLUIDO COM SUCESSO!")
 message(strrep("=", 70))

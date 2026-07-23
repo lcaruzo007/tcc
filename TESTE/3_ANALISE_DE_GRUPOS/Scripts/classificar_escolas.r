@@ -1,21 +1,21 @@
 ################################################################################
 # SCRIPT: classificar_escolas.r
 # 
-# OBJETIVO: Agregar dados por escola e criar metadados com classificações
-#           (tipo escola, localização, área, faixa de nota)
+# OBJETIVO: Agregar dados por escola e criar metadados com classificacoes
+#           (tipo escola, localizacao, area, faixa de nota)
 #
 # ENTRADA: Dados limpos (dados_escola_em_numeros.csv por escola)
 #          + TS_ESCOLA.csv (metadados das escolas)
 #          + TS_ALUNO.csv (notas dos alunos)
 #
-# SAÍDA: metadados_escolas_YYYYMMDD_HHMMSS.csv
-#        (um arquivo único para alimentar comparações e dendrogramas)
+# SAIDA: metadados_escolas_YYYYMMDD_HHMMSS.csv
+#        (um arquivo unico para alimentar comparacoes e dendrogramas)
 #
-# VERSÃO: 1.0 — Maio 2026
+# VERSAO: 1.0 - Maio 2026
 ################################################################################
 
 # ============================================================================
-# PASSO 0: CARREGAR PACOTES E DEFINIR CAMINHOS (DETECÇÃO AUTOMÁTICA)
+# PASSO 0: CARREGAR PACOTES E DEFINIR CAMINHOS (DETECCAO AUTOMATICA)
 # ============================================================================
 
 library(tidyverse)
@@ -26,7 +26,7 @@ detectar_raiz <- function() {
   cwd <- getwd()
   while (cwd != dirname(cwd)) {
     if (dir.exists(file.path(cwd, "TESTE"))) {
-      message("✓ Projeto encontrado em: ", cwd)
+      message("OK Projeto encontrado em: ", cwd)
       return(cwd)
     }
     cwd <- dirname(cwd)
@@ -34,11 +34,11 @@ detectar_raiz <- function() {
   if (interactive()) {
     raiz <- utils::choose.dir(default = getwd(),
                               caption = "Selecione a pasta raiz do projeto TCC")
-    if (is.na(raiz) || raiz == "") stop("Caminho não selecionado.")
-    message("✓ Pasta selecionada: ", raiz)
+    if (is.na(raiz) || raiz == "") stop("Caminho nao selecionado.")
+    message("OK Pasta selecionada: ", raiz)
     return(raiz)
   } else {
-    stop("Não foi possível detectar o caminho automaticamente.")
+    stop("Nao foi possivel detectar o caminho automaticamente.")
   }
 }
 
@@ -49,7 +49,7 @@ DIR_SAIDA <- file.path(DIR_TESTE, "1_LIMPEZA_E_TRANSFORMACAO/outputs")
 DIR_ANALISE <- file.path(DIR_TESTE, "3_ANALISE_DE_GRUPOS")
 DIR_PROCESSADOS <- file.path(DIR_ANALISE, "outputs/metadados")
 
-# Criar diretório de saída se não existir
+# Criar diretorio de saida se nao existir
 if (!dir.exists(DIR_PROCESSADOS)) {
   dir.create(DIR_PROCESSADOS, showWarnings = FALSE, recursive = TRUE)
 }
@@ -63,18 +63,18 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
 
 cat(">>> Carregando dados dos alunos...\n")
 
-# Alunos (dados brutos com informações das escolas)
+# Alunos (dados brutos com informacoes das escolas)
 alunos <- fread(file.path(DIR_MICRODADOS, "TS_ALUNO_34EM.csv"),
                  encoding = "Latin-1") %>%
   as_tibble()
 
-# Selecionar apenas colunas necessárias dos alunos
+# Selecionar apenas colunas necessarias dos alunos
 alunos <- alunos %>%
   select(
     ID_ESCOLA,
     ID_AREA,          # 1 = Capital, 2 = Interior
     ID_LOCALIZACAO,   # 1 = Urbana, 2 = Rural
-    IN_PUBLICA,       # 1 = Público, 0 = Privado
+    IN_PUBLICA,       # 1 = Publico, 0 = Privado
     PROFICIENCIA_MT_SAEB,
     PROFICIENCIA_LP_SAEB,
     INSE_ALUNO,
@@ -83,7 +83,7 @@ alunos <- alunos %>%
 
 
 # ============================================================================
-# PASSO 2: AGREGAR PROFICIÊNCIA E INSE POR ESCOLA
+# PASSO 2: AGREGAR PROFICIENCIA E INSE POR ESCOLA
 # ============================================================================
 
 cat("\n>>> Agregando dados por escola...\n")
@@ -119,8 +119,8 @@ agregados <- alunos %>%
 
     .groups="drop"
   )
-cat("   ✓ Agregação completa\n")
-cat(sprintf("   • Escolas com dados: %d\n", nrow(agregados)))
+cat("   OK Agregacao completa\n")
+cat(sprintf("   ? Escolas com dados: %d\n", nrow(agregados)))
 
 # ============================================================================
 # PASSO 3: CALCULAR QUARTIS (faixas de desempenho)
@@ -128,7 +128,7 @@ cat(sprintf("   • Escolas com dados: %d\n", nrow(agregados)))
 
 cat("\n>>> Calculando quartis de desempenho...\n")
 
-# Quartis de Matemática
+# Quartis de Matematica
 Q_MT <- quantile(agregados$MEDIA_MT, probs = c(0.25, 0.5, 0.75), na.rm = TRUE)
 Q_LP <- quantile(agregados$MEDIA_LP, probs = c(0.25, 0.5, 0.75), na.rm = TRUE)
 
@@ -142,14 +142,14 @@ agregados <- agregados %>%
   mutate(
     FAIXA_MT = case_when(
       MEDIA_MT < Q_MT[1] ~ "Q1_Baixo",
-      MEDIA_MT < Q_MT[2] ~ "Q2_Médio-Baixo",
-      MEDIA_MT < Q_MT[3] ~ "Q3_Médio-Alto",
+      MEDIA_MT < Q_MT[2] ~ "Q2_Medio-Baixo",
+      MEDIA_MT < Q_MT[3] ~ "Q3_Medio-Alto",
       TRUE ~ "Q4_Alto"
     ),
     FAIXA_LP = case_when(
       MEDIA_LP < Q_LP[1] ~ "Q1_Baixo",
-      MEDIA_LP < Q_LP[2] ~ "Q2_Médio-Baixo",
-      MEDIA_LP < Q_LP[3] ~ "Q3_Médio-Alto",
+      MEDIA_LP < Q_LP[2] ~ "Q2_Medio-Baixo",
+      MEDIA_LP < Q_LP[3] ~ "Q3_Medio-Alto",
       TRUE ~ "Q4_Alto"
     )
   )
@@ -158,23 +158,23 @@ agregados <- agregados %>%
 # PASSO 4: JUNTAR COM METADADOS DAS ESCOLAS
 # ============================================================================
 
-cat("\n>>> Juntando com informações das escolas...\n")
+cat("\n>>> Juntando com informacoes das escolas...\n")
 metadados <- agregados
 
 # ============================================================================
-# PASSO 5: CRIAR VARIÁVEIS DE CLASSIFICAÇÃO
+# PASSO 5: CRIAR VARIAVEIS DE CLASSIFICACAO
 # ============================================================================
 
-cat("\n>>> Criando variáveis de classificação...\n")
+cat("\n>>> Criando variaveis de classificacao...\n")
 
-# Classificar área (capital vs interior)
+# Classificar area (capital vs interior)
 area_map <- tribble(
   ~ID_AREA, ~AREA,
   1, "Capital",
   2, "Interior"
 )
 
-# Classificar localização (urbana vs rural)
+# Classificar localizacao (urbana vs rural)
 localizacao_map <- tribble(
   ~ID_LOCALIZACAO, ~LOCALIZACAO,
   1, "Urbana",
@@ -187,24 +187,31 @@ metadados <- metadados %>%
           by=c("ID_AREA_MODAL"="ID_AREA")) %>%
 left_join(localizacao_map,
           by=c("ID_LOCALIZACAO_MODAL"="ID_LOCALIZACAO")) %>%
-  # Criar variável de grupo (pública vs privada)
+  # Criar variavel de grupo (publica vs privada)
   mutate(
     TIPO_ESCOLA = if_else(TIPO_ESCOLA_MODAL == 1,
-                      "Pública",
+                      "Publica",
                       "Privada"),
-    
+
     # INSE categorizado
     GRUPO_INSE = case_when(
       INSE_MEDIO < quantile(INSE_MEDIO, 0.33, na.rm = TRUE) ~ "Baixo_INSE",
       INSE_MEDIO < quantile(INSE_MEDIO, 0.67, na.rm = TRUE) ~ "Medio_INSE",
       TRUE ~ "Alto_INSE"
-    )
+    ),
+
+    # Variavel combinada AREA x LOCALIZACAO (4 categorias)
+    # Usada como preditor unico nos modelos de regressao (substitui AREA e
+    # LOCALIZACAO separados), permitindo capturar interacoes como
+    # "escolas rurais do interior" vs. "urbanas da capital".
+    AREA_LOCAL = paste0(LOCALIZACAO, "_", AREA)
   ) %>%
   select(
     ID_ESCOLA,
     TIPO_ESCOLA,
     AREA,
     LOCALIZACAO,
+    AREA_LOCAL,
     MEDIA_MT,
     MEDIA_LP,
     FAIXA_MT,
@@ -218,16 +225,18 @@ left_join(localizacao_map,
   ) %>%
   arrange(desc(MEDIA_MT))
 
-cat("   ✓ Classificações criadas\n")
-cat(sprintf("   • Pública: %d | Privada: %d\n",
-            sum(metadados$TIPO_ESCOLA == "Pública"),
+cat("   OK Classificacoes criadas\n")
+cat(sprintf("   ? Publica: %d | Privada: %d\n",
+            sum(metadados$TIPO_ESCOLA == "Publica"),
             sum(metadados$TIPO_ESCOLA == "Privada")))
-cat(sprintf("   • Urbana: %d | Rural: %d\n",
+cat(sprintf("   ? Urbana: %d | Rural: %d\n",
             sum(metadados$LOCALIZACAO == "Urbana"),
             sum(metadados$LOCALIZACAO == "Rural")))
-cat(sprintf("   • Capital: %d | Interior: %d\n",
+cat(sprintf("   ? Capital: %d | Interior: %d\n",
             sum(metadados$AREA == "Capital"),
             sum(metadados$AREA == "Interior")))
+cat("   ? Distribuicao AREA_LOCAL (4 categorias):\n")
+print(table(metadados$AREA_LOCAL))
 
 # ============================================================================
 # PASSO 6: EXPORTAR METADADOS
@@ -240,11 +249,11 @@ nome_saida <- file.path(DIR_PROCESSADOS,
 
 write_csv(metadados, nome_saida)
 
-cat(sprintf("   ✓ Arquivo salvo: metadados_escolas_%s.csv\n", timestamp))
-cat(sprintf("   • Caminh: %s\n", nome_saida))
-cat(sprintf("   • Linhas: %d (escolas) | Colunas: %d\n", 
+cat(sprintf("   OK Arquivo salvo: metadados_escolas_%s.csv\n", timestamp))
+cat(sprintf("   ? Caminh: %s\n", nome_saida))
+cat(sprintf("   ? Linhas: %d (escolas) | Colunas: %d\n", 
             nrow(metadados), ncol(metadados)))
 
-cat("\n✅ Script finalizado com sucesso!\n")
+cat("\n? Script finalizado com sucesso!\n")
 
 

@@ -1,20 +1,20 @@
 ################################################################################
 # SCRIPT: comparar_grupos.r
 #
-# OBJETIVO: Comparar pares de grupos (pública vs privada, urbana vs rural, etc)
-#           com teste não-paramétrico (Wilcoxon) + tamanho de efeito (r rank-biserial)
-#           e visualizações (boxplots) com qualidade para documentos acadêmicos
+# OBJETIVO: Comparar pares de grupos (publica vs privada, urbana vs rural, etc)
+#           com teste nao-parametrico (Wilcoxon) + tamanho de efeito (r rank-biserial)
+#           e visualizacoes (boxplots) com qualidade para documentos academicos
 #
-# ENTRADA: metadados_escolas_*.csv (saída de classificar_escolas.r)
+# ENTRADA: metadados_escolas_*.csv (saida de classificar_escolas.r)
 #
-# SAÍDA: 
+# SAIDA: 
 #   - resultados_comparacao_YYYYMMDD_HHMMSS.csv (tabela de testes)
 #   - 01_boxplot_tipo_escola.png (Figura 1)
 #   - 02_boxplot_urbano_rural.png (Figura 2)
 #   - 03_boxplot_capital_interior.png (Figura 3)
 #   - 04_boxplot_inse.png (Figura 4)
 #
-# VERSÃO: 2.0 — Julho 2026 (melhorias visuais para TCC)
+# VERSAO: 2.0 - Julho 2026 (melhorias visuais para TCC)
 ################################################################################
 
 library(tidyverse)
@@ -47,17 +47,17 @@ arquivos_meta <- list.files(DIR_PROCESSADOS,
                              full.names = TRUE)
 
 if (length(arquivos_meta) == 0) {
-  stop("❌ Nenhum arquivo de metadados encontrado! Execute classificar_escolas.r primeiro.")
+  stop("? Nenhum arquivo de metadados encontrado! Execute classificar_escolas.r primeiro.")
 }
 
 arquivo_meta <- sort(arquivos_meta, decreasing = TRUE)[1]
 cat(sprintf("   Usando: %s\n", basename(arquivo_meta)))
 
 metadados <- read_csv(arquivo_meta, show_col_types = FALSE)
-cat(sprintf("   ✓ Metadados carregados: %d escolas\n", nrow(metadados)))
+cat(sprintf("   OK Metadados carregados: %d escolas\n", nrow(metadados)))
 
 # =========================================================================
-# FUNÇÃO: WILCOXON + TAMANHO DE EFEITO
+# FUNCAO: WILCOXON + TAMANHO DE EFEITO
 # =========================================================================
 
 fazer_wilcoxon <- function(x, y, nome_x, nome_y, variavel) {
@@ -66,14 +66,14 @@ fazer_wilcoxon <- function(x, y, nome_x, nome_y, variavel) {
   
   if (length(x_clean) == 0 | length(y_clean) == 0) {
     return(tibble(
-      Variável = variavel,
+      Variavel = variavel,
       Grupo1 = nome_x,
       Grupo2 = nome_y,
       N1 = NA, N2 = NA,
       Mediana1 = NA, Mediana2 = NA,
       U = NA, p_valor = NA,
       r_rank_biserial = NA,
-      Significância = NA
+      Significancia = NA
     ))
   }
   
@@ -92,7 +92,7 @@ fazer_wilcoxon <- function(x, y, nome_x, nome_y, variavel) {
   )
   
   tibble(
-    Variável = variavel,
+    Variavel = variavel,
     Grupo1 = nome_x,
     Grupo2 = nome_y,
     N1 = n1, N2 = n2,
@@ -101,31 +101,31 @@ fazer_wilcoxon <- function(x, y, nome_x, nome_y, variavel) {
     U = round(U, 2),
     p_valor = format(teste$p.value, digits = 4, scientific = TRUE),
     r_rank_biserial = round(r, 4),
-    Significância = sig
+    Significancia = sig
   )
 }
 
 # =========================================================================
-# COMPARAÇÕES
+# COMPARACOES
 # =========================================================================
 
-cat("\n>>> COMPARAÇÃO 1: PÚBLICA vs PRIVADA\n")
+cat("\n>>> COMPARACAO 1: PUBLICA vs PRIVADA\n")
 
-publica_mt <- metadados %>% filter(TIPO_ESCOLA == "Pública") %>% pull(MEDIA_MT)
+publica_mt <- metadados %>% filter(TIPO_ESCOLA == "Publica") %>% pull(MEDIA_MT)
 privada_mt <- metadados %>% filter(TIPO_ESCOLA == "Privada") %>% pull(MEDIA_MT)
-publica_lp <- metadados %>% filter(TIPO_ESCOLA == "Pública") %>% pull(MEDIA_LP)
+publica_lp <- metadados %>% filter(TIPO_ESCOLA == "Publica") %>% pull(MEDIA_LP)
 privada_lp <- metadados %>% filter(TIPO_ESCOLA == "Privada") %>% pull(MEDIA_LP)
 
 comparacoes <- bind_rows(
-  fazer_wilcoxon(publica_mt, privada_mt, "Pública", "Privada", "PROFICIÊNCIA_MT"),
-  fazer_wilcoxon(publica_lp, privada_lp, "Pública", "Privada", "PROFICIÊNCIA_LP"),
-  fazer_wilcoxon(privada_mt, publica_mt, "Privada", "Pública", "PROFICIÊNCIA_MT"),
-  fazer_wilcoxon(privada_lp, publica_lp, "Privada", "Pública", "PROFICIÊNCIA_LP")
+  fazer_wilcoxon(publica_mt, privada_mt, "Publica", "Privada", "PROFICIENCIA_MT"),
+  fazer_wilcoxon(publica_lp, privada_lp, "Publica", "Privada", "PROFICIENCIA_LP"),
+  fazer_wilcoxon(privada_mt, publica_mt, "Privada", "Publica", "PROFICIENCIA_MT"),
+  fazer_wilcoxon(privada_lp, publica_lp, "Privada", "Publica", "PROFICIENCIA_LP")
 )
 
 print(comparacoes)
 
-cat("\n>>> COMPARAÇÃO 2: URBANA vs RURAL\n")
+cat("\n>>> COMPARACAO 2: URBANA vs RURAL\n")
 
 urbana_mt <- metadados %>% filter(LOCALIZACAO == "Urbana") %>% pull(MEDIA_MT)
 rural_mt <- metadados %>% filter(LOCALIZACAO == "Rural") %>% pull(MEDIA_MT)
@@ -134,13 +134,13 @@ rural_lp <- metadados %>% filter(LOCALIZACAO == "Rural") %>% pull(MEDIA_LP)
 
 comparacoes <- bind_rows(
   comparacoes,
-  fazer_wilcoxon(urbana_mt, rural_mt, "Urbana", "Rural", "PROFICIÊNCIA_MT"),
-  fazer_wilcoxon(urbana_lp, rural_lp, "Urbana", "Rural", "PROFICIÊNCIA_LP"),
-  fazer_wilcoxon(rural_mt, urbana_mt, "Rural", "Urbana", "PROFICIÊNCIA_MT"),
-  fazer_wilcoxon(rural_lp, urbana_lp, "Rural", "Urbana", "PROFICIÊNCIA_LP")
+  fazer_wilcoxon(urbana_mt, rural_mt, "Urbana", "Rural", "PROFICIENCIA_MT"),
+  fazer_wilcoxon(urbana_lp, rural_lp, "Urbana", "Rural", "PROFICIENCIA_LP"),
+  fazer_wilcoxon(rural_mt, urbana_mt, "Rural", "Urbana", "PROFICIENCIA_MT"),
+  fazer_wilcoxon(rural_lp, urbana_lp, "Rural", "Urbana", "PROFICIENCIA_LP")
 )
 
-cat("\n>>> COMPARAÇÃO 3: CAPITAL vs INTERIOR\n")
+cat("\n>>> COMPARACAO 3: CAPITAL vs INTERIOR\n")
 
 capital_mt <- metadados %>% filter(AREA == "Capital") %>% pull(MEDIA_MT)
 interior_mt <- metadados %>% filter(AREA == "Interior") %>% pull(MEDIA_MT)
@@ -149,13 +149,13 @@ interior_lp <- metadados %>% filter(AREA == "Interior") %>% pull(MEDIA_LP)
 
 comparacoes <- bind_rows(
   comparacoes,
-  fazer_wilcoxon(capital_mt, interior_mt, "Capital", "Interior", "PROFICIÊNCIA_MT"),
-  fazer_wilcoxon(capital_lp, interior_lp, "Capital", "Interior", "PROFICIÊNCIA_LP"),
-  fazer_wilcoxon(interior_mt, capital_mt, "Interior", "Capital", "PROFICIÊNCIA_MT"),
-  fazer_wilcoxon(interior_lp, capital_lp, "Interior", "Capital", "PROFICIÊNCIA_LP")
+  fazer_wilcoxon(capital_mt, interior_mt, "Capital", "Interior", "PROFICIENCIA_MT"),
+  fazer_wilcoxon(capital_lp, interior_lp, "Capital", "Interior", "PROFICIENCIA_LP"),
+  fazer_wilcoxon(interior_mt, capital_mt, "Interior", "Capital", "PROFICIENCIA_MT"),
+  fazer_wilcoxon(interior_lp, capital_lp, "Interior", "Capital", "PROFICIENCIA_LP")
 )
 
-cat("\n>>> COMPARAÇÃO 4: ALTO INSE vs BAIXO INSE\n")
+cat("\n>>> COMPARACAO 4: ALTO INSE vs BAIXO INSE\n")
 
 alto_inse_mt <- metadados %>% filter(GRUPO_INSE == "Alto_INSE") %>% pull(MEDIA_MT)
 baixo_inse_mt <- metadados %>% filter(GRUPO_INSE == "Baixo_INSE") %>% pull(MEDIA_MT)
@@ -164,26 +164,26 @@ baixo_inse_lp <- metadados %>% filter(GRUPO_INSE == "Baixo_INSE") %>% pull(MEDIA
 
 comparacoes <- bind_rows(
   comparacoes,
-  fazer_wilcoxon(alto_inse_mt, baixo_inse_mt, "Alto_INSE", "Baixo_INSE", "PROFICIÊNCIA_MT"),
-  fazer_wilcoxon(alto_inse_lp, baixo_inse_lp, "Alto_INSE", "Baixo_INSE", "PROFICIÊNCIA_LP"),
-  fazer_wilcoxon(baixo_inse_mt, alto_inse_mt, "Baixo_INSE", "Alto_INSE", "PROFICIÊNCIA_MT"),
-  fazer_wilcoxon(baixo_inse_lp, alto_inse_lp, "Baixo_INSE", "Alto_INSE", "PROFICIÊNCIA_LP")
+  fazer_wilcoxon(alto_inse_mt, baixo_inse_mt, "Alto_INSE", "Baixo_INSE", "PROFICIENCIA_MT"),
+  fazer_wilcoxon(alto_inse_lp, baixo_inse_lp, "Alto_INSE", "Baixo_INSE", "PROFICIENCIA_LP"),
+  fazer_wilcoxon(baixo_inse_mt, alto_inse_mt, "Baixo_INSE", "Alto_INSE", "PROFICIENCIA_MT"),
+  fazer_wilcoxon(baixo_inse_lp, alto_inse_lp, "Baixo_INSE", "Alto_INSE", "PROFICIENCIA_LP")
 )
 
 # =========================================================================
 # EXPORTAR TABELA
 # =========================================================================
 
-cat("\n>>> Exportando tabela de comparações...\n")
+cat("\n>>> Exportando tabela de comparacoes...\n")
 
 nome_saida_tabela <- file.path(DIR_PROCESSADOS,
                                 paste0("resultados_comparacao_", timestamp, ".csv"))
 
 write_csv(comparacoes, nome_saida_tabela)
-cat(sprintf("   ✓ Tabela salva: resultados_comparacao_%s.csv\n", timestamp))
+cat(sprintf("   OK Tabela salva: resultados_comparacao_%s.csv\n", timestamp))
 
 # =========================================================================
-# BOXPLOTS — DESIGN PROFISSIONAL PARA TCC
+# BOXPLOTS - DESIGN PROFISSIONAL PARA TCC
 # =========================================================================
 
 cat("\n>>> Gerando boxplots com visual profissional...\n")
@@ -193,14 +193,14 @@ dados_plot <- metadados %>%
   pivot_longer(
     cols = c(MEDIA_MT, MEDIA_LP),
     names_to = "Disciplina",
-    values_to = "Proficiência"
+    values_to = "Proficiencia"
   ) %>%
   mutate(Disciplina = recode(Disciplina, 
-                              MEDIA_MT = "Matemática",
-                              MEDIA_LP = "Língua Portuguesa"))
+                              MEDIA_MT = "Matematica",
+                              MEDIA_LP = "Lingua Portuguesa"))
 
 # -------------------------------------------------------------------------
-# FUNÇÃO AUXILIAR: Criar boxplot com anotações estatísticas
+# FUNCAO AUXILIAR: Criar boxplot com anotacoes estatisticas
 # -------------------------------------------------------------------------
 criar_boxplot <- function(dados, var_x, paleta, titulo, fig_num,
                           mostrar_jitter = TRUE, max_jitter = 500) {
@@ -209,15 +209,15 @@ criar_boxplot <- function(dados, var_x, paleta, titulo, fig_num,
   n_grupos <- dados %>% group_by(!!sym(var_x)) %>% summarise(n = n())
   n_txt <- paste(n_grupos[[var_x]], "(n=", n_grupos$n, ")", sep = "", collapse = " | ")
   
-  # Obter resultados estatísticos para anotação
+  # Obter resultados estatisticos para anotacao
   comp_filtradas <- comparacoes %>%
-    filter(Variável == "PROFICIÊNCIA_MT") %>%
+    filter(Variavel == "PROFICIENCIA_MT") %>%
     filter(Grupo1 %in% dados[[var_x]] & Grupo2 %in% dados[[var_x]])
   
   if (nrow(comp_filtradas) > 0) {
     p_val <- comp_filtradas$p_valor[1]
     r_val <- comp_filtradas$r_rank_biserial[1]
-    sig_txt <- comp_filtradas$Significância[1]
+    sig_txt <- comp_filtradas$Significancia[1]
     
     annot_texto <- paste0(
       formatar_p_annot(as.numeric(p_val)),
@@ -229,12 +229,12 @@ criar_boxplot <- function(dados, var_x, paleta, titulo, fig_num,
     annot_texto <- NULL
   }
   
-  # Calcular mediana geral para linha de referência
-  mediana_geral <- median(dados$Proficiência, na.rm = TRUE)
+  # Calcular mediana geral para linha de referencia
+  mediana_geral <- median(dados$Proficiencia, na.rm = TRUE)
   
-  # Construir gráfico
+  # Construir grafico
   p <- dados %>%
-    ggplot(aes(x = !!sym(var_x), y = Proficiência, fill = !!sym(var_x))) +
+    ggplot(aes(x = !!sym(var_x), y = Proficiencia, fill = !!sym(var_x))) +
     geom_violin(alpha = 0.25, size = 0.8, color = NA, trim = FALSE) +
     geom_boxplot(alpha = 0.8, width = 0.3, outlier.alpha = 0.5, outlier.size = 1.8,
                  outlier.color = "#666666", color = "#333333") +
@@ -242,10 +242,10 @@ criar_boxplot <- function(dados, var_x, paleta, titulo, fig_num,
     facet_wrap(~Disciplina, scales = "free_y") +
     scale_fill_manual(values = paleta) +
     labs(
-      title = paste0("Figura ", fig_num, " — ", titulo),
+      title = paste0("Figura ", fig_num, " - ", titulo),
       subtitle = paste0(n_txt, " | Mediana geral = ", round(mediana_geral, 1)),
       x = NULL,
-      y = "Proficiência Média (escala SAEB 0-500)",
+      y = "Proficiencia Media (escala SAEB 0-500)",
       caption = if (!is.null(annot_texto)) paste0("Teste Wilcoxon: ", annot_texto) else NULL
     ) +
     tema_saeb(base_size = 12) +
@@ -268,7 +268,7 @@ criar_boxplot <- function(dados, var_x, paleta, titulo, fig_num,
 # -------------------------------------------------------------------------
 p1 <- criar_boxplot(
   dados_plot, "TIPO_ESCOLA", PALETA_PUBLICA_PRIVADA,
-  "Distribuição de Proficiência por Tipo de Escola",
+  "Distribuicao de Proficiencia por Tipo de Escola",
   fig_num = 1
 )
 
@@ -276,14 +276,14 @@ ggsave(file.path(DIR_FIGURAS, "01_boxplot_tipo_escola.png"),
        plot = p1, width = LARGURA_PADRAO, height = ALTURA_PADRAO, 
        dpi = DPI_PADRAO, bg = "white")
 
-cat("   ✓ Figura 1: Tipo de Escola\n")
+cat("   OK Figura 1: Tipo de Escola\n")
 
 # -------------------------------------------------------------------------
-# Figura 2: Localização
+# Figura 2: Localizacao
 # -------------------------------------------------------------------------
 p2 <- criar_boxplot(
   dados_plot %>% filter(!is.na(LOCALIZACAO)), "LOCALIZACAO", PALETA_URBANA_RURAL,
-  "Distribuição de Proficiência por Localização",
+  "Distribuicao de Proficiencia por Localizacao",
   fig_num = 2
 )
 
@@ -291,14 +291,14 @@ ggsave(file.path(DIR_FIGURAS, "02_boxplot_urbano_rural.png"),
        plot = p2, width = LARGURA_PADRAO, height = ALTURA_PADRAO, 
        dpi = DPI_PADRAO, bg = "white")
 
-cat("   ✓ Figura 2: Localização\n")
+cat("   OK Figura 2: Localizacao\n")
 
 # -------------------------------------------------------------------------
-# Figura 3: Área
+# Figura 3: Area
 # -------------------------------------------------------------------------
 p3 <- criar_boxplot(
   dados_plot %>% filter(!is.na(AREA)), "AREA", PALETA_CAPITAL_INTERIOR,
-  "Distribuição de Proficiência por Área Geográfica",
+  "Distribuicao de Proficiencia por Area Geografica",
   fig_num = 3
 )
 
@@ -306,14 +306,14 @@ ggsave(file.path(DIR_FIGURAS, "03_boxplot_capital_interior.png"),
        plot = p3, width = LARGURA_PADRAO, height = ALTURA_PADRAO, 
        dpi = DPI_PADRAO, bg = "white")
 
-cat("   ✓ Figura 3: Área\n")
+cat("   OK Figura 3: Area\n")
 
 # -------------------------------------------------------------------------
 # Figura 4: INSE
 # -------------------------------------------------------------------------
 p4 <- criar_boxplot(
   dados_plot %>% filter(!is.na(GRUPO_INSE)), "GRUPO_INSE", PALETA_INSE,
-  "Distribuição de Proficiência por Nível Socioeconômico (INSE)",
+  "Distribuicao de Proficiencia por Nivel Socioeconomico (INSE)",
   fig_num = 4,
   mostrar_jitter = FALSE
 ) +
@@ -323,23 +323,23 @@ ggsave(file.path(DIR_FIGURAS, "04_boxplot_inse.png"),
        plot = p4, width = LARGURA_PADRAO, height = ALTURA_PADRAO, 
        dpi = DPI_PADRAO, bg = "white")
 
-cat("   ✓ Figura 4: INSE\n")
+cat("   OK Figura 4: INSE\n")
 
 # =========================================================================
 # RESUMO FINAL
 # =========================================================================
 
 cat("\n", strrep("=", 80), "\n", sep = "")
-cat("RESUMO GERAL DA ANÁLISE\n")
+cat("RESUMO GERAL DA ANALISE\n")
 cat(strrep("=", 80), "\n\n", sep = "")
 
 cat("Tabela de Resultados:\n")
 print(comparacoes, n = Inf)
 
-cat(sprintf("\n✅ Testes concluídos! Arquivos salvos em: %s\n", DIR_PROCESSADOS))
-cat("   📊 Tabela: resultados_comparacao_%s.csv\n", timestamp)
-cat("   📈 Figuras (DPI = %d):\n", DPI_PADRAO)
-cat("      • 01_boxplot_tipo_escola.png\n")
-cat("      • 02_boxplot_urbano_rural.png\n")
-cat("      • 03_boxplot_capital_interior.png\n")
-cat("      • 04_boxplot_inse.png\n")
+cat(sprintf("\n? Testes concluidos! Arquivos salvos em: %s\n", DIR_PROCESSADOS))
+cat("   ?? Tabela: resultados_comparacao_%s.csv\n", timestamp)
+cat("   ?? Figuras (DPI = %d):\n", DPI_PADRAO)
+cat("      - 01_boxplot_tipo_escola.png\n")
+cat("      - 02_boxplot_urbano_rural.png\n")
+cat("      - 03_boxplot_capital_interior.png\n")
+cat("      - 04_boxplot_inse.png\n")
