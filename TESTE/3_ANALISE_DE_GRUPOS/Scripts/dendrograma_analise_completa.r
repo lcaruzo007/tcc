@@ -11,7 +11,7 @@
 #   - dendrograma_geral_ALTO_BAIXO_<ts>.png
 #   - tabela_escolas_ALTO_BAIXO_<ts>.csv
 #
-# VERSAO: 3.0 — Mai 2026 (Apenas MODO 1)
+# VERSAO: 3.0 - Mai 2026 (Apenas MODO 1)
 ################################################################################
 
 library(tidyverse)
@@ -19,36 +19,36 @@ library(ggdendro)
 library(patchwork)
 
 # =============================================================================
-# DETECCAO AUTOMATICA DE CAMINHOS — Funciona em qualquer computador!
+# DETECCAO AUTOMATICA DE CAMINHOS - Funciona em qualquer computador!
 # =============================================================================
 
 detectar_raiz <- function() {
-  # 1. Começar do diretório de trabalho atual
+  # 1. Comecar do diretorio de trabalho atual
   cwd <- getwd()
   
-  # 2. Procurar pela pasta "TESTE" subindo a árvore de diretórios
-  while (cwd != dirname(cwd)) {  # enquanto não chegar à raiz do sistema
+  # 2. Procurar pela pasta "TESTE" subindo a arvore de diretorios
+  while (cwd != dirname(cwd)) {  # enquanto nao chegar a raiz do sistema
     if (dir.exists(file.path(cwd, "TESTE"))) {
-      message("✓ Projeto encontrado em: ", cwd)
+      message("OK Projeto encontrado em: ", cwd)
       return(cwd)
     }
-    cwd <- dirname(cwd)  # sobe um nível
+    cwd <- dirname(cwd)  # sobe um nivel
   }
   
-  # 3. Se não encontrar, pedir ao usuário
-  message("⚠️  Não consegui encontrar a pasta 'TESTE' automaticamente.")
+  # 3. Se nao encontrar, pedir ao usuario
+  message("!?  Nao consegui encontrar a pasta 'TESTE' automaticamente.")
   message("   Por favor, selecione manualmente a pasta raiz do projeto TCC")
   
   if (interactive()) {
     raiz <- utils::choose.dir(default = getwd(),
-                              caption = "Selecione a pasta raiz do projeto TCC (onde está a pasta TESTE)")
+                              caption = "Selecione a pasta raiz do projeto TCC (onde esta a pasta TESTE)")
     if (is.na(raiz) || raiz == "") {
-      stop("Caminho não selecionado. Encerrando.")
+      stop("Caminho nao selecionado. Encerrando.")
     }
-    message("✓ Pasta selecionada: ", raiz)
+    message("OK Pasta selecionada: ", raiz)
     return(raiz)
   } else {
-    stop("Script não pode rodar em modo não-interativo sem encontrar o caminho.",
+    stop("Script nao pode rodar em modo nao-interativo sem encontrar o caminho.",
          "\nExecute no RStudio ou em um terminal interativo.")
   }
 }
@@ -64,11 +64,15 @@ message("  Metadados:         ", DIR_PROCESSADOS)
 message("  Figuras (saida):   ", DIR_FIGURAS, "\n")
 
 # =============================================================================
-# CONFIGURACAO — Ajuste conforme necessário
+# CONFIGURACAO - Ajuste conforme necessario
 # =============================================================================
 
 # Este script gera APENAS dendrogramas gerais (todas as escolas ALTO+BAIXO)
-# Para comparar pares específicos, use o script comparar_duas_escolas.r
+# Para comparar pares especificos, use o script comparar_duas_escolas.r
+
+# Modo de operacao (mantido por compatibilidade com versoes anteriores que
+# suportavam MODO 2 - pares). A partir da versao 3.0 apenas MODO 1 esta ativo.
+MODO <- 1L
 
 # Percentis para classificar desempenho (Modo 1)
 PERCENTIL_ALTO  <- 0.75
@@ -78,7 +82,7 @@ PERCENTIL_BAIXO <- 0.25
 N_CLUSTERS <- 3
 
 # Maximo de escolas por grupo no dendrograma geral (Modo 1)
-# Com 1165 escolas o grafico fica ilegivel — recomendado: 20 a 40
+# Com 1165 escolas o grafico fica ilegivel - recomendado: 20 a 40
 # Seleciona automaticamente as mais representativas de cada extremo
 N_MAX_POR_GRUPO <- 30
 
@@ -200,7 +204,7 @@ dir.create(DIR_FIGURAS, showWarnings = FALSE, recursive = TRUE)
 ts_global <- format(Sys.time(), "%Y%m%d_%H%M%S")
 
 message(strrep("=", 70))
-message("ANALISE DE DENDROGRAMAS — SAEB MG  (Geral ALTO+BAIXO)")
+message("ANALISE DE DENDROGRAMAS - SAEB MG  (Geral ALTO+BAIXO)")
 message(strrep("=", 70))
 
 # =============================================================================
@@ -239,7 +243,7 @@ metadados |>
   { \(d) message(paste0("  ", d$CATEGORIA_DESEMPENHO, ": ", d$n, collapse = "\n")) }()
 
 # =============================================================================
-# MODO 1 — DENDROGRAMA GERAL (ALTO + BAIXO)
+# MODO 1 - DENDROGRAMA GERAL (ALTO + BAIXO)
 # =============================================================================
 
 if (MODO == 1) {
@@ -323,7 +327,7 @@ if (MODO == 1) {
     arrange(CLUSTER) |>
     print(n = Inf, width = Inf)
 
-  # ---- PASSO 4: Painel — Dendrograma ----
+  # ---- PASSO 4: Painel - Dendrograma ----
   lab_cores <- dados_cluster |>
     transmute(
       label = sprintf("Esc.%d", ID_ESCOLA),
@@ -341,7 +345,7 @@ if (MODO == 1) {
     lab_cores = lab_cores,
     y_expand  = 0.18,
     titulo    = paste0(
-      "Dendrograma Geral — Escolas ALTO e BAIXO Desempenho",
+      "Dendrograma Geral - Escolas ALTO e BAIXO Desempenho",
       "  (amostra: ", nrow(dados_cluster), " de ", nrow(dados_modo1), ")"
     ),
     subtitulo = paste0(
@@ -355,7 +359,7 @@ if (MODO == 1) {
     annotate("text", x = x_leg, y = altura_corte * 1.04,
              label = paste0("Corte: ", N_CLUSTERS, " clusters"),
              hjust = 1, size = 2.8, colour = COR_CORTE, fontface = "italic") +
-    # Legenda — canto superior direito
+    # Legenda - canto superior direito
     annotate("point", x = x_leg, y = y_max_g * 0.97,
              colour = COR_ALTO, size = 3.5) +
     annotate("text",  x = x_leg - 0.3, y = y_max_g * 0.97,
@@ -367,7 +371,7 @@ if (MODO == 1) {
              label = paste0("BAIXO (n=", sum(dados_cluster$CATEGORIA_DESEMPENHO == "BAIXO"), ")"),
              hjust = 1, size = 3, colour = COR_BAIXO, fontface = "bold")
 
-  # ---- PASSO 5: Painel — Scatter MT x LP (usa TODA a amostra limpa) ----
+  # ---- PASSO 5: Painel - Scatter MT x LP (usa TODA a amostra limpa) ----
   # Limites de eixo excluindo outliers residuais (99.5 percentil)
   lp_max <- quantile(dados_modo1$MEDIA_LP, 0.995, na.rm = TRUE)
   mt_max <- quantile(dados_modo1$MEDIA_MT, 0.995, na.rm = TRUE)
@@ -381,7 +385,7 @@ if (MODO == 1) {
                     ylim = c(0, lp_max * 1.05)) +
     scale_colour_manual(values = c("ALTO" = COR_ALTO, "BAIXO" = COR_BAIXO),
                         name = "Desempenho") +
-    scale_shape_manual(values = c("Publica" = 16, "Privada" = 17, "Pública" = 16),
+    scale_shape_manual(values = c("Publica" = 16, "Privada" = 17, "Publica" = 16),
                        name = "Tipo") +
     scale_size_continuous(range = c(1.5, 6), name = "INSE") +
     labs(
@@ -400,7 +404,7 @@ if (MODO == 1) {
       caption = paste0(
         "Percentil ALTO >= ", PERCENTIL_ALTO * 100, "%  (>= ", round(q_alto, 1), ")",
         "  |  Percentil BAIXO <= ", PERCENTIL_BAIXO * 100, "%  (<= ", round(q_baixo, 1), ")",
-        if (REMOVER_OUTLIERS_LP) paste0("  |  Outliers LP removidos (fora de ±3dp: ",
+        if (REMOVER_OUTLIERS_LP) paste0("  |  Outliers LP removidos (fora de ?3dp: ",
                                         round(lim_inf, 1), " a ", round(lim_sup, 1), ")") else "",
         "\nGerado em: ", format(Sys.time(), "%d/%m/%Y %H:%M")
       ),
