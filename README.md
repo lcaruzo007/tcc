@@ -345,6 +345,6 @@ Detalhes completos: [`diario.md`](diario.md)
 **Versão**: 3.0 (refatoração julho/2026 — pastas datadas, `AREA_LOCAL`, README brilhoso máximo)
 **Última atualização**: 23 de Julho de 2026 — vide [`diario.md`](diario.md)
 
-Feito com 💙 e muito ☕ · Pipeline R · SAEB 2023 · Minas Gerais
+Feito com muito ☕ · Pipeline R · SAEB 2023 · Minas Gerais
 
 </div>
