@@ -105,7 +105,7 @@ painel_dendrograma <- function(hc,
   lab       <- dend_data$labels |> left_join(lab_cores, by = "label")
 
   y_max   <- max(seg$y, na.rm = TRUE)
-  y_label <- -0.02 * y_max
+  y_label <- -0.03 * y_max
   y_prof  <- if (!is.null(prof_labels)) -0.30 * y_max else NULL
 
   p <- ggplot() +
@@ -114,15 +114,16 @@ painel_dendrograma <- function(hc,
                  colour = "#555555", linewidth = 1.1, lineend = "round") +
     geom_point(data = lab,
                aes(x = x, y = 0, colour = cor),
-               size = 6, shape = 19) +
+               size = 3.6, shape = 19) +
     geom_text(data = lab,
               aes(x = x, y = y_label, label = label, colour = cor),
-              size = 2.4, fontface = "bold", angle = 90, hjust = 1, vjust = 0.5, lineheight = 0.9) +
+              size = 2.6, fontface = "bold", angle = 90, hjust = 1, vjust = 0.5, lineheight = 0.9) +
     scale_colour_identity() +
     scale_y_continuous(
       expand = expansion(mult = c(y_expand, 0.07)),
       name   = "Distancia Euclidiana (Ward.D2)"
     ) +
+    scale_x_continuous(expand = expansion(mult = c(0.12, 0.02))) +
     labs(title = titulo, subtitle = subtitulo) +
     tema_saeb() +
     theme(
@@ -160,16 +161,26 @@ painel_dendrograma <- function(hc,
 
   # Legenda manual (tibble com colunas cor e rotulo)
   if (!is.null(legenda_df)) {
-    n_leg   <- nrow(legenda_df)
-    x_leg   <- min(lab$x) - 0.2
-    y_start <- y_max * 0.97
-    y_step  <- y_max * 0.07
+    n_leg    <- nrow(legenda_df)
+    largura_rotulo <- max(nchar(legenda_df$rotulo)) * 0.16
+    x_leg <- min(lab$x) - 4.2
+    y_start  <- y_max * 0.97
+    y_step   <- y_max * 0.075
+
+    # Caixa de fundo para destacar a legenda das linhas do dendrograma
+    p <- p +
+      annotate("rect",
+               xmin = x_leg - 0.55,
+               xmax = x_leg + 0.95 + largura_rotulo,
+               ymin = y_start - (n_leg - 1) * y_step - y_step * 0.55,
+               ymax = y_start + y_step * 0.55,
+               fill = "white", colour = "#CCCCCC", linewidth = 0.4, alpha = 0.97)
 
     for (i in seq_len(n_leg)) {
       p <- p +
         annotate("point", x = x_leg, y = y_start - (i - 1) * y_step,
                  colour = legenda_df$cor[i], size = 3) +
-        annotate("text",  x = x_leg + 0.15, y = y_start - (i - 1) * y_step,
+        annotate("text",  x = x_leg + 0.32, y = y_start - (i - 1) * y_step,
                  label    = legenda_df$rotulo[i],
                  hjust    = 0, size = 3,
                  colour   = legenda_df$cor[i], fontface = "bold")
@@ -352,7 +363,7 @@ salvar_figura_completa <- function(p_dend,
     )
 
   n_folhas <- nrow(p_dend$layers[[2]]$data)
-  largura  <- max(16, n_folhas * 0.4)
+  largura  <- max(16, n_folhas * 0.6)
 
   caminho <- file.path(dir_saida, nome_arquivo)
   ggsave(caminho, final, width = largura, height = 11, dpi = 180, bg = COR_FUNDO)

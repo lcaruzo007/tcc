@@ -186,7 +186,7 @@ legenda_df <- tibble(
 p_dend <- painel_dendrograma(
   hc,
   lab_cores    = lab_cores,
-  y_expand     = 0.17,
+  y_expand     = 0.28,
   titulo       = paste0("Clustering: Publica vs Privada  (n = ", nrow(dados_cluster), ")"),
   subtitulo    = paste0("Variaveis: ", paste(VARS_CLUSTER, collapse = ", "),
                         "  |  Metodo: Ward.D2  |  Corte: ", N_CLUSTERS, " clusters"),
