@@ -21,11 +21,11 @@
 ---
 
 > 📌 **TL;DR**
-> TCC de mestrado que modela o **impacto socioeconomico** sobre a **proficiencia escolar**
-> de alunos da 3a serie do EM em MG, usando o **INSE** como proxy socioeconomico.
-> Pipeline de **15 passos** em R (tidyverse), cobrindo limpeza, anMlise de grupos,
-> regressMo linear, modelos hierarquicos, mediMao, validMo cruzada
-> e PCB. Outputs organizados em **pastas datadas** `outputs/<YYYY-MM-DD>/<tipo>/`.
+> TCC de mestrado que modela o **impacto socioeconômico** sobre a **proficiência escolar**
+> de alunos da 3ª série do EM em MG, usando o **INSE** como proxy socioeconômico.
+> Pipeline de **15 passos** em R (tidyverse), cobrindo limpeza, análise de grupos,
+> regressão linear, modelos hierárquicos, mediação, validação cruzada
+> e PCA. Outputs organizados em **pastas datadas** `outputs/<YYYY-MM-DD>/<tipo>/`.
 
 ---
 
@@ -124,10 +124,14 @@ graph TD
     P4 --> P15["15. indice_composto.r"]
     P8 -.-> AUX["aux.: grafico_coeficientes_referencia_oposta.r"]
 
-    style D fill:#ffe0b3,stroke:#b35900
-    style P8 fill:#b3d9ff,stroke:#0059b3
-    style P11 fill:#b3d9ff,stroke:#0059b3
-    style AUX fill:#e6ccff,stroke:#5c0099,stroke-dasharray: 4 2
+    classDef origem fill:#ffe0b3,stroke:#b35900,color:#1a1a1a
+    classDef destaque fill:#b3d9ff,stroke:#0059b3,color:#1a1a1a
+    classDef auxiliar fill:#e6ccff,stroke:#5c0099,stroke-dasharray: 4 2,color:#1a1a1a
+
+    class D origem
+    class P8 destaque
+    class P11 destaque
+    class AUX auxiliar
 ```
 
 ### Fase 1: Limpeza e Correlações (PASSO 1-3)
@@ -145,6 +149,10 @@ source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/classificar_escolas.r")
 source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/comparar_grupos.r")
 source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/comparar_duas_escolas.r")  # opcional
 source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/dendrograma_analise_completa.r")
+source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/dendrograma_publica_vs_particular.r")
+source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/dendrograma_urbana_vs_rural.r")
+source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/dendrograma_capital_vs_interior.r")
+source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/dendrograma_area_local.r")
 ```
 
 ### Fase 3: Modelagem Preditiva (PASSO 8-9)
@@ -169,7 +177,7 @@ source("TESTE/11_INDICE_COMPOSTO/Scripts/indice_composto.r")
 O modelo principal é uma regressão linear múltipla com variáveis dummy:
 
 $$
-\text{Proficiencia}_i = \beta_0 + \beta_1 \cdot \text{INSE}_i^{(z)} + \beta_2 \cdot \text{TIPO\_ESCOLA\_Privada}_i + \sum_{k \in \text{AREA\_LOCAL}} \beta_k \cdot D_{ik} + \varepsilon_i
+\text{Proficiencia}_i = \beta_0 + \beta_1 \cdot \text{INSE}_i^{(z)} + \beta_2 \cdot \text{Privada}_i + \sum_{k \in \text{AreaLocal}} \beta_k \cdot D_{ik} + \varepsilon_i
 $$
 
 com referências **`TIPO_ESCOLA = "Publica"`** e **`AREA_LOCAL = "Urbana_Capital"`**, e `INSE_MEDIO` normalizado por z-score. O script auxiliar `grafico_coeficientes_referencia_oposta.r` reajusta o mesmo modelo com a referência oposta (`Privada` + `Rural_Interior`).
@@ -308,9 +316,9 @@ Antes de editar código ou documentação, leia [`AGENTS.md`](AGENTS.md). Resumo
 
 ## 📜 Changelog
 
-| Data | Versão | Mudanças chapadas |
+| Data | Versão | Mudanças |
 |------|:------:|--------------------|
-| Maio 2026 | 1.0 | EstruturM inicial, 9 scripts |
+| Maio 2026 | 1.0 | Estrutura inicial, 9 scripts |
 | Maio 2026 | 2.0 | Regressão linear + itens brutos + 3 guias |
 | Julho 2026 | 2.1 | `utils_saeb.r` + pastas datadas + `AREA_LOCAL` |
 | Julho 2026 | 2.2 | Migração de outputs antigos (mod 3, 4, 5) + script auxiliar ref. oposta |

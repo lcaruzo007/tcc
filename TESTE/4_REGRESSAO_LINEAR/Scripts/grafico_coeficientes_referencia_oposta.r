@@ -49,8 +49,6 @@ RAIZ <- detectar_raiz()
 source(file.path(RAIZ, "TESTE", "DOCUMENTACAO", "utils_saeb.r"))
 DIR_BASE     <- file.path(RAIZ, "TESTE", "4_REGRESSAO_LINEAR")
 DIR_OUTPUTS  <- file.path(DIR_BASE, "outputs")
-DIR_TABELAS  <- file.path(DIR_OUTPUTS, "tabelas")        # legacy (fallback leitura)
-DIR_FIGURAS  <- file.path(DIR_OUTPUTS, "figuras")        # legacy (fallback leitura)
 
 # Localiza a base agregada mais recente (subpastas datadas ou padrao antigo)
 arquivo_base <- encontrar_arquivo_mais_recente(DIR_OUTPUTS, "base_escolas_agregada", "tabelas")
@@ -243,7 +241,7 @@ gerar_grafico <- function(colorido = TRUE) {
     ) +
 
     labs(
-      title    = "Determinantes da proficiencia escolar - SAEB 2023 (3a serie EM)",
+      title    = "Determinantes da proficiencia escolar - SAEB 2023 (3º serie EM)",
       subtitle = paste0(
         "Coeficientes da regressao linear multipla com intervalos de confianca 95%\n",
         "Comparado as escolas privadas e rurais do Interior (referencia: Privada_Rural_Interior)"

@@ -111,10 +111,6 @@ RAIZ <- detectar_raiz()
 ARQUIVO_DADOS_BRUTOS <- file.path(RAIZ, "MICRODADOS_SAEB_2023/DADOS/TS_ALUNO_34EM.csv")
 
 DIR_BASE         <- file.path(RAIZ, "TESTE/4_REGRESSAO_LINEAR")
-DIR_MODELOS      <- file.path(DIR_BASE, "outputs/modelos")
-DIR_DIAGNOSTICOS <- file.path(DIR_BASE, "outputs/diagnosticos")
-DIR_FIGURAS      <- file.path(DIR_BASE, "outputs/figuras")
-DIR_TABELAS      <- file.path(DIR_BASE, "outputs/tabelas")
 
 source(file.path(RAIZ, "TESTE", "DOCUMENTACAO", "utils_saeb.r"))
 
@@ -760,7 +756,7 @@ gerar_grafico_coef_tcc <- function(colorido = TRUE) {
     ) +
 
     labs(
-      title    = "Determinantes da proficiencia escolar - SAEB 2023 (3? serie EM)",
+      title    = "Determinantes da proficiencia escolar - SAEB 2023 (3º serie EM)",
       subtitle = paste0(
         "Coeficientes da regressao linear multipla com intervalos de confianca 95%\n",
         "Comparado as escolas publicas e urbanas da Capital (referencia: Urbana_Capital)"

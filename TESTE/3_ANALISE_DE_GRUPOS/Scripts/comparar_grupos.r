@@ -13,6 +13,8 @@
 #   - 02_boxplot_urbano_rural.png (Figura 2)
 #   - 03_boxplot_capital_interior.png (Figura 3)
 #   - 04_boxplot_inse.png (Figura 4)
+#   - 05_boxplot_area_local.png (Figura 5 - Urbana_Capital/Urbana_Interior/
+#     Rural_Capital/Rural_Interior, combinacao de LOCALIZACAO x AREA)
 #
 # VERSAO: 2.0 - Julho 2026 (melhorias visuais para TCC)
 ################################################################################
@@ -170,6 +172,34 @@ comparacoes <- bind_rows(
   fazer_wilcoxon(baixo_inse_lp, alto_inse_lp, "Baixo_INSE", "Alto_INSE", "PROFICIENCIA_LP")
 )
 
+cat("\n>>> COMPARACAO 5: AREA_LOCAL (Urbana_Capital x Urbana_Interior x Rural_Capital x Rural_Interior)\n")
+
+# AREA_LOCAL ja vem pronta de classificar_escolas.r (LOCALIZACAO + "_" + AREA).
+# Aqui comparamos as 4 combinacoes par a par, nas duas direcoes, assim como
+# as demais comparacoes deste script.
+
+grupos_area_local <- c("Urbana_Capital", "Urbana_Interior", "Rural_Capital", "Rural_Interior")
+
+pares_area_local <- combn(grupos_area_local, 2, simplify = FALSE)
+
+for (par in pares_area_local) {
+  g1 <- par[1]
+  g2 <- par[2]
+
+  g1_mt <- metadados %>% filter(AREA_LOCAL == g1) %>% pull(MEDIA_MT)
+  g2_mt <- metadados %>% filter(AREA_LOCAL == g2) %>% pull(MEDIA_MT)
+  g1_lp <- metadados %>% filter(AREA_LOCAL == g1) %>% pull(MEDIA_LP)
+  g2_lp <- metadados %>% filter(AREA_LOCAL == g2) %>% pull(MEDIA_LP)
+
+  comparacoes <- bind_rows(
+    comparacoes,
+    fazer_wilcoxon(g1_mt, g2_mt, g1, g2, "PROFICIENCIA_MT"),
+    fazer_wilcoxon(g1_lp, g2_lp, g1, g2, "PROFICIENCIA_LP"),
+    fazer_wilcoxon(g2_mt, g1_mt, g2, g1, "PROFICIENCIA_MT"),
+    fazer_wilcoxon(g2_lp, g1_lp, g2, g1, "PROFICIENCIA_LP")
+  )
+}
+
 # =========================================================================
 # EXPORTAR TABELA
 # =========================================================================
@@ -188,16 +218,27 @@ cat(sprintf("   OK Tabela salva: resultados_comparacao_%s.csv\n", timestamp))
 
 cat("\n>>> Gerando boxplots com visual profissional...\n")
 
+# Paleta para AREA_LOCAL (4 categorias combinadas) - nao existe em utils_saeb.r,
+# definida localmente seguindo o mesmo espirito das demais paletas (urbana em
+# tons de verde, rural em tons de laranja/marrom; capital mais escuro que interior)
+PALETA_AREA_LOCAL <- c(
+  "Urbana_Capital"  = "#1B7837",
+  "Urbana_Interior" = "#66C2A5",
+  "Rural_Capital"   = "#B35806",
+  "Rural_Interior"  = "#E08214"
+)
+
 dados_plot <- metadados %>%
-  select(ID_ESCOLA, MEDIA_MT, MEDIA_LP, TIPO_ESCOLA, LOCALIZACAO, AREA, GRUPO_INSE) %>%
+  select(ID_ESCOLA, MEDIA_MT, MEDIA_LP, TIPO_ESCOLA, LOCALIZACAO, AREA, AREA_LOCAL, GRUPO_INSE) %>%
   pivot_longer(
     cols = c(MEDIA_MT, MEDIA_LP),
     names_to = "Disciplina",
     values_to = "Proficiencia"
   ) %>%
-  mutate(Disciplina = recode(Disciplina, 
-                              MEDIA_MT = "Matematica",
-                              MEDIA_LP = "Lingua Portuguesa"))
+  mutate(Disciplina = dplyr::case_when(
+                              Disciplina == "MEDIA_MT" ~ "Matematica",
+                              Disciplina == "MEDIA_LP" ~ "Lingua Portuguesa",
+                              TRUE ~ Disciplina))
 
 # -------------------------------------------------------------------------
 # FUNCAO AUXILIAR: Criar boxplot com anotacoes estatisticas
@@ -325,6 +366,64 @@ ggsave(file.path(DIR_FIGURAS, "04_boxplot_inse.png"),
 
 cat("   OK Figura 4: INSE\n")
 
+# -------------------------------------------------------------------------
+# Figura 5: Area x Localizacao combinadas (4 categorias)
+# -------------------------------------------------------------------------
+# Com 4 grupos, a anotacao de par unico usada nas figuras anteriores nao faz
+# sentido (existem 6 pares possiveis - ver tabela resultados_comparacao_*.csv
+# para os testes de Wilcoxon par a par). Aqui anotamos com Kruskal-Wallis
+# (teste global de diferenca entre as 4 medianas).
+
+dados_area_local <- dados_plot %>% filter(!is.na(AREA_LOCAL))
+
+kw_mt <- kruskal.test(Proficiencia ~ AREA_LOCAL,
+                       data = dados_area_local %>% filter(Disciplina == "Matematica"))
+kw_lp <- kruskal.test(Proficiencia ~ AREA_LOCAL,
+                       data = dados_area_local %>% filter(Disciplina == "Lingua Portuguesa"))
+
+annot_kw <- sprintf(
+  "Kruskal-Wallis: MT %s | LP %s",
+  formatar_p_annot(kw_mt$p.value),
+  formatar_p_annot(kw_lp$p.value)
+)
+
+n_grupos5 <- dados_area_local %>% group_by(AREA_LOCAL) %>% summarise(n = n())
+n_txt5 <- paste(n_grupos5$AREA_LOCAL, "(n=", n_grupos5$n, ")", sep = "", collapse = " | ")
+mediana_geral5 <- median(dados_area_local$Proficiencia, na.rm = TRUE)
+
+p5 <- dados_area_local %>%
+  ggplot(aes(x = AREA_LOCAL, y = Proficiencia, fill = AREA_LOCAL)) +
+  geom_violin(alpha = 0.25, size = 0.8, color = NA, trim = FALSE) +
+  geom_boxplot(alpha = 0.8, width = 0.3, outlier.alpha = 0.5, outlier.size = 1.8,
+               outlier.color = "#666666", color = "#333333") +
+  geom_hline(yintercept = mediana_geral5, linetype = "dashed", color = "#999999", linewidth = 0.6) +
+  facet_wrap(~Disciplina, scales = "free_y") +
+  scale_fill_manual(values = PALETA_AREA_LOCAL) +
+  labs(
+    title = "Figura 5 - Distribuicao de Proficiencia por Area x Localizacao (4 categorias)",
+    subtitle = paste0(n_txt5, " | Mediana geral = ", round(mediana_geral5, 1)),
+    x = NULL,
+    y = "Proficiencia Media (escala SAEB 0-500)",
+    caption = paste0("Teste ", annot_kw, " | comparacoes par a par na tabela de resultados")
+  ) +
+  tema_saeb(base_size = 12) +
+  theme(
+    legend.position = "none",
+    panel.grid.major.x = element_blank(),
+    plot.caption = element_text(size = 10, face = "bold", colour = "#444444"),
+    axis.text.x = element_text(angle = 20, hjust = 1)
+  )
+
+if (nrow(dados_area_local) <= 500) {
+  p5 <- p5 + geom_jitter(width = 0.15, alpha = 0.25, size = 1.2, color = "#555555")
+}
+
+ggsave(file.path(DIR_FIGURAS, "05_boxplot_area_local.png"),
+       plot = p5, width = LARGURA_PADRAO, height = ALTURA_PADRAO,
+       dpi = DPI_PADRAO, bg = "white")
+
+cat("   OK Figura 5: Area x Localizacao (4 categorias)\n")
+
 # =========================================================================
 # RESUMO FINAL
 # =========================================================================
@@ -343,3 +442,4 @@ cat("      - 01_boxplot_tipo_escola.png\n")
 cat("      - 02_boxplot_urbano_rural.png\n")
 cat("      - 03_boxplot_capital_interior.png\n")
 cat("      - 04_boxplot_inse.png\n")
+cat("      - 05_boxplot_area_local.png\n")

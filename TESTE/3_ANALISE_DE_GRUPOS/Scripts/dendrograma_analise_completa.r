@@ -146,7 +146,7 @@ painel_dendrograma <- function(hc, lab_cores, y_expand = 0.28,
     left_join(lab_cores, by = "label")
 
   y_max   <- max(seg$y, na.rm = TRUE)
-  y_label <- -0.22 * y_max
+  y_label <- -0.05 * y_max
   y_prof  <- if (!is.null(prof_labels)) -0.20 * y_max else NULL
 
   p <- ggplot() +
@@ -158,10 +158,10 @@ painel_dendrograma <- function(hc, lab_cores, y_expand = 0.28,
                size = 6, shape = 19) +
     geom_text(data = lab,
               aes(x = x, y = y_label, label = label, colour = cor),
-              size = 3.2, fontface = "bold", hjust = 0.5, lineheight = 0.9, angle = 90) +
+              size = 2.4, fontface = "bold", hjust = 1, lineheight = 0.9, angle = 90) +
     scale_colour_identity() +
     scale_y_continuous(
-      expand = expansion(mult = c(0.45, 0.06)),
+      expand = expansion(mult = c(y_expand, 0.06)),
       name = "Distancia Euclidiana (Ward.D2)"
     ) +
     labs(title = titulo, subtitle = subtitulo) +
@@ -257,21 +257,21 @@ if (MODO == 1) {
     filter(CATEGORIA_DESEMPENHO %in% c("ALTO", "BAIXO"),
            !is.na(MEDIA_MT), !is.na(MEDIA_LP), !is.na(INSE_MEDIO))
 
-  # Remover outliers de MEDIA_LP (valores > media +/- 3 dp sao dados corrompidos)
+  # Remover outliers/sentinelas de MEDIA_MT e MEDIA_LP (fora do intervalo
+  # plausivel da escala SAEB — valores sentinela de dados corrompidos ficam
+  # fora de 150-500)
   if (REMOVER_OUTLIERS_LP) {
-    mu_lp  <- mean(dados_modo1$MEDIA_LP, na.rm = TRUE)
-    dp_lp  <- sd(dados_modo1$MEDIA_LP,   na.rm = TRUE)
-    lim_inf <- mu_lp - 3 * dp_lp
-    lim_sup <- mu_lp + 3 * dp_lp
+    lim_inf <- 150
+    lim_sup <- 500
     n_antes <- nrow(dados_modo1)
     dados_modo1 <- dados_modo1 |>
-  filter(
-    MEDIA_MT >= 150, MEDIA_MT <= 500,
-    MEDIA_LP >= 150, MEDIA_LP <= 500
-  )
+      filter(
+        MEDIA_MT >= lim_inf, MEDIA_MT <= lim_sup,
+        MEDIA_LP >= lim_inf, MEDIA_LP <= lim_sup
+      )
     n_depois <- nrow(dados_modo1)
-    message("\nRemocao de outliers de MEDIA_LP: ", n_antes - n_depois,
-            " escolas removidas (fora de ", round(lim_inf, 1), " a ", round(lim_sup, 1), ")")
+    message("\nRemocao de outliers/sentinelas de MEDIA_MT e MEDIA_LP: ", n_antes - n_depois,
+            " escolas removidas (fora do intervalo plausivel ", lim_inf, " a ", lim_sup, ")")
   }
   
 
@@ -309,7 +309,7 @@ if (MODO == 1) {
   # ---- PASSO 3: Clustering ----
   vars_ok <- intersect(VARS_CLUSTER, names(dados_cluster))
   mat     <- as.matrix(dados_cluster[, vars_ok])
-  rownames(mat) <- sprintf("Esc.%d", dados_cluster$ID_ESCOLA)
+  rownames(mat) <- sprintf("%d", dados_cluster$ID_ESCOLA)
 
   dist_mat <- dist(mat, method = "euclidean")
   hc       <- hclust(dist_mat, method = "ward.D2")
@@ -330,7 +330,7 @@ if (MODO == 1) {
   # ---- PASSO 4: Painel - Dendrograma ----
   lab_cores <- dados_cluster |>
     transmute(
-      label = sprintf("Esc.%d", ID_ESCOLA),
+      label = sprintf("%d", ID_ESCOLA),
       cor   = if_else(CATEGORIA_DESEMPENHO == "ALTO", COR_ALTO, COR_BAIXO)
     )
 
@@ -385,7 +385,7 @@ if (MODO == 1) {
                     ylim = c(0, lp_max * 1.05)) +
     scale_colour_manual(values = c("ALTO" = COR_ALTO, "BAIXO" = COR_BAIXO),
                         name = "Desempenho") +
-    scale_shape_manual(values = c("Publica" = 16, "Privada" = 17, "Publica" = 16),
+    scale_shape_manual(values = c("Publica" = 16, "Privada" = 17),
                        name = "Tipo") +
     scale_size_continuous(range = c(1.5, 6), name = "INSE") +
     labs(
