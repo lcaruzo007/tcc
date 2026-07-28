@@ -123,7 +123,7 @@ painel_dendrograma <- function(hc,
       expand = expansion(mult = c(y_expand, 0.07)),
       name   = "Distancia Euclidiana (Ward.D2)"
     ) +
-    scale_x_continuous(expand = expansion(mult = c(0.12, 0.02))) +
+    scale_x_continuous(expand = expansion(mult = c(0.02, 0.18))) +
     labs(title = titulo, subtitle = subtitulo) +
     tema_saeb() +
     theme(
@@ -162,27 +162,26 @@ painel_dendrograma <- function(hc,
   # Legenda manual (tibble com colunas cor e rotulo)
   if (!is.null(legenda_df)) {
     n_leg    <- nrow(legenda_df)
-    largura_rotulo <- max(nchar(legenda_df$rotulo)) * 0.16
-    x_leg <- min(lab$x) - 4.2
+    largura_rotulo <- max(nchar(legenda_df$rotulo)) * 0.18
+    x_leg <- max(lab$x) + 1.5
     y_start  <- y_max * 0.97
-    y_step   <- y_max * 0.075
+    y_step   <- y_max * 0.07
 
-    # Caixa de fundo para destacar a legenda das linhas do dendrograma
     p <- p +
       annotate("rect",
-               xmin = x_leg - 0.55,
-               xmax = x_leg + 0.95 + largura_rotulo,
-               ymin = y_start - (n_leg - 1) * y_step - y_step * 0.55,
-               ymax = y_start + y_step * 0.55,
-               fill = "white", colour = "#CCCCCC", linewidth = 0.4, alpha = 0.97)
+               xmin = x_leg - 0.4,
+               xmax = x_leg + 0.65 + largura_rotulo,
+               ymin = y_start - (n_leg - 1) * y_step - y_step * 0.6,
+               ymax = y_start + y_step * 0.6,
+               fill = "#FFFFFF", colour = "#AAAAAA", linewidth = 0.5, alpha = 0.95)
 
     for (i in seq_len(n_leg)) {
       p <- p +
         annotate("point", x = x_leg, y = y_start - (i - 1) * y_step,
-                 colour = legenda_df$cor[i], size = 3) +
-        annotate("text",  x = x_leg + 0.32, y = y_start - (i - 1) * y_step,
+                 colour = legenda_df$cor[i], size = 3.5) +
+        annotate("text",  x = x_leg + 0.38, y = y_start - (i - 1) * y_step,
                  label    = legenda_df$rotulo[i],
-                 hjust    = 0, size = 3,
+                 hjust    = 0, size = 3.2,
                  colour   = legenda_df$cor[i], fontface = "bold")
     }
   }
@@ -315,7 +314,13 @@ painel_scatter <- function(dados,
     labs(title = titulo, subtitle = subtitulo,
          x = "Proficiencia MT", y = "Proficiencia LP") +
     tema_saeb(base_size = 10) +
-    theme(legend.position = "right")
+    theme(
+      legend.position = "bottom",
+      legend.direction = "horizontal",
+      legend.box = "vertical",
+      legend.key.size = grid::unit(0.4, "cm"),
+      legend.margin = margin(t = 4, b = 0, unit = "pt")
+    )
 
   # Forma diferente por tipo de escola (se informado)
   if (!is.null(var_forma) && var_forma %in% names(dados)) {

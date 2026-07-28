@@ -395,7 +395,13 @@ if (MODO == 1) {
       x = "Proficiencia MT", y = "Proficiencia LP"
     ) +
     tema_saeb(base_size = 10) +
-    theme(legend.position = "right")
+    theme(
+      legend.position = "bottom",
+      legend.direction = "horizontal",
+      legend.box = "vertical",
+      legend.key.size = grid::unit(0.4, "cm"),
+      legend.margin = margin(t = 4, b = 0, unit = "pt")
+    )
 
   # ---- PASSO 6: Composicao e salvamento ----
   final_g <- p_dend_g / p_scatter_g +

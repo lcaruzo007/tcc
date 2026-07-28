@@ -279,21 +279,26 @@ criar_boxplot <- function(dados, var_x, paleta, titulo, fig_num,
     geom_violin(alpha = 0.25, size = 0.8, color = NA, trim = FALSE) +
     geom_boxplot(alpha = 0.8, width = 0.3, outlier.alpha = 0.5, outlier.size = 1.8,
                  outlier.color = "#666666", color = "#333333") +
-    geom_hline(yintercept = mediana_geral, linetype = "dashed", color = "#999999", linewidth = 0.6) +
+    geom_hline(aes(yintercept = mediana_geral, linetype = "Mediana geral"),
+               color = "#999999", linewidth = 0.7) +
     facet_wrap(~Disciplina, scales = "free_y") +
     scale_fill_manual(values = paleta) +
+    scale_linetype_manual(name = NULL, values = c("Mediana geral" = "dashed")) +
     labs(
       title = paste0("Figura ", fig_num, " - ", titulo),
       subtitle = paste0(n_txt, " | Mediana geral = ", round(mediana_geral, 1)),
       x = NULL,
       y = "Proficiencia Media (escala SAEB 0-500)",
-      caption = if (!is.null(annot_texto)) paste0("Teste Wilcoxon: ", annot_texto) else NULL
+      caption = if (!is.null(annot_texto)) paste0("Wilcoxon: ", annot_texto) else NULL
     ) +
     tema_saeb(base_size = 12) +
     theme(
-      legend.position = "none",
+      legend.position = "bottom",
+      legend.box = "horizontal",
+      legend.key.size = grid::unit(0.6, "cm"),
+      legend.margin = margin(t = 2, b = 0, unit = "pt"),
       panel.grid.major.x = element_blank(),
-      plot.caption = element_text(size = 10, face = "bold", colour = "#444444")
+      plot.caption = element_text(size = 9, face = "bold", colour = "#555555")
     )
   
   # Adicionar jitter apenas se N for pequeno
@@ -396,21 +401,26 @@ p5 <- dados_area_local %>%
   geom_violin(alpha = 0.25, size = 0.8, color = NA, trim = FALSE) +
   geom_boxplot(alpha = 0.8, width = 0.3, outlier.alpha = 0.5, outlier.size = 1.8,
                outlier.color = "#666666", color = "#333333") +
-  geom_hline(yintercept = mediana_geral5, linetype = "dashed", color = "#999999", linewidth = 0.6) +
+  geom_hline(aes(yintercept = mediana_geral5, linetype = "Mediana geral"),
+             color = "#999999", linewidth = 0.7) +
   facet_wrap(~Disciplina, scales = "free_y") +
   scale_fill_manual(values = PALETA_AREA_LOCAL) +
+  scale_linetype_manual(name = NULL, values = c("Mediana geral" = "dashed")) +
   labs(
     title = "Figura 5 - Distribuicao de Proficiencia por Area x Localizacao (4 categorias)",
     subtitle = paste0(n_txt5, " | Mediana geral = ", round(mediana_geral5, 1)),
     x = NULL,
     y = "Proficiencia Media (escala SAEB 0-500)",
-    caption = paste0("Teste ", annot_kw, " | comparacoes par a par na tabela de resultados")
+    caption = paste0("Kruskal-Wallis: ", annot_kw, "  |  comparacoes par a par na tabela")
   ) +
   tema_saeb(base_size = 12) +
   theme(
-    legend.position = "none",
+    legend.position = "bottom",
+    legend.box = "horizontal",
+    legend.key.size = grid::unit(0.6, "cm"),
+    legend.margin = margin(t = 2, b = 0, unit = "pt"),
     panel.grid.major.x = element_blank(),
-    plot.caption = element_text(size = 10, face = "bold", colour = "#444444"),
+    plot.caption = element_text(size = 9, face = "bold", colour = "#555555"),
     axis.text.x = element_text(angle = 20, hjust = 1)
   )
 

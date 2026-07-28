@@ -539,7 +539,9 @@ p <- dados_plot %>%
   theme_minimal() +
   theme(
     plot.title = element_text(size = 14, face = "bold"),
-    legend.position = "right"
+    legend.position = "bottom",
+    legend.direction = "horizontal",
+    legend.key.size = grid::unit(0.5, "cm")
   )
 
 nome_plot <- file.path(DIR_SAIDA,
