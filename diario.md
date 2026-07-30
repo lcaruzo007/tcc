@@ -1615,3 +1615,50 @@ removidos da pipeline devido à **anonimização dos municípios nos microdados 
 - [ ] Redação final do TCC
 - [ ] Preparação para apresentação
 
+
+### 30 de Julho de 2026
+
+**Horario:** ~ultima sessao
+**Fase:** Refatoracao do modulo 5 (regressao por itens brutos)
+**Status:** Concluido com sucesso (parse OK, sem execucao completa)
+
+#### Atividades Realizadas
+
+Refatoracao do script TESTE/5_REGRESSAO_ITENS_BRUTOS/Scripts/regressao_itens_brutos_dummy.r em.commit unico (11 correcoes/melhorias):
+
+- **Item 1 (bug):** p_valor da 	abela_resumo era hardcoded "< 0.001"; agora e calculado via pf(F, df1, df2, lower.tail=FALSE) (helper calc_p_F).
+- **Item 2 (docs):** Nota metodologica do grafico de coeficientes dizia "exibe TODAS as preditoras" mas o codigo filtra p_valor < ALPHA. Mantido o filtro de significancia (preferencia do usuario) e a nota foi reescrita para refletir isso.
+- **Item 3:** miss_info (Etapa 5) era calculado mas nunca salvo. Agora e gravado em 	abelas/log_missings_itens.csv.
+- **Item 4:** log_vif_removidos era um vetor de strings "nome (VIF=..)". Refatorado para 	ibble(Iteracao, Preditor, VIF), salvo direto. Corrigido tambem length(log_vif) -> 
+row(log_vif) (length de tibble = n. de colunas, nao linhas).
+- **Item 5 (robustez):** gerar_pred_obs usava modelo[[1]] (depende da ordem das colunas). Trocado por modelo[[all.vars(formula(modelo))[1]]] (acesso nomeado a variavel-resposta).
+- **Item 6 (convencao):** detectar_raiz e 	ema_saeb locais eram duplicatas de utils_saeb.r. source(utils_saeb.r) movido para antes de detectar_raiz(); funcoes locais removidas. rquivo_mais_recente mantido local (semantica distinta do encontrar_arquivo_mais_recente).
+- **Item 7 (limpeza):** Variaveis mortas removidas: VARS_ESTRUTURAIS e VARIAVEL_DEPENDENTE (nunca usadas no codigo).
+- **Item 8 (convencao):** Sanitizacao ASCII em todas as strings/mensagens/comentarios. O arquivo era ASCII puro mas continha ? literais resultantes de conversao de encoding perdida (bullets *, setas ->, raiz sqrt, subscritos _j, edicoes 8a, etc.). Nenhum ? restante.
+- **Item 9 (performance):** Etapa 4 reescrita com count + pivot_wider (1 passagem por item) em vez de 1 summarise + left_join por categoria (~169 joins). Preservada a semantica original: categoria "A" como referencia (omitida), escolas com 
+_valid < MIN_RESP_ITEM recebem NA, e escolas que responderam apenas "A" ficam com prop 0 nas demais categorias (via alues_fill = 0 pivotando todas as categorias antes de descartar "A").
+- **Item 10 (convencao):** Grupo tematico "Variaveis Estruturais" agora lista os nomes reais das dummies (TIPO_ESCOLA_Privada, AREA_LOCAL_*) em vez de c("TIPO_ESCOLA","AREA","LOCALIZACAO"), e o str_detect do filtro usa ^TIPO_ESCOLA_|^AREA_LOCAL_.
+- **Item 11 (correcao menor):** IC 95% dos coeficientes agora via qt(0.975, df.residual(modelo)) em vez da aproximacao 1.96 * std.error. Altera os ICs nos CSVs coeficientes_*_itens e barras de erro das figuras (diferencas despreziveis com n ~ 2000 escuelas). Nota metodologica atualizada.
+
+#### Desafios Encontrados
+
+- Bug introduzido na 1a wersao da reescrita da Etapa 4: o 
+_valid era descartado pelo pivot_wider (nao estava em id_cols/
+ames_from/alues_from), fazendo is.null(df_agg) == TRUE e tornando TODAS as dummies NA. Corrigido separando 
+_valid_escola via summarise e fazendo left_join apos o pivot.
+- Rscript nao esta no PATH do sistema; localizado em C:\Program Files\R\R-4.5.2\bin\.
+
+#### Resultados Obtidos
+
+- Script parseia sem erros (parse() OK, 217 expressoes).
+- Diff: 169 insercoes / 157 remocoes em 1 arquivo.
+- Comportamento estatistico preservado (mesma semantica de agregacao e filtros); apenas correcoes de rigor (IC via t, p-valor F real) e rastreabilidade (logs em colunas).
+
+#### Proximos Passos
+
+- [ ] Executar o script completo contra TS_ALUNO_34EM.csv para validar saidas
+- [ ]Comparar coeficientes_*_itens antes/depois (ICs devem mudar pouco)
+- [ ] Confirmar que log_missings_itens.csv e o novo formato de log_vif_removidos sao uteis para o TCC
+
+---
+
