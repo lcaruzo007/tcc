@@ -21,12 +21,13 @@
 # SAIDA (outputs/<YYYY-MM-DD>/<tipo>/<nome>_<HHMMSS>.<ext>):
 #   - tabelas/base_escolas_itens, resumo_modelos_itens,
 #     coeficientes_MT_itens / coeficientes_LP_itens,
-#     log_eliminadas_var0, log_vif_removidos
+#     log_eliminadas_var0, log_vif_removidos, log_missings_itens
 #   - diagnosticos/diagnosticos_MT_itens / diagnosticos_LP_itens
-#   - figuras/diagnosticos_residuos_MT_itens / _LP_itens,
-#     preditos_vs_observados_MT_itens / _LP_itens,
-#     resumo_qualidade_ajuste_itens, mapa_calor_vif_MT_itens / _LP_itens,
-#     coef_grupo_MT_IMAGEMNN / coef_grupo_LP_IMAGEMNN (por grupo tematico)
+#   - figuras/diagnosticos_residuos/    -> residuos_MT_itens / _LP_itens
+#   - figuras/preditos_vs_observados/   -> preditos_vs_observados_MT_itens / _LP_itens
+#   - figuras/qualidade_ajuste/         -> resumo_qualidade_ajuste_itens
+#   - figuras/mapas_calor_vif/          -> mapa_calor_vif_MT_itens / _LP_itens
+#   - figuras/coeficientes_grupo/       -> coef_grupo_MT_IMAGEMNN / coef_grupo_LP_IMAGEMNN
 #   - modelos/modelo_MT_itens.rds / modelo_LP_itens.rds
 #
 # VERSAO: 1.3 - Julho 2026 (refatoracao: p-valor F, IC via t, log VIF em
@@ -292,6 +293,14 @@ DIR_MODELOS     <- file.path(DIR_BASE, "outputs/modelos")
 DIR_DIAGNOSTICOS<- file.path(DIR_BASE, "outputs/diagnosticos")
 DIR_FIGURAS     <- file.path(DIR_BASE, "outputs/figuras")
 DIR_TABELAS     <- file.path(DIR_BASE, "outputs/tabelas")
+
+# Subpastas de figuras (organizacao por tipo, dentro de outputs/<data>/figuras/).
+# Usadas como argumento `subpasta` de caminho_saida() -> cria figuras/<tipo>/.
+FIG_DIAG_RESS  <- file.path("figuras", "diagnosticos_residuos")
+FIG_PRED_OBS   <- file.path("figuras", "preditos_vs_observados")
+FIG_VIF        <- file.path("figuras", "mapas_calor_vif")
+FIG_QUALIDADE  <- file.path("figuras", "qualidade_ajuste")
+FIG_COEF_GRUPO <- file.path("figuras", "coeficientes_grupo")
 
 message("Caminhos configurados:")
 message("  Dados brutos : ", ARQUIVO_DADOS_BRUTOS)
@@ -968,13 +977,13 @@ p_diag_mt <- gerar_graficos_residuos(modelo_mt, "MEDIA_MT", "#1f77b4")
 p_diag_lp <- gerar_graficos_residuos(modelo_lp, "MEDIA_LP", "#ff7f0e")
 
 ggsave(
-  caminho_saida(DIR_BASE, "figuras", "diagnosticos_residuos_MT_itens", "png"),
+  caminho_saida(DIR_BASE, FIG_DIAG_RESS, "diagnosticos_residuos_MT_itens", "png"),
   p_diag_mt, width = 14, height = 10, dpi = 180, bg = "white"
 )
 message("Figura salva: diagnosticos_residuos_MT_itens")
 
 ggsave(
-  caminho_saida(DIR_BASE, "figuras", "diagnosticos_residuos_LP_itens", "png"),
+  caminho_saida(DIR_BASE, FIG_DIAG_RESS, "diagnosticos_residuos_LP_itens", "png"),
   p_diag_lp, width = 14, height = 10, dpi = 180, bg = "white"
 )
 message("Figura salva: diagnosticos_residuos_LP_itens")
@@ -1101,7 +1110,7 @@ for (grupo_nome in names(grupos_tematicos)) {
   res_mt <- gerar_grafico_grupo(coef_mt, "MEDIA_MT", "#E65100",
                                 grupo_nome, itens_grupo)
   if (!is.null(res_mt)) {
-    arq <- caminho_saida(DIR_BASE, "figuras",
+    arq <- caminho_saida(DIR_BASE, FIG_COEF_GRUPO,
                          sprintf("coef_grupo_MT_IMAGEM%02d", contador_mt), "png")
     ggsave(arq, res_mt$plot, width = 12, height = res_mt$altura,
            dpi = 180, bg = "white", limitsize = FALSE)
@@ -1115,7 +1124,7 @@ for (grupo_nome in names(grupos_tematicos)) {
   res_lp <- gerar_grafico_grupo(coef_lp, "MEDIA_LP", "#1B5E20",
                                 grupo_nome, itens_grupo)
   if (!is.null(res_lp)) {
-    arq <- caminho_saida(DIR_BASE, "figuras",
+    arq <- caminho_saida(DIR_BASE, FIG_COEF_GRUPO,
                          sprintf("coef_grupo_LP_IMAGEM%02d", contador_lp), "png")
     ggsave(arq, res_lp$plot, width = 12, height = res_lp$altura,
            dpi = 180, bg = "white", limitsize = FALSE)
@@ -1127,7 +1136,8 @@ for (grupo_nome in names(grupos_tematicos)) {
 }
 
 message("\n* Graficos gerados em: ",
-        file.path(DIR_BASE, "outputs", format(Sys.Date(), FORMATO_DATA_PASTA), "figuras"))
+        file.path(DIR_BASE, "outputs", format(Sys.Date(), FORMATO_DATA_PASTA), "figuras"),
+        " (subpastas por tipo)")
 message("   MT: ", contador_mt - 1L, " imagens")
 message("   LP: ", contador_lp - 1L, " imagens")
 
@@ -1189,7 +1199,7 @@ p_pred_lp <- gerar_pred_obs(modelo_lp, summary_lp, "MEDIA_LP", "#ff7f0e")
 
 if (!is.null(p_pred_mt)) {
   ggsave(
-    caminho_saida(DIR_BASE, "figuras", "preditos_vs_observados_MT_itens", "png"),
+    caminho_saida(DIR_BASE, FIG_PRED_OBS, "preditos_vs_observados_MT_itens", "png"),
     p_pred_mt, width = 9, height = 9, dpi = 180, bg = "white"
   )
   message("Figura salva: preditos_vs_observados_MT_itens")
@@ -1199,7 +1209,7 @@ if (!is.null(p_pred_mt)) {
 
 if (!is.null(p_pred_lp)) {
   ggsave(
-    caminho_saida(DIR_BASE, "figuras", "preditos_vs_observados_LP_itens", "png"),
+    caminho_saida(DIR_BASE, FIG_PRED_OBS, "preditos_vs_observados_LP_itens", "png"),
     p_pred_lp, width = 9, height = 9, dpi = 180, bg = "white"
   )
   message("Figura salva: preditos_vs_observados_LP_itens")
@@ -1257,7 +1267,7 @@ p_r2 <- ggplot(dados_r2, aes(x = Modelo, y = R2, fill = Modelo)) +
   )
 
 ggsave(
-  caminho_saida(DIR_BASE, "figuras", "resumo_qualidade_ajuste_itens", "png"),
+  caminho_saida(DIR_BASE, FIG_QUALIDADE, "resumo_qualidade_ajuste_itens", "png"),
   p_r2, width = 8, height = 6, dpi = 180, bg = "white"
 )
 message("Figura salva: resumo_qualidade_ajuste_itens")
@@ -1327,7 +1337,7 @@ gerar_mapa_vif <- function(modelo, nome_modelo, nome_arq) {
     theme(legend.position = "right")
 
   ggsave(
-    caminho_saida(DIR_BASE, "figuras", nome_arq, "png"),
+    caminho_saida(DIR_BASE, FIG_VIF, nome_arq, "png"),
     p_vif, width = 12, height = max(8, n_barras * 0.25), dpi = 180, bg = "white"
   )
   message("Figura salva: ", nome_arq)
