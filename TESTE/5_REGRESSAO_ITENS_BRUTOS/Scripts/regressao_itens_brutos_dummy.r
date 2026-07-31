@@ -21,7 +21,8 @@
 # SAIDA (outputs/<YYYY-MM-DD>/<tipo>/<nome>_<HHMMSS>.<ext>):
 #   - tabelas/base_escolas_itens, resumo_modelos_itens,
 #     coeficientes_MT_itens / coeficientes_LP_itens,
-#     log_eliminadas_var0, log_vif_removidos, log_missings_itens
+#     log_eliminadas_var0, log_vif_removidos, log_missings_itens,
+#     dicionario_perguntas_respostas (TXT legivel das 72 perguntas + categorias)
 #   - diagnosticos/diagnosticos_MT_itens / diagnosticos_LP_itens
 #   - figuras/diagnosticos_residuos/    -> residuos_MT_itens / _LP_itens
 #   - figuras/preditos_vs_observados/   -> preditos_vs_observados_MT_itens / _LP_itens
@@ -30,8 +31,9 @@
 #   - figuras/coeficientes_grupo/       -> coef_grupo_MT_IMAGEMNN / coef_grupo_LP_IMAGEMNN
 #   - modelos/modelo_MT_itens.rds / modelo_LP_itens.rds
 #
-# VERSAO: 1.3 - Julho 2026 (refatoracao: p-valor F, IC via t, log VIF em
-#   colunas, log_missings, pivot_wider, helpers de utils_saeb.r, ASCII)
+# VERSAO: 1.5 - Julho 2026 (correcoes visuais do grafico de coeficientes:
+#   agrupamento por item no eixo Y, offset Sig proporcional, altura 0.40;
+#   TXT de perguntas/respostas em vez de texto no grafico)
 #
 # ---------------------------------------------------------------------------
 # NOTA METODOLOGICA - USO DE DUMMIES DOS ITENS BRUTOS E CRITERIOS DE ELIMINACAO
@@ -1040,13 +1042,29 @@ gerar_grafico_grupo <- function(coef_df, nome_modelo, cor_sig,
       str_replace(Termo, "_[A-Z]$", "") %in% itens_grupo |
       str_detect(Termo, "^TIPO_ESCOLA_|^AREA_LOCAL_")
     ) |>
-    mutate(Termo = fct_reorder(Termo, abs(Coef)))
-  
+    # Reordenar PRIMEIRO por Item (agrupa barras do mesmo item adjacentes)
+    # e DEPOIS por |Coef| dentro de cada item. Isso mitiga o problema de
+    # rótulos quase identigos (ex.: TX_RESP_Q23d_C/D/B) ficarem espalhados
+    # e dificil de distinguir; agora ficam visualmente agrupados.
+    arrange(Item, desc(abs(Coef))) |>
+    mutate(Termo = factor(Termo, levels = Termo))
+
   if (nrow(dados_plot) == 0) return(NULL)
-  
+
   n_preds    <- nrow(dados_plot)
-  altura_fig <- max(5, n_preds * 0.32)
-  
+  # Altura por barra ampliada de 0.32 para 0.40 para reduzir impressao de
+  # "grudado" entre rótulos do eixo Y em figuras com 15+ preditoras.
+  altura_fig <- max(5, n_preds * 0.40)
+
+  # Offset dos asteriscos de Sig proporcional aa escala do eixo X (nao mais
+  # fixo +0.5/-0.5). Com coeficientes de magnitude ate ~50 pontos SAEB, o
+  # offset 0.5 ficava insignificante e os asteriscos sobrepostos aa barra
+  # de erro. 4% do alcance dos ICs da um afastamento visivel.
+  alcance <- diff(range(c(dados_plot$IC_95_inf, dados_plot$IC_95_sup),
+                        na.rm = TRUE))
+  if (!is.finite(alcance) || alcance == 0) alcance <- 10
+  offset_sig <- alcance * 0.04
+
   p <- ggplot(dados_plot, aes(x = Termo, y = Coef)) +
     geom_hline(yintercept = 0, linetype = "dashed",
                colour = "#D62728", linewidth = 0.9) +
@@ -1056,7 +1074,9 @@ gerar_grafico_grupo <- function(coef_df, nome_modelo, cor_sig,
                   width = 0.35, linewidth = 0.55, colour = "#333333") +
     geom_text(
       aes(label = Sig,
-          y = if_else(Coef >= 0, IC_95_sup + 0.5, IC_95_inf - 0.5)),
+          y = if_else(Coef >= 0,
+                      IC_95_sup + offset_sig,
+                      IC_95_inf - offset_sig)),
       size = 3.2, fontface = "bold", colour = "#1A1A1A"
     ) +
     coord_flip() +
@@ -1068,7 +1088,7 @@ gerar_grafico_grupo <- function(coef_df, nome_modelo, cor_sig,
       title    = paste0(grupo_nome, " - Modelo ", nome_modelo),
       subtitle = paste0(
         n_preds, " coeficientes significativos (p < 0,05) | ",
-        "ordenados por |coeficiente| | categoria A = referencia"
+        "agrupados por item, ordenados por |coeficiente| | categoria A = referencia"
       ),
       x       = NULL,
       y       = "Coeficiente (pontos de proficiencia SAEB)",
@@ -1089,12 +1109,14 @@ gerar_grafico_grupo <- function(coef_df, nome_modelo, cor_sig,
       plot.subtitle = element_text(size = 10, colour = "#555555"),
       plot.caption  = element_text(size = 8.5, colour = "#777777",
                                    face = "italic", hjust = 0, lineheight = 1.4),
-      axis.text.y   = element_text(size = 10, colour = "#1A1A1A"),
+      # Aumentar um pouco o espacamento vertical dos rótulos do eixo Y
+      axis.text.y   = element_text(size = 10, colour = "#1A1A1A",
+                                   margin = margin(r = 4)),
       axis.text.x   = element_text(size = 10),
       axis.title.x  = element_text(size = 10, margin = margin(t = 8)),
       plot.margin   = margin(14, 20, 10, 14)
     )
-  
+
   list(plot = p, altura = altura_fig, n = n_preds)
 }
 
@@ -1354,6 +1376,61 @@ saveRDS(modelo_mt,
         caminho_saida(DIR_BASE, "modelos", "modelo_MT_itens", "rds"))
 saveRDS(modelo_lp,
         caminho_saida(DIR_BASE, "modelos", "modelo_LP_itens", "rds"))
+
+# =============================================================================
+# GERAR TXT DE PERGUNTAS E RESPOSTAS (dicionario legivel)
+# =============================================================================
+# Para nao poluir os graficos de coeficientes com texto, as perguntas
+# completas e os rotulos das categorias sao exportadas para um TXT de
+# referencia, em pastas datadas. Os dicionarios DICT_PERGUNTAS_SAEB e
+# DICT_ROTULOS_SAEB vem de utils_saeb.r (extracao do INPUT_R do INEP).
+
+if (exists("DICT_PERGUNTAS_SAEB") && exists("DICT_ROTULOS_SAEB")) {
+
+  arq_txt <- caminho_saida(DIR_BASE, "tabelas", "dicionario_perguntas_respostas", "txt")
+
+  # Itens que de fato entraram no modelo (preditoras_finais)
+  itens_no_modelo <- unique(str_extract(preditoras_finais, "^TX_RESP_Q[^_]+"))
+  itens_no_modelo <- itens_no_modelo[!is.na(itens_no_modelo)]
+
+  # Acumular todo o conteudo num vetor de linhas e escrever de uma vez
+  # (writeLines com path string abre/escreve/fecha automaticamente).
+  linhas <- c(
+    "================================================================================",
+    "DICIONARIO DE PERGUNTAS E RESPOSTAS - QUESTIONARIO SOCIOECONOMICO SAEB 2023",
+    "================================================================================",
+    "Fonte: MICRODADOS_SAEB_2023/INPUTS/INPUT_R_TS_ALUNO_34EM.R (INEP)",
+    "Normalizado para ASCII puro. Categoria A = referencia (omitida das dummies).",
+    "Itens presentes no modelo final aparecem marcados com [*].",
+    "",
+    paste0("Total de itens: ", length(DICT_PERGUNTAS_SAEB)),
+    ""
+  )
+
+  for (it in names(DICT_PERGUNTAS_SAEB)) {
+    marca <- if (it %in% itens_no_modelo) " [*]" else ""
+    linhas <- c(linhas, paste0("---- ", it, marca, " ----"),
+                paste0("Pergunta: ", DICT_PERGUNTAS_SAEB[[it]]),
+                "Categorias:")
+    rot <- DICT_ROTULOS_SAEB[[it]]
+    if (!is.null(rot) && length(rot) > 0) {
+      for (cat in names(rot)) {
+        linhas <- c(linhas, paste0("  ", cat, " = ", rot[[cat]]))
+      }
+    } else {
+      linhas <- c(linhas, "  (sem rotulos registrados)")
+    }
+    linhas <- c(linhas, "")
+  }
+  linhas <- c(linhas, "================================================================================")
+
+  writeLines(linhas, arq_txt, useBytes = TRUE)
+  message("TXT de perguntas/respostas salvo: ", basename(arq_txt),
+          " (", length(DICT_PERGUNTAS_SAEB), " itens, ",
+          length(linhas), " linhas)")
+} else {
+  message("[!] Dicionarios DICT_PERGUNTAS_SAEB/DICT_ROTULOS_SAEB indisponiveis - TXT nao gerado.")
+}
 
 # =============================================================================
 # RELATORIO FINAL
