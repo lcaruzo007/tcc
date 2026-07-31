@@ -251,9 +251,32 @@ arquivo_mais_recente <- function(pasta, padrao) {
   arqs[which.max(file.info(arqs)$mtime)]
 }
 
-# Source dos helpers compartilhados (detectar_raiz, caminho_saida,
-# encontrar_arquivo_mais_recente, tema_saeb, paletas, dicionarios) ANTES
-# de usar detectar_raiz(), para evitar redefinir essas funcoes localmente.
+# detectar_raiz e definida localmente por necessidade: ela e pre-condicao
+# do source() de utils_saeb.r (que por sua vez redefine detectar_raiz,
+# caminho_saida, tema_saeb, etc., sobrescrevendo esta versao local).
+# arquivo_mais_recente tambem e local (semantica distinta da
+# encontrar_arquivo_mais_recente, que procura em subpastas datadas).
+detectar_raiz <- function() {
+  cwd <- getwd()
+  while (cwd != dirname(cwd)) {
+    if (dir.exists(file.path(cwd, "TESTE"))) {
+      message("OK Projeto encontrado em: ", cwd)
+      return(cwd)
+    }
+    cwd <- dirname(cwd)
+  }
+  message("[!] Pasta 'TESTE' nao encontrada automaticamente.")
+  if (interactive()) {
+    raiz <- utils::choose.dir(default = getwd(),
+                              caption = "Selecione a pasta raiz do projeto TCC")
+    if (is.na(raiz) || raiz == "") stop("Caminho nao selecionado. Encerrando.")
+    message("OK Pasta selecionada: ", raiz)
+    return(raiz)
+  } else {
+    stop("Script nao pode rodar em modo nao-interativo sem encontrar o caminho.")
+  }
+}
+
 RAIZ <- detectar_raiz()
 source(file.path(RAIZ, "TESTE", "DOCUMENTACAO", "utils_saeb.r"))
 
@@ -1324,7 +1347,7 @@ message("  Escolas na base final    : ", nrow(df_completo))
 message("  Dummies geradas (total)  : ", length(todas_dummies))
 message("  [A] Respostas invalidas  : tratadas como NA antes da geracao das dummies")
 message("  [B] Removidas (var ~ 0)  : ", n_removidas_var0)
-message("  [C] Removidas (VIF > ",  LIMIAR_VIF, ")    : ", length(log_vif))
+message("  [C] Removidas (VIF > ",  LIMIAR_VIF, ")    : ", nrow(log_vif))
 message("  Preditoras no modelo     : ", length(preditoras_finais))
 message("\nModelos:")
 message("  MT - R2aj: ", round(summary_mt$adj.r.squared, 4),

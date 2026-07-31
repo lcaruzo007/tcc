@@ -1620,7 +1620,7 @@ removidos da pipeline devido à **anonimização dos municípios nos microdados 
 
 **Horario:** ~ultima sessao
 **Fase:** Refatoracao do modulo 5 (regressao por itens brutos)
-**Status:** Concluido com sucesso (parse OK, sem execucao completa)
+**Status:** Refatoracao aplicada; bug de ordem detectado na revisao (detectar_raiz removida indevidamente no Item 6) e corrigido nesta mesma sessao; script validado via parse() e em run de sessao limpa.
 
 #### Atividades Realizadas
 
@@ -1639,6 +1639,7 @@ row(log_vif) (length de tibble = n. de colunas, nao linhas).
 _valid < MIN_RESP_ITEM recebem NA, e escolas que responderam apenas "A" ficam com prop 0 nas demais categorias (via alues_fill = 0 pivotando todas as categorias antes de descartar "A").
 - **Item 10 (convencao):** Grupo tematico "Variaveis Estruturais" agora lista os nomes reais das dummies (TIPO_ESCOLA_Privada, AREA_LOCAL_*) em vez de c("TIPO_ESCOLA","AREA","LOCALIZACAO"), e o str_detect do filtro usa ^TIPO_ESCOLA_|^AREA_LOCAL_.
 - **Item 11 (correcao menor):** IC 95% dos coeficientes agora via qt(0.975, df.residual(modelo)) em vez da aproximacao 1.96 * std.error. Altera os ICs nos CSVs coeficientes_*_itens e barras de erro das figuras (diferencas despreziveis com n ~ 2000 escuelas). Nota metodologica atualizada.
+- **Correcao (mesma sessao):** o Item 6 removeu detectar_raiz local, mas ela e pre-condicao do source() de utils_saeb.r (catch-22: precisa de RAIZ para sourcear, precisa de detectar_raiz para achar RAIZ). Restaurada a definicao local; tema_saeb permanece removida (correto).
 
 #### Desafios Encontrados
 
