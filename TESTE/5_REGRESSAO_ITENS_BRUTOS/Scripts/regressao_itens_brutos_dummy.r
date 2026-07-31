@@ -25,7 +25,7 @@
 #   - diagnosticos/diagnosticos_MT_itens / diagnosticos_LP_itens
 #   - figuras/diagnosticos_residuos_MT_itens / _LP_itens,
 #     preditos_vs_observados_MT_itens / _LP_itens,
-#     resumo_qualidade_ajuste_itens, mapa_calor_vif_itens,
+#     resumo_qualidade_ajuste_itens, mapa_calor_vif_MT_itens / _LP_itens,
 #     coef_grupo_MT_IMAGEMNN / coef_grupo_LP_IMAGEMNN (por grupo tematico)
 #   - modelos/modelo_MT_itens.rds / modelo_LP_itens.rds
 #
@@ -1270,17 +1270,26 @@ message("\n", strrep("-", 50))
 message("ETAPA 15: MAPA DE CALOR DOS VIFs FINAIS")
 message(strrep("-", 50))
 
-vif_final <- tryCatch(
-  car::vif(modelo_mt),
-  error = function(e) {
-    message("  [!] VIF nao pode ser calculado para o modelo final: ", conditionMessage(e))
-    NULL
-  }
-)
+# Funcao reutilizavel: gera o mapa de calor do VIF para um modelo.
+# Os conjuntos de preditoras finais sao identicos entre MT e LP (ambos
+# usam preditoras_finais), mas exibimos os dois mapas para documentar
+# que o VIF final respeita o limiar em cada modelo.
+gerar_mapa_vif <- function(modelo, nome_modelo, nome_arq) {
 
-if (is.null(vif_final) || length(vif_final) == 0L) {
-  message("  [!] Pulando mapa de calor VIF - sem preditoras suficientes.")
-} else {
+  vif_final <- tryCatch(
+    car::vif(modelo),
+    error = function(e) {
+      message("  [!] VIF nao pode ser calculado para ", nome_modelo,
+              ": ", conditionMessage(e))
+      NULL
+    }
+  )
+
+  if (is.null(vif_final) || length(vif_final) == 0L) {
+    message("  [!] Pulando mapa de calor VIF - ", nome_modelo,
+            " sem preditoras suficientes.")
+    return(invisible(NULL))
+  }
 
   if (is.matrix(vif_final)) vif_final <- vif_final[, 1]
 
@@ -1307,7 +1316,7 @@ if (is.null(vif_final) || length(vif_final) == 0L) {
     scale_y_continuous(breaks = c(1, 2, 5, LIMIAR_VIF)) +
     labs(
       title    = paste0("VIF das Preditoras Finais (Top ", n_barras,
-                        ") - Modelo MEDIA_MT"),
+                        ") - Modelo ", nome_modelo),
       subtitle = "Apos eliminacao iterativa: todas as preditoras mantidas tem VIF <= limiar",
       x        = NULL,
       y        = "Variance Inflation Factor (VIF)",
@@ -1318,12 +1327,14 @@ if (is.null(vif_final) || length(vif_final) == 0L) {
     theme(legend.position = "right")
 
   ggsave(
-    caminho_saida(DIR_BASE, "figuras", "mapa_calor_vif_itens", "png"),
+    caminho_saida(DIR_BASE, "figuras", nome_arq, "png"),
     p_vif, width = 12, height = max(8, n_barras * 0.25), dpi = 180, bg = "white"
   )
-  message("Figura salva: mapa_calor_vif_itens")
-
+  message("Figura salva: ", nome_arq)
 }
+
+gerar_mapa_vif(modelo_mt, "MEDIA_MT", "mapa_calor_vif_MT_itens")
+gerar_mapa_vif(modelo_lp, "MEDIA_LP", "mapa_calor_vif_LP_itens")
 
 # =============================================================================
 # SALVAR MODELOS RDS
