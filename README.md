@@ -26,6 +26,9 @@
 > Pipeline de **15 passos** em R (tidyverse), cobrindo limpeza, análise de grupos,
 > regressão linear, modelos hierárquicos, mediação, validação cruzada
 > e PCA. Outputs organizados em **pastas datadas** `outputs/<YYYY-MM-DD>/<tipo>/`.
+>
+> **Setup rápido**: [R 4.6.1 instalado](#-instalação-de-r-e-dependências) → 
+> `source("TESTE/1_LIMPEZA_E_TRANSFORMACAO/ajeitar_dados.r")` → próximos passos
 
 ---
 
@@ -45,7 +48,9 @@
 
 - [📋 Contexto](#-contexto)
 - [🗂️ Estrutura](#️-estrutura)
+- [⚙️ Instalação de R e Dependências](#️-instalação-de-r-e-dependências)
 - [🚀 Pipeline de Execução](#-pipeline-de-execução)
+- [📊 Resumo das Análises](#-resumo-das-análises)
 - [📊 Resumo das Análises](#-resumo-das-análises)
 - [✅ Progresso do Pipeline](#-progresso-do-pipeline)
 - [🛣️ Detecção Automática de Caminhos](#️-detecção-automática-de-caminhos)
@@ -61,10 +66,24 @@
 
 ## 📋 Contexto
 
-- **Dados**: 173.918 alunos, 2.338 escolas, 851 municípios de MG
-- **Disciplinas**: Matemática (MT) e Língua Portuguesa (LP)
-- **Foco**: Relação entre variáveis socioeconômicas e proficiência escolar
-- **Proxy socioeconômico**: `INSE_ALUNO` (score TRI do INEP), agregado por escola como `INSE_MEDIO`
+**Ambiente**:
+- **R**: 4.6.1 (2024-06-24) — instalado em `C:\Users\13756596699\AppData\Local\Programs\R\R-4.6.1`
+- **OS**: Windows 10/11
+- **Paradigma**: tidyverse (R moderno, pipe nativo `|>`)
+
+**Dados e Amostra**:
+- **Fonte**: INEP (Instituto Nacional de Estudos e Pesquisas Educacionais)
+- **Dataset**: SAEB 2023 (Minas Gerais apenas)
+- **Alunos**: 173.918 (3ª série do Ensino Médio)
+- **Escolas**: 2.338 | **Municípios**: 851
+
+**Disciplinas**:
+- `MEDIA_MT` — Matemática (proficiência média por escola)
+- `MEDIA_LP` — Língua Portuguesa (proficiência média por escola)
+
+**Proxy socioeconômico**:
+- `INSE_ALUNO` (score TRI do INEP, nível individual)
+- `INSE_MEDIO` (agregado por escola, usada nos modelos)
 
 > 💡 **Por que INSE e não itens brutos?**
 > O INSE já é a síntese TRI dos 72 itens do questionário, com calibração psicométrica publicada.
@@ -105,7 +124,48 @@ Legenda: ✅ migração concluída · ⏳ pendência Fase 3 (vide `diario.md`)
 
 ---
 
-## 🚀 Pipeline de Execução
+## ⚙️ Instalação de R e Dependências
+
+### Verificar R instalado
+
+```powershell
+# Verificar versão (deve estar instalado em C:\Users\<user>\AppData\Local\Programs\R\R-4.x.x\)
+& "C:\Users\13756596699\AppData\Local\Programs\R\R-4.6.1\bin\x64\Rscript.exe" --version
+
+# Resultado esperado:
+# Rscript (R) version 4.6.1 (2024-06-24)
+```
+
+### Instalar dependências via R
+
+Execute uma **única vez** (no PowerShell ou RStudio):
+
+```powershell
+# Via PowerShell
+C:\Users\13756596699\AppData\Local\Programs\R\R-4.6.1\bin\x64\R.exe --vanilla --quiet -e "install.packages(c('tidyverse','broom','patchwork','car','lmtest','shiny','dendextend','ggdendro'), repos='https://cloud.r-project.org'); cat('✓ All packages installed successfully!\n')"
+```
+
+Ou, **no RStudio**, cole na console:
+
+```r
+install.packages(c('tidyverse','broom','patchwork','car','lmtest','shiny','dendextend','ggdendro'))
+```
+
+**Dependências principais**:
+| Pacote | Uso | Versão |
+|--------|-----|--------|
+| `tidyverse` | Manipulação de dados + ggplot2 | ≥ 1.3 |
+| `broom` | Resumo de modelos (coeficientes, diagnósticos) | ≥ 0.8 |
+| `patchwork` | Composição de múltiplos gráficos | ≥ 1.1 |
+| `car` | Testes de multicolinearidade (VIF) | ≥ 3.1 |
+| `lmtest` | Testes de regressão (Breusch-Pagan, etc.) | ≥ 0.9 |
+| `shiny` | Dashboard interativo (opcional, PASSO 3) | ≥ 1.8 |
+| `dendextend` | Dendrogramas coloridos (PASSO 7) | ≥ 1.15 |
+| `ggdendro` | Wrapper ggplot2 para dendrogramas | ≥ 0.1 |
+
+Detalhes completos: [`TESTE/DOCUMENTACAO/requisitos.md`](TESTE/DOCUMENTACAO/requisitos.md)
+
+---
 
 ```mermaid
 graph TD
@@ -139,7 +199,22 @@ graph TD
 ```r
 source("TESTE/1_LIMPEZA_E_TRANSFORMACAO/ajeitar_dados.r")
 source("TESTE/2_ANALISE_POR_ESCOLA/Scripts/correlacao.r")
-shiny::runApp("TESTE/2_ANALISE_POR_ESCOLA/Scripts/graficos.r")  # opcional
+
+# Opcional: dashboard Shiny interativo
+shiny::runApp("TESTE/2_ANALISE_POR_ESCOLA/Scripts/graficos.r")
+```
+
+**Ou via terminal** (sem abrir R interativo):
+
+```powershell
+# PASSO 1
+C:\Users\13756596699\AppData\Local\Programs\R\R-4.6.1\bin\x64\Rscript.exe TESTE/1_LIMPEZA_E_TRANSFORMACAO/ajeitar_dados.r
+
+# PASSO 2
+C:\Users\13756596699\AppData\Local\Programs\R\R-4.6.1\bin\x64\Rscript.exe TESTE/2_ANALISE_POR_ESCOLA/Scripts/correlacao.r
+
+# PASSO 3 (opcional)
+C:\Users\13756596699\AppData\Local\Programs\R\R-4.6.1\bin\x64\Rscript.exe TESTE/2_ANALISE_POR_ESCOLA/Scripts/graficos.r
 ```
 
 ### Fase 2: Análise de Grupos (PASSO 4-7)
@@ -298,6 +373,8 @@ arq <- encontrar_arquivo_mais_recente(DIR_OUTPUTS, "base_escolas_agregada", "tab
 - ✅ Gráficos em DPI 600, fundo branco (qualidade para impressão)
 - ✅ Convenção sem acentos em strings/mensagens R (encoding Windows/UTF-8/Latin1)
 - ✅ Notas metodológicas nos scripts de decisão substantiva (PASSOS 7, 8, 9, 11-15)
+- ✅ Scripts executáveis via `Rscript` sem abrir R interativo
+- ✅ Detecção automática de caminhos em qualquer computador (função `detectar_raiz()`)
 
 ---
 
