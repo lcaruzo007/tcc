@@ -79,7 +79,7 @@ DIR_TESTE <- file.path(RAIZ, "TESTE")
 DIR_ANALISE <- file.path(DIR_TESTE, "3_ANALISE_DE_GRUPOS")
 DIR_OUTPUTS_ANALISE <- file.path(DIR_ANALISE, "outputs")
 
-DIR_BASE <- file.path(DIR_TESTE, "8_ANALISE_MEDIACAO")
+DIR_BASE <- file.path(DIR_TESTE, "6_ANALISE_MEDIACAO")
 
 source(file.path(RAIZ, "TESTE", "DOCUMENTACAO", "utils_saeb.r"))
 

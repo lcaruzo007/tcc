@@ -30,34 +30,44 @@ A Fase 5 substitui o INSE por seus itens brutos:
 
 ## 📁 Estrutura de Pastas
 
-> **Convenção de pastas datadas** (refatoração julho/2026): os outputs gerados
-> vão para `5_REGRESSAO_ITENS_BRUTOS/outputs/<YYYY-MM-DD>/<tipo>/<nome>_<HHMMSS>.<ext>`.
-> Os arquivos antigos deste módulo já foram migrados para pastas datadas
-> (vide `diario.md`). Os caminhos em `outputs_<tipo>/` listados abaixo
-> correspondem à estrutura LEGADA — mantida aqui para referência; serão
-> atualizados quando o script for migrado para o helper `caminho_saida()`
-> (Fase 3 pendente).
+> **Convenção de pastas datadas** (refatoração julho/2026): os outputs vão para
+> `5_REGRESSAO_ITENS_BRUTOS/outputs/<YYYY-MM-DD>/<tipo>/<nome>_<HHMMSS>.<ext>`
+> via helper `caminho_saida()` (migrado em 30/07). As figuras são organizadas em
+> subpastas por tipo (`figuras/<subtipo>/`). Diretórios `outputs_{modelos,
+> tabelas, diagnosticos, figuras}/` antigos são mantidos apenas para leitura de
+> arquivos legados.
 
 ```
 5_REGRESSAO_ITENS_BRUTOS/
 ├── Scripts/
-│   └── regressao_itens_brutos_dummy.r          [Script principal]
-├── outputs_diagnosticos/
-│   ├── vif_log_eliminacao_iterativa_*.txt      [Rastreamento VIF]
-│   └── missing_report_itens_*.txt              [Valores faltantes]
-├── outputs_tabelas/
-│   ├── base_escolas_itens_*.csv                [Dados agregados]
-│   ├── resumo_modelos_itens_*.csv              [R², RMSE, AIC, BIC]
-│   ├── coeficientes_MT_itens_*.csv             [Coeficientes + IC]
-│   └── coeficientes_LP_itens_*.csv
-├── outputs_figuras/
-│   ├── diagnosticos_residuos_MT_itens_*.png
-│   ├── diagnosticos_residuos_LP_itens_*.png
-│   ├── coeficientes_top_MT_itens_*.png         [Top 20 por |β|]
-│   ├── coeficientes_top_LP_itens_*.png
-│   ├── mapa_calor_vif_itens_*.png              [Multicolinearidade]
-│   └── missings_por_item_*.png
-└── README.md                                    [Este arquivo]
+│   ├── regressao_itens_brutos_dummy.r          [Script principal]
+│   └── NAO_regressao_itens_brutos_dummy_v2.r   [versão alternativa — não executar]
+└── outputs/
+    └── <YYYY-MM-DD>/                  (uma pasta por dia de execução)
+        ├── modelos/
+        │   ├── modelo_MT_itens_<HHMMSS>.rds
+        │   └── modelo_LP_itens_<HHMMSS>.rds
+        ├── tabelas/
+        │   ├── base_escolas_itens_<HHMMSS>.csv          [Dados agregados]
+        │   ├── resumo_modelos_itens_<HHMMSS>.csv        [R², RMSE, AIC, BIC]
+        │   ├── coeficientes_MT_itens_<HHMMSS>.csv       [Coeficientes + IC]
+        │   ├── coeficientes_LP_itens_<HHMMSS>.csv
+        │   ├── log_vif_removidos_<HHMMSS>.csv           [Rastreamento VIF iterativo]
+        │   ├── log_eliminadas_var0_<HHMMSS>.csv         [Variáveis de variância ~0]
+        │   ├── log_missings_itens_<HHMMSS>.csv          [Valores faltantes por item]
+        │   └── dicionario_perguntas_respostas_<HHMMSS>.txt
+        ├── diagnosticos/
+        │   ├── diagnosticos_MT_itens_<HHMMSS>.csv
+        │   └── diagnosticos_LP_itens_<HHMMSS>.csv
+        └── figuras/
+            ├── diagnosticos_residuos_MT_itens_<HHMMSS>.png
+            ├── diagnosticos_residuos_LP_itens_<HHMMSS>.png
+            ├── coeficientes_top_MT_itens_<HHMMSS>.png   [Top 20 por |β|]
+            ├── coeficientes_top_LP_itens_<HHMMSS>.png
+            ├── mapa_calor_vif_itens_<HHMMSS>.png        [Multicolinearidade]
+            ├── preditos_vs_observados_MT_itens_<HHMMSS>.png
+            ├── preditos_vs_observados_LP_itens_<HHMMSS>.png
+            └── resumo_qualidade_ajuste_itens_<HHMMSS>.png
 ```
 
 ---

@@ -86,8 +86,7 @@ Justificativas estatísticas das decisões metodológicas.
 
 ### Variáveis dummy
 - TIPO_ESCOLA: referência = Pública
-- AREA: referência = Capital
-- LOCALIZACAO: referência = Urbana
+- AREA_LOCAL: referência = Urbana_Capital (variável combinada de 4 categorias — urbano/rural × capital/interior)
 
 ### Normalização
 - INSE padronizado (z-score) para comparabilidade
@@ -118,29 +117,7 @@ Justificativas estatísticas das decisões metodológicas.
 | Multicolinearidade | Nenhuma | Severa → VIF |
 | Uso | Modelagem final | Exploração |
 
-## PASSO 11: Modelos Hierárquicos Lineares (HLM)
-
-### Objetivo
-Considerar estrutura aninhada dos dados (alunos dentro de escolas).
-
-### Metodologia
-1. **Modelo Nulo**: Intercepto aleatório por escola → calcula ICC
-2. **Modelo 1**: INSE_ALUNO como preditor fixo + intercepto aleatório
-3. **Modelo 2**: INSE individual + INSE médio da escola
-4. Comparação via Likelihood Ratio Test (ANOVA)
-5. R² marginal (efeitos fixos) e condicional (fixos + aleatórios)
-
-### ICC (Coeficiente de Correlação Intraclasse)
-- ICC > 20%: estrutura hierárquica forte — HLM necessário
-- ICC 10-20%: moderado — HLM recomendado
-- ICC < 10%: estrutura hierárquica fraca
-
-### Justificativa
-- Dados educacionais são inerentemente hierárquicos
-- Ignorar estrutura aninhada viola pressuposto de independência
-- Permite separar variância entre e dentro de escolas
-
-## PASSO 12: Análise de Mediação
+## PASSO 10: Análise de Mediação
 
 ### Objetivo
 Testar se INSE media o efeito de variáveis de contexto sobre a proficiência.
@@ -148,69 +125,15 @@ Testar se INSE media o efeito de variáveis de contexto sobre a proficiência.
 ### Metodologia
 1. **Caminho A**: Variável independente → INSE (mediador)
 2. **Caminho B + C'**: INSE + variável independente → Proficiência
-3. **Efeito indireto** (A × B): bootstrap com 1000 simulações
+3. **Efeito indireto** (A × B): bootstrap BCa com 1000 simulações (Preacher & Hayes, 2008)
 4. **Proporção mediada**: |indireto| / |total| × 100
 
 ### Análises
-- TIPO_ESCOLA → INSE → Proficiência (MT e LP)
-- LOCALIZACAO → INSE → Proficiência (MT e LP)
+- TIPO_ESCOLA → INSE → Proficiência (MT e LP; referência: Pública)
+- AREA_LOCAL → INSE → Proficiência (MT e LP; 3 dummies — `Rural_Interior`, `Rural_Capital`, `Urbana_Interior` — com referência `Urbana_Capital`)
 
 ### Justificativa
 - Responde: "Escolas privadas têm melhor desempenho PORQUE têm INSE maior?"
 - Separa efeito direto (tipo de escola) do efeito indireto (via INSE)
 - Informa políticas públicas: focar em INSE reduz diferença?
 
-## PASSO 13: Validação Cruzada + Curva ROC
-
-### Objetivo
-Avaliar qualidade preditiva dos modelos e capacidade de classificação.
-
-### Metodologia
-
-#### Validação Cruzada (Regressão)
-- 10-fold CV estratificado por tipo de escola
-- Métricas: RMSE, MAE, R² por fold
-- Média e desvio padrão das métricas
-
-#### Curva ROC (Classificação)
-- Define "alto desempenho" como top 25% de proficiência
-- Modelo logístico com preditores: INSE, TIPO_ESCOLA, LOCALIZACAO, AREA
-- AUC com IC 95% (bootstrap)
-
-### Interpretação do AUC
-- AUC > 0.8: excelente discriminação
-- AUC 0.7-0.8: boa discriminação
-- AUC 0.6-0.7: discriminação moderada
-- AUC < 0.6: discriminação fraca
-
-### Justificativa
-- Testa robustez e generalização dos modelos
-- Evita overfitting
-- Quantifica capacidade de prever "alto desempenho"
-
-## PASSO 15: Índice Composto de Vulnerabilidade (PCA)
-
-### Objetivo
-Criar indicador próprio combinando variáveis socioeconômicas e de proficiência.
-
-### Metodologia
-1. Inverte variáveis (menor proficiência = maior vulnerabilidade)
-2. Padroniza todas as variáveis (z-score)
-3. Executa PCA com 5 componentes
-4. Retém componentes até explicar ≥ 80% da variância
-5. PC1 como índice composto (maior variância explicada)
-6. Normaliza para escala 0-100
-7. Classifica em 4 níveis: Muito Baixa, Baixa, Alta, Muito Alta
-
-### Variáveis no PCA
-- INV_MT: -MEDIA_MT (inverso da proficiência MT)
-- INV_LP: -MEDIA_LP (inverso da proficiência LP)
-- INV_INSE: -INSE_MEDIO (inverso do INSE)
-- TIPO_PRIVADA: escola privada (0/1)
-- LOCAL_RURAL: escola rural (0/1)
-
-### Justificativa
-- INSE é índice sintético do INEP, mas pode não capturar todas as dimensões
-- Índice próprio permite combinar variáveis de forma transparente
-- Útil para classificação de escolas por vulnerabilidade
-- Informa políticas de intervenção direcionada

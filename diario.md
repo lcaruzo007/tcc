@@ -1,8 +1,8 @@
 # 📔 Diário de Desenvolvimento — TCC
 
 **Título:** Impacto Socioeconômico na Proficiência SAEB  
-**Período:** 06 de Abril — 27 de Maio de 2026  
-**Status:** 🚀 Em Desenvolvimento — validação final em andamento
+**Período:** 06 de Abril de 2026 — em andamento  
+**Status:** 🚀 Em Desenvolvimento — pipeline enxuto de 10 passos
 
 ---
 
@@ -1662,4 +1662,114 @@ _valid_escola via summarise e fazendo left_join apos o pivot.
 - [ ] Confirmar que log_missings_itens.csv e o novo formato de log_vif_removidos sao uteis para o TCC
 
 ---
+
+### 21 de Agosto de 2026
+
+**Horario:** sessao de revisao/organizacao
+**Fase:** Refatoracao #3 — pipeline enxuto (remocao de HLM, CV e PCA) + renumeracao 7->6 + atualizacao de docs
+**Status:** Concluido com sucesso (alteracoes em working tree, a commitar nesta sessao)
+
+#### Contexto
+
+Apos a apresentacao/banca, o TCC foi reescrito para focar no eixo principal
+(limpeza -> agrupamento -> regressao -> mediacao). Os modulos avancados que
+dependiam de infraestrutura ou nao se sustentavam metodologicamente com os
+dados do SAEB foram retirados:
+
+- **6_MODELOS_HIERARQUICOS** (HLM, PASSO 11) — removido
+- **8_MODELOS_HIERARQUICOS** (duplicata orfa do HLM, com outputs de 2026-08-18) — removido
+- **9_VALIDACAO_CRUZADA** (CV + ROC, PASSO 13) — removido
+- **11_INDICE_COMPOSTO** (PCA, PASSO 15) — ja havia saido em commit anterior; confirmada a ausencia
+
+Restam **6 modulos** (1-6) e **10 passos** sequenciais.
+
+#### Atividades Realizadas
+
+##### 1. Renumeracao `7_ANALISE_MEDIACAO` -> `6_ANALISE_MEDIACAO`
+
+- `git mv` da pasta (preserva historico); fechamento do gap deixado pela
+  remocao dos modulos 6/8/9 (convencao "remover lacunas", commit 4ed021d).
+- Correcao de bug no script `analise_mediacao.r` (linha 82): `DIR_BASE`
+  apontava para `"8_ANALISE_MEDIACAO"` (path quebrado, herdado da
+  renumeracao anterior) -> corrigido para `"6_ANALISE_MEDIACAO"`.
+- Reescrita do `README.md` do modulo 6: path de `source()`, titulo
+  (PASSO 10), saidas em pastas datadas, e atualizacao da secao "Analises"
+  para refletir `AREA_LOCAL` (3 dummies, ref. `Urbana_Capital`) em vez de
+  `LOCALIZACAO`.
+
+##### 2. Confirmacao da migracao do modulo 5
+
+- Inspecionado `regressao_itens_brutos_dummy.r`: o script JA usa
+  `caminho_saida()` em todas as escritas (migrado na refatoracao de 30/07;
+  os `DIR_*` legacy sao mantidos apenas para leitura de arquivos antigos).
+- `README.md` do modulo 5 atualizado: removida a nota falsa "Fase 3
+  pendente" e a arvore de pastas reescrita para o formato datado
+  (`outputs/<YYYY-MM-DD>/{modelos,tabelas,diagnosticos,figuras}/`).
+
+##### 3. Atualizacao da documentacao (refletir "como tudo esta agora")
+
+- `README.md` raiz: badges (pipeline 15 -> 10 passos), TL;DR, cartoes,
+  arvore de estrutura, fluxograma mermaid, comandos `source()`, tabela de
+  resumo, tabela de progresso, changelog (entrada 4.0) e roadmap. Removidas
+  todas as referencias a HLM/CV/PCA. Dependencias atualizadas (inclui
+  `data.table`, `caret`, `mediation`, `boot`).
+- `AGENTS.md`: arvore de estrutura (6 modulos) e secao "Estado atual"
+  (Agosto 2026) — pipeline enxuto, modulos 4/5/6 com `caminho_saida()`,
+  so modulo 3 pendente.
+- `TESTE/DOCUMENTACAO/README.md`: fluxo de dados, tabela de fases e ordem
+  de execucao reescritos para 10 passos.
+- `TESTE/DOCUMENTACAO/metodologia.md`: PASSO 8 (dummies -> `AREA_LOCAL`),
+  remocao de HLM (PASSO 11), CV (PASSO 13) e PCA (PASSO 15); renumeracao
+  da mediacao (PASSO 12 -> PASSO 10) com `AREA_LOCAL` e bootstrap BCa.
+- `TESTE/DOCUMENTACAO/referencia_outputs.md`: removidas as secoes de HLM,
+  CV e PCA; mediacao renumerada (PASSO 10) com paths `6_ANALISE_MEDIACAO`.
+- `TESTE/DOCUMENTACAO/requisitos.md`: removidos pacotes exclusivos dos
+  modulos cortados (`lme4`, `performance`, `lmerTest`, `pROC`,
+  `FactoMineR`, `factoextra`); tabela de versoes atualizada (mediacao =
+  Fase 10).
+
+##### 4. Commit das remocoes + renumeracao + docs
+
+- As delecoes dos modulos 6/8/9 (ja na working tree) + a renumeracao 7->6
+  + todas as edicoes de docs serao commitadas nesta sessao.
+
+#### Decisoes e limitacoes
+
+- **Figuras**: o PASSO 10 (mediacao) ainda emite "Figura 21" e "Figura 22"
+  (hardcoded no script). Nao renumerei para 15-16 para nao editar a logica
+  do script nem quebrar possiveis referencias no texto do TCC. Renumeracao
+  de figuras deixada no roadmap.
+- **`detectar_raiz()` x `source(utils_saeb.r)`**: pre-condicao circular
+  conhecida no modulo 6 (mediacao chama `detectar_raiz()` antes de
+  `source(utils_saeb.r)`; funciona em sessao RStudio com utils carregado,
+  pode falhar em `Rscript` limpo). Nao corrigida nesta sessao (fora do
+  escopo de "atualizar docs"); registrada no roadmap.
+- **Modulo 3** continua pendente de migracao para `caminho_saida()` (Fase 3).
+- **Acentos**: scripts R continuam sem acentos (convencao). Os `.md`
+  reescritos por inteiro (README raiz, DOCUMENTACAO/README, README do
+  modulo 6) ficaram sem acentos; os `.md` editados pontualmente
+  (metodologia, referencia_outputs, requisitos, README do modulo 5)
+  preservaram o estilo acentuado original de cada arquivo.
+
+#### Resultados
+
+- Estrutura final: `1_LIMPEZA`, `2_ANALISE_POR_ESCOLA`, `3_ANALISE_DE_GRUPOS`,
+  `4_REGRESSAO_LINEAR`, `5_REGRESSAO_ITENS_BRUTOS`, `6_ANALISE_MEDIACAO`.
+- Pipeline de 10 passos, sequencial, sem gaps.
+- Documentacao alinhada ao estado real do repositorio.
+
+#### Proximos Passos
+
+- [ ] Validar `analise_mediacao.r` em RStudio (apos a correcao do path `8_` -> `6_`)
+- [ ] Corrigir ordem `detectar_raiz()` x `source(utils_saeb.r)` no modulo 6
+- [ ] Fase 3: migrar scripts do modulo 3 para `caminho_saida()`
+- [ ] Renumerar figuras do PASSO 10 (21-22 -> 15-16) para sequencia continua
+- [ ] Limpar acentos/emojis dos scripts dos modulos 1 e 2
+- [ ] Redacao final do TCC
+
+---
+
+**Atualizado:** 21 de Agosto de 2026  
+**Status:** Refatoracao #3 concluida — pipeline enxuto de 10 passos, modulos HLM/CV/PCA removidos, mediacao renumerada para 6  
+**Proxima etapa:** Validacao em RStudio + redacao final do TCC
 

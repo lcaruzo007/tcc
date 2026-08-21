@@ -147,38 +147,9 @@ Coeficientes dos ~150 itens mantidos após VIF.
 ### `5_REGRESSAO_ITENS_BRUTOS/outputs/figuras/coeficientes_top_MT_itens_*.png`
 Top 20 variáveis por magnitude do efeito.
 
-## PASSO 11: Modelos Hierárquicos
+## PASSO 10: Análise de Mediação
 
-### `7_MODELOS_HIERARQUICOS/outputs/tabelas/icc_*.csv`
-Coeficiente de correlação intraclasse.
-
-| Coluna | Descrição |
-|--------|-----------|
-| Disciplina | Matemática ou Língua Portuguesa |
-| ICC | Coeficiente de correlação intraclasse |
-| Variância_Entre_Escolas | % da variância entre escolas |
-| Variância_Dentro_Escola | % da variância dentro de escolas |
-| Interpretação | Alto / Moderado / Baixo |
-
-### `7_MODELOS_HIERARQUICOS/outputs/tabelas/resumo_hlm_*.csv`
-Comparação de modelos hierárquicos.
-
-| Coluna | Descrição |
-|--------|-----------|
-| Modelo | Nulo / Modelo 1 / Modelo 2 |
-| AIC_MT / AIC_LP | Critério de informação |
-| R2_Marginal_MT / R2_Marginal_LP | Variância explicada por efeitos fixos |
-| R2_Condicional_MT / R2_Condicional_LP | Variância explicada por fixos + aleatórios |
-
-### `7_MODELOS_HIERARQUICOS/outputs/figuras/icc_varianca_*.png`
-Figura 19: Decomposição da variância (ICC).
-
-### `7_MODELOS_HIERARQUICOS/outputs/figuras/efeitos_aleatorios_*.png`
-Figura 20: Efeitos aleatórios por escola (Top 20).
-
-## PASSO 12: Análise de Mediação
-
-### `8_ANALISE_MEDIACAO/outputs/tabelas/mediacao_*.csv`
+### `6_ANALISE_MEDIACAO/outputs/tabelas/mediacao_*.csv`
 Efeitos direto, indireto e total.
 
 | Coluna | Descrição |
@@ -191,76 +162,8 @@ Efeitos direto, indireto e total.
 | Efeito_Total | Efeito total (c' + a×b) |
 | Proporcao_Mediada | % do efeito mediado por INSE |
 
-### `8_ANALISE_MEDIACAO/outputs/figuras/caminhos_mediacao_MT_*.png`
+### `6_ANALISE_MEDIACAO/outputs/figuras/caminhos_mediacao_MT_*.png`
 Figura 21: Diagrama de caminhos (MT).
 
-### `8_ANALISE_MEDIACAO/outputs/figuras/caminhos_mediacao_LP_*.png`
+### `6_ANALISE_MEDIACAO/outputs/figuras/caminhos_mediacao_LP_*.png`
 Figura 22: Diagrama de caminhos (LP).
-
-## PASSO 13: Validação Cruzada
-
-### `9_VALIDACAO_CRUZADA/outputs/tabelas/cv_resultados_*.csv`
-Métricas por fold.
-
-| Coluna | Descrição |
-|--------|-----------|
-| Fold | Número do fold (1-10) |
-| Disciplina | Matemática ou Língua Portuguesa |
-| RMSE | Erro quadrático médio |
-| MAE | Erro absoluto médio |
-| R2 | Coeficiente de determinação |
-
-### `9_VALIDACAO_CRUZADA/outputs/tabelas/cv_resumo_*.csv`
-Resumo com AUC e IC 95%.
-
-| Coluna | Descrição |
-|--------|-----------|
-| Disciplina | Matemática ou Língua Portuguesa |
-| RMSE_Medio / RMSE_SD | Média e desvio padrão do RMSE |
-| MAE_Medio | Erro absoluto médio |
-| R2_Medio / R2_SD | Média e desvio padrão do R² |
-| AUC | Área sob a curva ROC |
-| AUC_IC_inf / AUC_IC_sup | Intervalo de confiança 95% |
-
-### `9_VALIDACAO_CRUZADA/outputs/figuras/roc_curve_MT_*.png`
-Figura 23: Curva ROC (MT).
-
-### `9_VALIDACAO_CRUZADA/outputs/figuras/roc_curve_LP_*.png`
-Figura 24: Curva ROC (LP).
-
-### `9_VALIDACAO_CRUZADA/outputs/figuras/cv_metricas_*.png`
-Figura 25: Métricas de validação cruzada por fold.
-
-## PASSO 15: Índice Composto
-
-### `11_INDICE_COMPOSTO/outputs/tabelas/indice_composto_*.csv`
-Scores do índice por escola.
-
-| Coluna | Descrição |
-|--------|-----------|
-| ID_ESCOLA | Identificador |
-| TIPO_ESCOLA | Pública / Privada |
-| LOCALIZACAO | Urbana / Rural |
-| MEDIA_MT / MEDIA_LP | Proficiência |
-| INSE_MEDIO | Nível socioeconômico |
-| IC_VULN | Score bruto do índice |
-| IC_VULN_NORM | Score normalizado (0-100) |
-| NIVEL_VULN | Muito Baixa / Baixa / Alta / Muito Alta |
-
-### `11_INDICE_COMPOSTO/outputs/tabelas/pca_contribuicoes_*.csv`
-Contribuição de cada variável para o PC1.
-
-| Coluna | Descrição |
-|--------|-----------|
-| Variavel | Nome da variável |
-| Contribuicao_PC1 | % de contribuição para PC1 |
-| Cos2_PC1 | Qualidade da representação |
-
-### `11_INDICE_COMPOSTO/outputs/figuras/pca_scree_*.png`
-Figura 29: Scree plot (variância por componente).
-
-### `11_INDICE_COMPOSTO/outputs/figuras/pca_biplot_*.png`
-Figura 30: Biplot PCA (variáveis + escolas).
-
-### `11_INDICE_COMPOSTO/outputs/figuras/indice_mapa_distribuicao_*.png`
-Figura 31: Distribuição do índice de vulnerabilidade.

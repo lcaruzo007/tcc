@@ -25,15 +25,9 @@ pkgs <- c(
   "car",          # VIF, Durbin-Watson
   "lmtest",       # Breusch-Pagan
   
-  # Análises avançadas (PASSO 11-15)
-  "lme4",         # modelos hierárquicos (PASSO 11)
-  "performance",  # R², ICC (PASSO 11)
-  "lmerTest",     # testes para HLM (PASSO 11)
-  "mediation",    # análise de mediação (PASSO 12)
-  "boot",         # bootstrap (PASSO 12)
-  "pROC",         # curva ROC (PASSO 13)
-  "FactoMineR",   # PCA (PASSO 15)
-  "factoextra"    # visualização PCA (PASSO 15)
+  # Mediação (PASSO 10)
+  "mediation",    # análise de mediação bootstrap
+  "boot"          # bootstrap
 )
 install.packages(pkgs[!pkgs %in% rownames(installed.packages())])
 ```
@@ -55,14 +49,12 @@ sapply(pkgs, require, character.only = TRUE)
 | shiny | 1.6.0 | 3 |
 | dendextend | 1.16.0 | 3, 7 |
 | ggdendro | 0.1.23 | 3, 7 |
-| lme4 | 1.1.27 | 11 |
-| performance | 0.8.0 | 11 |
-| lmerTest | 3.1.3 | 11 |
-| mediation | 4.5.0 | 12 |
-| boot | 1.3.28 | 12 |
-| pROC | 1.18.0 | 13 |
-| FactoMineR | 2.8.0 | 15 |
-| factoextra | 1.0.7 | 15 |
+| broom | 0.8.0 | 8-9 |
+| patchwork | 1.1.0 | 8-9 |
+| car | 3.1.0 | 8-9 |
+| lmtest | 0.9.0 | 8-9 |
+| mediation | 4.5.0 | 10 |
+| boot | 1.3.28 | 10 |
 
 ## Troubleshooting
 

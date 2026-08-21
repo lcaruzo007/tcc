@@ -46,10 +46,7 @@ tcc/
     +-- 3_ANALISE_DE_GRUPOS/              PASSO 4-7
     +-- 4_REGRESSAO_LINEAR/               PASSO 8
     +-- 5_REGRESSAO_ITENS_BRUTOS/         PASSO 9
-    +-- 7_MODELOS_HIERARQUICOS/           PASSO 11 (HLM)
-    +-- 8_ANALISE_MEDIACAO/               PASSO 12
-    +-- 9_VALIDACAO_CRUZADA/              PASSO 13
-    +-- 11_INDICE_COMPOSTO/               PASSO 15 (PCA)
+    +-- 6_ANALISE_MEDIACAO/               PASSO 10 (mediacao INSE)
 ```
 
 ## Conventoes OBRIGATORIAS
@@ -121,15 +118,21 @@ capital/interior identificada como lacuna na apresentacao do TCC.
 - Nao commitar secrets/credenciais. Nao commitar arquivos `outputs/` (sao
   regeneraveis). Use `git status` antes de commitar.
 
-## Estado atual (Julho 2026)
+## Estado atual (Agosto 2026)
 
-- Scripts dos modulos 4, 7, 8, 9, 11 ja usam `caminho_saida()`
-  (pastas datadas).
-- Modulo 3 (classificar_escolas, comparar_grupos, dendrograma) e modulo 5
-  (regressao_itens_brutos_dummy) ainda usam o padrao antigo de sufixo -
-  pendentes de migracao para `caminho_saida()` (Fase 3).
+- Pipeline enxuto de **10 passos** em **6 modulos** (1-6). Os modulos de HLM
+  (modelos hierarquicos), validacao cruzada + ROC e indice composto (PCA)
+  foram removidos — o TCC foca no eixo limpeza -> agrupamento -> regressao
+  -> mediacao (vide `diario.md`, entrada ago/2026).
+- Scripts dos modulos 4, 5 e 6 ja usam `caminho_saida()` (pastas datadas).
+- Modulo 3 (classificar_escolas, comparar_grupos, dendrograma) ainda usa o
+  padrao antigo de sufixo — pendente de migracao para `caminho_saida()`
+  (Fase 3). O script do modulo 5 foi migrado na refatoracao de 30/07.
 - Outputs antigos dos modulos 3, 4, 5 ja foram migrados para pastas datadas
   (organizadas por data da run; vide `diario.md`).
+- Modulo 6 (`analise_mediacao.r`): conhecido — `detectar_raiz()` e chamada
+  antes de `source(utils_saeb.r)` (pode falhar em `Rscript` limpo; funciona em
+  sessao RStudio com utils ja carregado). Pendente de correcao de ordem.
 
 ## Fontes de verdade
 
