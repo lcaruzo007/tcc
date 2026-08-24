@@ -26,7 +26,7 @@ detectar_raiz <- function() {
 RAIZ <- detectar_raiz()
 DIR_MODULO <- file.path(RAIZ, "TESTE", "3_ANALISE_DE_GRUPOS")
 source(file.path(RAIZ, "TESTE", "DOCUMENTACAO", "utils_saeb.r"))
-source(file.path(DIR_MODULO, "Scripts", "base_dendrograma.r"))
+source(file.path(DIR_MODULO, "Scripts", "base_dendrograma_artigo.r"))
 
 VARS_CLUSTER <- c("MEDIA_MT", "MEDIA_LP", "INSE_MEDIO")
 N_CLUSTERS <- 2L
