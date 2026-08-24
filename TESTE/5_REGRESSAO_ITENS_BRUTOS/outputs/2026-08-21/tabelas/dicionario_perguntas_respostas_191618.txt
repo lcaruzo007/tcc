@@ -1,0 +1,543 @@
+================================================================================
+DICIONARIO DE PERGUNTAS E RESPOSTAS - QUESTIONARIO SOCIOECONOMICO SAEB 2023
+================================================================================
+Fonte: MICRODADOS_SAEB_2023/INPUTS/INPUT_R_TS_ALUNO_34EM.R (INEP)
+Normalizado para ASCII puro. Categoria A = referencia (omitida das dummies).
+Itens presentes no modelo final aparecem marcados com [*].
+
+Total de itens: 72
+
+---- TX_RESP_Q01 [*] ----
+Pergunta: Qual e o seu sexo?
+Categorias:
+  A = Masculino
+  B = Feminino
+  C = Nao quero declarar
+
+---- TX_RESP_Q02 [*] ----
+Pergunta: Qual e a sua idade?
+Categorias:
+  A = 16 anos ou menos
+  B = 17 anos
+  C = 18 anos
+  D = 19 anos
+  E = 20 anos
+  F = 21 anos ou mais
+
+---- TX_RESP_Q03 ----
+Pergunta: Qual lingua que seus pais falam com mais frequencia em casa?
+Categorias:
+  A = Portugues
+  B = Espanhol
+  C = Lingua de Sinais
+  D = Outra lingua
+
+---- TX_RESP_Q04 [*] ----
+Pergunta: Qual e a sua cor ou raca?
+Categorias:
+  A = Branca
+  B = Preta
+  C = Parda
+  D = Amarela
+  E = Indigena
+  F = Nao quero declarar
+
+---- TX_RESP_Q05a ----
+Pergunta: Voce possui deficiencia, transtorno do espectro autista ou superdotacao? - Deficiencia.
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q05b ----
+Pergunta: Voce possui deficiencia, transtorno do espectro autista ou superdotacao? - Transtorno do espectro autista.
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q05c [*] ----
+Pergunta: Voce possui deficiencia, transtorno do espectro autista ou superdotacao? - Altas habilidades ou superdotacao.
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q06 [*] ----
+Pergunta: Quantas pessoas moram na sua casa, contando com voce?
+Categorias:
+  A = 2 pessoas
+  B = 3 pessoas
+  C = 4 pessoas
+  D = 5 pessoas
+  E = 6 pessoas ou mais
+
+---- TX_RESP_Q07a [*] ----
+Pergunta: Normalmente, quem mora na sua casa? - Mae(s) ou madrasta(s).
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q07b [*] ----
+Pergunta: Normalmente, quem mora na sua casa? - Pai(s) ou padrasto(s).
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q07c [*] ----
+Pergunta: Normalmente, quem mora na sua casa? - Avo(s).
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q07d [*] ----
+Pergunta: Normalmente, quem mora na sua casa? - Avo(s).
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q07e [*] ----
+Pergunta: Normalmente, quem mora na sua casa? - Outros familiares, irmaos(as), tios(as), primos(as) etc.
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q08 [*] ----
+Pergunta: Qual e a maior escolaridade da sua mae (ou madrasta ou mulher responsavel por voce)?
+Categorias:
+  A = Nao completou o 5 ano do Ensino Fundamental
+  B = Ensino Fundamental, ate o 5 ano
+  C = Ensino Fundamental completo
+  D = Ensino Medio completo
+  E = Ensino Superior completo (faculdade ou graduacao)
+  F = Nao sei
+
+---- TX_RESP_Q09 [*] ----
+Pergunta: Qual e a maior escolaridade de seu pai (ou padrasto homem responsavel por voce)?
+Categorias:
+  A = Nao completou o 5 ano do Ensino Fundamental
+  B = Ensino Fundamental, ate o 5 ano
+  C = Ensino Fundamental completo
+  D = Ensino Medio completo
+  E = Ensino Superior completo (faculdade ou graduacao)
+  F = Nao sei
+
+---- TX_RESP_Q10a [*] ----
+Pergunta: Com que frequencia seus pais ou responsaveis costumam: - Ler em casa.
+Categorias:
+  A = Nunca ou quase nunca
+  B = De vez em quando
+  C = Sempre ou quase sempre
+
+---- TX_RESP_Q10b [*] ----
+Pergunta: Com que frequencia seus pais ou responsaveis costumam: - Conversar com voce sobre o que acontece na escola.
+Categorias:
+  A = Nunca ou quase nunca
+  B = De vez em quando
+  C = Sempre ou quase sempre
+
+---- TX_RESP_Q10c [*] ----
+Pergunta: Com que frequencia seus pais ou responsaveis costumam: - Incentivar voce a estudar.
+Categorias:
+  A = Nunca ou quase nunca
+  B = De vez em quando
+  C = Sempre ou quase sempre
+
+---- TX_RESP_Q10d [*] ----
+Pergunta: Com que frequencia seus pais ou responsaveis costumam: - Incentivar voce a fazer a tarefa de casa.
+Categorias:
+  A = Nunca ou quase nunca
+  B = De vez em quando
+  C = Sempre ou quase sempre
+
+---- TX_RESP_Q10e [*] ----
+Pergunta: Com que frequencia seus pais ou responsaveis costumam: - Incentivar voce a comparecer as aulas.
+Categorias:
+  A = Nunca ou quase nunca
+  B = De vez em quando
+  C = Sempre ou quase sempre
+
+---- TX_RESP_Q10f [*] ----
+Pergunta: Com que frequencia seus pais ou responsaveis costumam: - Ir as reunioes de pais na escola.
+Categorias:
+  A = Nunca ou quase nunca
+  B = De vez em quando
+  C = Sempre ou quase sempre
+
+---- TX_RESP_Q11a [*] ----
+Pergunta: Na rua em que voce mora tem: - Asfalto ou calcamento.
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q11b [*] ----
+Pergunta: Na rua em que voce mora tem: - Agua tratada.
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q11c [*] ----
+Pergunta: Na rua em que voce mora tem: - Iluminacao.
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q12a [*] ----
+Pergunta: Dos itens relacionados abaixo, quantos existem na sua casa? - Geladeira.
+Categorias:
+  A = Nenhum
+  B = 1
+  C = 2
+  D = 3 ou mais
+
+---- TX_RESP_Q12b [*] ----
+Pergunta: Dos itens relacionados abaixo, quantos existem na sua casa? - Computador (ou notebook).
+Categorias:
+  A = Nenhum
+  B = 1
+  C = 2
+  D = 3 ou mais
+
+---- TX_RESP_Q12c [*] ----
+Pergunta: Dos itens relacionados abaixo, quantos existem na sua casa? - Quartos para dormir.
+Categorias:
+  A = Nenhum
+  B = 1
+  C = 2
+  D = 3 ou mais
+
+---- TX_RESP_Q12d [*] ----
+Pergunta: Dos itens relacionados abaixo, quantos existem na sua casa? - Televisao.
+Categorias:
+  A = Nenhum
+  B = 1
+  C = 2
+  D = 3 ou mais
+
+---- TX_RESP_Q12e [*] ----
+Pergunta: Dos itens relacionados abaixo, quantos existem na sua casa? - Banheiro.
+Categorias:
+  A = Nenhum
+  B = 1
+  C = 2
+  D = 3 ou mais
+
+---- TX_RESP_Q12f [*] ----
+Pergunta: Dos itens relacionados abaixo, quantos existem na sua casa? - Carro.
+Categorias:
+  A = Nenhum
+  B = 1
+  C = 2
+  D = 3 ou mais
+
+---- TX_RESP_Q12g [*] ----
+Pergunta: Dos itens relacionados abaixo, quantos existem na sua casa? - Celular com internet (smartphone).
+Categorias:
+  A = Nenhum
+  B = 1
+  C = 2
+  D = 3 ou mais
+
+---- TX_RESP_Q13a [*] ----
+Pergunta: Na sua casa tem: - Tv por internet (Netflix, GloboPlay, etc.).
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q13b [*] ----
+Pergunta: Na sua casa tem: - Rede Wi-Fi.
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q13c [*] ----
+Pergunta: Na sua casa tem: - Um quarto so seu.
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q13d [*] ----
+Pergunta: Na sua casa tem: - Mesa para estudar.
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q13e [*] ----
+Pergunta: Na sua casa tem: - Forno de microondas.
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q13f [*] ----
+Pergunta: Na sua casa tem: - Aspirador de po.
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q13g [*] ----
+Pergunta: Na sua casa tem: - Maquina de lavar roupa.
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q13h [*] ----
+Pergunta: Na sua casa tem: - Freezer (independente ou segunda porta da geladeira).
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q13i [*] ----
+Pergunta: Na sua casa tem: - Garagem.
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q14 [*] ----
+Pergunta: Quanto tempo voce demora para chegar a sua escola?
+Categorias:
+  A = Menos de 30 minutos
+  B = Entre 30 minutos e uma hora
+  C = Mais de uma hora
+
+---- TX_RESP_Q15a [*] ----
+Pergunta: Voce utiliza para ir a escola: - Transporte gratuito escolar.
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q15b [*] ----
+Pergunta: Voce utiliza para ir a escola: - Passe escolar.
+Categorias:
+  A = Nao
+  B = Sim
+
+---- TX_RESP_Q16 [*] ----
+Pergunta: Considerando a maior distancia percorrida, normalmente de que forma voce chega a sua escola?
+Categorias:
+  A = A pe
+  B = De bicicleta
+  C = De Van (ou Kombi)
+  D = De onibus
+  E = De metro (ou trem urbano)
+  F = De carro
+  G = De barco
+  H = De motocicleta
+  I = Outro meio de transporte
+
+---- TX_RESP_Q17 [*] ----
+Pergunta: Com que idade voce entrou na escola?
+Categorias:
+  A = 3 anos ou menos
+  B = 4 ou 5 anos
+  C = 6 ou 7 anos
+  D = 8 anos ou mais
+
+---- TX_RESP_Q18 [*] ----
+Pergunta: A partir do primeiro ano do ensino fundamental, em que tipo de escola voce estudou?
+Categorias:
+  A = Somente em escola publica
+  B = Somente em escola particular
+  C = Em escola publica e em escola particular
+
+---- TX_RESP_Q19 [*] ----
+Pergunta: Voce ja foi reprovado(a)?
+Categorias:
+  A = Nao
+  B = Sim, uma vez
+  C = Sim, duas vezes ou mais
+
+---- TX_RESP_Q20 [*] ----
+Pergunta: Alguma vez voce abandonou a escola deixando de frequenta-la ate o final do ano escolar?
+Categorias:
+  A = Nunca
+  B = Sim, uma vez
+  C = Sim, duas vezes ou mais
+
+---- TX_RESP_Q21a [*] ----
+Pergunta: Fora da escola em dias de aula, quanto tempo voce usa para: - Estudar (licao de casa, trabalhos escolares, etc.).
+Categorias:
+  A = Nao uso meu tempo para isso.
+  B = Menos de 1 hora.
+  C = Entre 1 e 2 horas.
+  D = Mais de 2 horas.
+
+---- TX_RESP_Q21b [*] ----
+Pergunta: Fora da escola em dias de aula, quanto tempo voce usa para: - Fazer cursos ou atividades extracurriculares (idioma, artes, informatica etc.).
+Categorias:
+  A = Nao uso meu tempo para isso
+  B = Menos de 1 hora
+  C = Entre 1 e 2 horas
+  D = Mais de 2 horas
+
+---- TX_RESP_Q21c [*] ----
+Pergunta: Fora da escola em dias de aula, quanto tempo voce usa para: - Trabalhar em casa (lavar louca, limpar quintal, cuidar dos irmaos, etc.).
+Categorias:
+  A = Nao uso meu tempo para isso
+  B = Menos de 1 hora
+  C = Entre 1 e 2 horas
+  D = Mais de 2 horas
+
+---- TX_RESP_Q21d [*] ----
+Pergunta: Fora da escola em dias de aula, quanto tempo voce usa para: - Trabalhar fora de casa (recebendo ou nao um salario).
+Categorias:
+  A = Nao uso meu tempo para isso
+  B = Menos de 1 hora
+  C = Entre 1 e 2 horas
+  D = Mais de 2 horas
+
+---- TX_RESP_Q21e [*] ----
+Pergunta: Fora da escola em dias de aula, quanto tempo voce usa para: - Lazer (TV, brincar, internet, musica etc.).
+Categorias:
+  A = Nao uso meu tempo para isso
+  B = Menos de 1 hora
+  C = Entre 1 e 2 horas
+  D = Mais de 2 horas
+
+---- TX_RESP_Q22a [*] ----
+Pergunta: Para os proximos itens, indique qual e a proporcao de professores(as) da sua turma que abordam os seguintes temas em sala de aula: - No inicio do ano, eles(as) informaram sobre o que seria ensinado e aprendido?
+Categorias:
+  A = Todos eles
+  B = A maior parte deles
+  C = Poucos deles
+  D = Nenhum deles
+
+---- TX_RESP_Q22b [*] ----
+Pergunta: Para os proximos itens, indique qual e a proporcao de professores(as) da sua turma que abordam os seguintes temas em sala de aula: - Antes de iniciar um novo conteudo, eles(as) perguntam o que voces sabem sobre o conteudo?
+Categorias:
+  A = Todos eles
+  B = A maior parte deles
+  C = Poucos deles
+  D = Nenhum deles
+
+---- TX_RESP_Q22c [*] ----
+Pergunta: Para os proximos itens, indique qual e a proporcao de professores(as) da sua turma que abordam os seguintes temas em sala de aula: - Eles(as) trazem temas do cotidiano para serem debatidos em sala de aula?
+Categorias:
+  A = Todos eles
+  B = A maior parte deles
+  C = Poucos deles
+  D = Nenhum deles
+
+---- TX_RESP_Q22d [*] ----
+Pergunta: Para os proximos itens, indique qual e a proporcao de professores(as) da sua turma que abordam os seguintes temas em sala de aula: - Eles(as) abordam temas sobre desigualdade racial?
+Categorias:
+  A = Todos eles
+  B = A maior parte deles
+  C = Poucos deles
+  D = Nenhum deles
+
+---- TX_RESP_Q22e [*] ----
+Pergunta: Para os proximos itens, indique qual e a proporcao de professores(as) da sua turma que abordam os seguintes temas em sala de aula: - Eles(as) abordam temas sobre desigualdade de genero?
+Categorias:
+  A = Todos eles
+  B = A maior parte deles
+  C = Poucos deles
+  D = Nenhum deles
+
+---- TX_RESP_Q22f [*] ----
+Pergunta: Para os proximos itens, indique qual e a proporcao de professores(as) da sua turma que abordam os seguintes temas em sala de aula: - Eles(as) abordam temas como bullying e outras formas de violencia?
+Categorias:
+  A = Todos eles
+  B = A maior parte deles
+  C = Poucos deles
+  D = Nenhum deles
+
+---- TX_RESP_Q22g [*] ----
+Pergunta: Para os proximos itens, indique qual e a proporcao de professores(as) da sua turma que abordam os seguintes temas em sala de aula: - Eles(as) desenvolvem trabalhos em grupos?
+Categorias:
+  A = Todos eles
+  B = A maior parte deles
+  C = Poucos deles
+  D = Nenhum deles
+
+---- TX_RESP_Q22h [*] ----
+Pergunta: Para os proximos itens, indique qual e a proporcao de professores(as) da sua turma que abordam os seguintes temas em sala de aula: - Eles(as) abordam questoes relacionadas ao futuro profissional dos(as) estudantes?
+Categorias:
+  A = Todos eles
+  B = A maior parte deles
+  C = Poucos deles
+  D = Nenhum deles
+
+---- TX_RESP_Q23a [*] ----
+Pergunta: Sobre sua escola, indique o quanto voce concorda ou discorda das afirmacoes abaixo: - Eu me interesso sobre o que foi ensinado na escola neste ano.
+Categorias:
+  A = Concordo totalmente
+  B = Concordo
+  C = Discordo
+  D = Discordo totalmente
+
+---- TX_RESP_Q23b [*] ----
+Pergunta: Sobre sua escola, indique o quanto voce concorda ou discorda das afirmacoes abaixo: - Eu me sinto motivado(a), no dia a dia, a usar o que foi ensinado.
+Categorias:
+  A = Concordo totalmente
+  B = Concordo
+  C = Discordo
+  D = Discordo totalmente
+
+---- TX_RESP_Q23c [*] ----
+Pergunta: Sobre sua escola, indique o quanto voce concorda ou discorda das afirmacoes abaixo: - Ha espaco para diferentes opinioes na minha sala de aula.
+Categorias:
+  A = Concordo totalmente
+  B = Concordo
+  C = Discordo
+  D = Discordo totalmente
+
+---- TX_RESP_Q23d [*] ----
+Pergunta: Sobre sua escola, indique o quanto voce concorda ou discorda das afirmacoes abaixo: - Eu me sinto seguro(a) quando estou na escola.
+Categorias:
+  A = Concordo totalmente
+  B = Concordo
+  C = Discordo
+  D = Discordo totalmente
+
+---- TX_RESP_Q23e [*] ----
+Pergunta: Sobre sua escola, indique o quanto voce concorda ou discorda das afirmacoes abaixo: - Eu me sinto a vontade para discordar dos(as) meus(minhas) professores(as).
+Categorias:
+  A = Concordo totalmente
+  B = Concordo
+  C = Discordo
+  D = Discordo totalmente
+
+---- TX_RESP_Q23f [*] ----
+Pergunta: Sobre sua escola, indique o quanto voce concorda ou discorda das afirmacoes abaixo: - Eu consigo argumentar sobre conteudos dificeis.
+Categorias:
+  A = Concordo totalmente
+  B = Concordo
+  C = Discordo
+  D = Discordo totalmente
+
+---- TX_RESP_Q23g [*] ----
+Pergunta: Sobre sua escola, indique o quanto voce concorda ou discorda das afirmacoes abaixo: - Os resultados das avaliacoes representam o quanto eu aprendi.
+Categorias:
+  A = Concordo totalmente
+  B = Concordo
+  C = Discordo
+  D = Discordo totalmente
+
+---- TX_RESP_Q23h [*] ----
+Pergunta: Sobre sua escola, indique o quanto voce concorda ou discorda das afirmacoes abaixo: - Meus (Minhas) professores(as) acreditam que eu sou capaz de aprender.
+Categorias:
+  A = Concordo totalmente
+  B = Concordo
+  C = Discordo
+  D = Discordo totalmente
+
+---- TX_RESP_Q23i [*] ----
+Pergunta: Sobre sua escola, indique o quanto voce concorda ou discorda das afirmacoes abaixo: -Meus (Minhas) professores(as) me motivam a continuar meus estudos.
+Categorias:
+  A = Concordo totalmente
+  B = Concordo
+  C = Discordo
+  D = Discordo totalmente
+
+---- TX_RESP_Q24 [*] ----
+Pergunta: Quando terminar o Ensino Medio, voce pretende:
+Categorias:
+  A = Somente continuar estudando
+  B = Somente trabalhar
+  C = Continuar estudando e trabalhar
+  D = Ainda nao sei
+
+---- TX_RESP_Q25 [*] ----
+Pergunta: Voce concluiu o Ensino Fundamental na Educacao de Jovens e Adultos (EJA), antigo supletivo?
+Categorias:
+  A = Nao
+  B = Sim
+
+================================================================================

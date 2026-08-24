@@ -15,6 +15,7 @@ Scripts para análise de GRUPOS de escolas — comparações estatísticas e clu
 | `dendrograma_urbana_vs_rural.r` | 7 | Clustering: Urbana x Rural |
 | `dendrograma_capital_vs_interior.r` | 7 | Clustering: Capital x Interior |
 | `dendrograma_area_local.r` | 7 | Clustering: AREA_LOCAL (4 categorias combinadas) |
+| `dendrogramas_artigo.r` | 7 | Gera somente os 5 dendrogramas, com legenda de cores, em alta resolução |
 
 ## Execução
 
@@ -36,6 +37,9 @@ source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/dendrograma_publica_vs_particular.r")
 source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/dendrograma_urbana_vs_rural.r")
 source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/dendrograma_capital_vs_interior.r")
 source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/dendrograma_area_local.r")
+
+# PASSO 7 (figuras limpas para artigo: geral + 4 comparativos)
+source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/dendrogramas_artigo.r")
 ```
 
 ## Outputs (pastas datadas)

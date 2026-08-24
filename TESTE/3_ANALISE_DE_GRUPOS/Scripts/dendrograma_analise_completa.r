@@ -56,7 +56,7 @@ detectar_raiz <- function() {
 # Detectar e confirmar caminho
 RAIZ            <- detectar_raiz()
 DIR_PROCESSADOS <- file.path(RAIZ, "TESTE/3_ANALISE_DE_GRUPOS/outputs/metadados")
-DIR_FIGURAS     <- file.path(RAIZ, "TESTE/3_ANALISE_DE_GRUPOS/outputs/figuras")
+DIR_FIGURAS     <- file.path(RAIZ, "TESTE/3_ANALISE_DE_GRUPOS/outputs/figuras/alto_baixo")
 
 message("Caminhos configurados:")
 message("  RAIZ:              ", RAIZ)

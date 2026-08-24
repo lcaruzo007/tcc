@@ -1,0 +1,5 @@
+"Variavel","Metodo","Correlacao_Matematica","Correlacao_Portugues","Status_Calculo"
+"TX_RESP_Q10e_num","Spearman",-0.324176359389243,-0.0355693505440975,"OK"
+"TX_RESP_Q21e_num","Spearman",0.438511656943552,0.436533408867115,"OK"
+"TX_RESP_Q23a_num","Spearman",-0.305749744043893,-0.0873570697268265,"OK"
+"TX_RESP_Q23i_num","Spearman",0.366643476264168,0.095055716068488,"OK"

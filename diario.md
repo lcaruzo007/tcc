@@ -8,6 +8,22 @@
 
 ## 📍 Entradas de Registro
 
+### 🔵 23 de Agosto de 2026
+
+**Horário:** sessão atual
+**Fase:** Visualização e preparação para artigo
+**Status:** ✅ Concluído
+
+#### Atividades Realizadas
+
+- Criado `dendrogramas_artigo.r` para gerar os cinco dendrogramas isoladamente.
+- As figuras incluem somente o dendrograma e a legenda de cores, sem painéis auxiliares ou tabelas.
+- Saídas configuradas em pasta datada, com resolução de 300 dpi.
+
+#### Próximos Passos
+
+- Executar o script após atualizar os metadados e selecionar as figuras finais para o artigo.
+
 ### 🔵 06 de Abril de 2026
 
 **Horário:** ~20h29  
