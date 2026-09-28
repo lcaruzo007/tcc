@@ -89,6 +89,8 @@ A partir da refatoracao de julho/2026, os modelos de regressao NAO usam mais
 `AREA_LOCAL` (4 categorias: `Urbana_Capital`, `Urbana_Interior`,
 `Rural_Capital`, `Rural_Interior`). Isso captura a interacao urbano/ural x
 capital/interior identificada como lacuna na apresentacao do TCC.
+No recorte MG/2023, `Rural_Capital` nao foi observada; scripts devem ignorar
+categorias sem variacao em vez de ajustar coeficientes nao estimaveis.
 
 - Modelo principal: referencias = `TIPO_ESCOLA = "Publica"` e
   `AREA_LOCAL = "Urbana_Capital"`.
@@ -125,14 +127,16 @@ capital/interior identificada como lacuna na apresentacao do TCC.
   foram removidos — o TCC foca no eixo limpeza -> agrupamento -> regressao
   -> mediacao (vide `diario.md`, entrada ago/2026).
 - Scripts dos modulos 4, 5 e 6 ja usam `caminho_saida()` (pastas datadas).
-- Modulo 3 (classificar_escolas, comparar_grupos, dendrograma) ainda usa o
-  padrao antigo de sufixo — pendente de migracao para `caminho_saida()`
-  (Fase 3). O script do modulo 5 foi migrado na refatoracao de 30/07.
+- Modulo 3 (classificar_escolas, comparar_grupos, comparacao de escolas e
+  dendrogramas) usa `caminho_saida()` e le os formatos datado e legado.
+- O script do modulo 5 foi migrado na refatoracao de 30/07.
 - Outputs antigos dos modulos 3, 4, 5 ja foram migrados para pastas datadas
   (organizadas por data da run; vide `diario.md`).
-- Modulo 6 (`analise_mediacao.r`): conhecido — `detectar_raiz()` e chamada
-  antes de `source(utils_saeb.r)` (pode falhar em `Rscript` limpo; funciona em
-  sessao RStudio com utils ja carregado). Pendente de correcao de ordem.
+- Modulo 6 (`analise_mediacao.r`) define `detectar_raiz()` localmente antes de
+  carregar `utils_saeb.r` e pode ser iniciado em sessao R limpa.
+- `executar_pipeline.r` executa as etapas nao interativas em sessoes R isoladas.
+- `TESTE/DOCUMENTACAO/validar_pipeline.r` verifica sintaxe e invariantes basicos.
+- Microdados CSV e pastas `outputs/` sao locais e ignorados pelo Git.
 
 ## Fontes de verdade
 

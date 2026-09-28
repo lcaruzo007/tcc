@@ -11,7 +11,7 @@ MICRODADOS_SAEB_2023/DADOS/
     ↓
 [2_ANALISE] → outputs/{ID_ESCOLA}/correlacoes_*.csv, dados_FINAL_*.csv
     ↓
-[3_GRUPOS]  → outputs/metadados/metadados_escolas_*.csv
+[3_GRUPOS]  → outputs/<YYYY-MM-DD>/metadados/metadados_escolas_*.csv
     ↓
 [4/5_REGRESSAO] → outputs/{modelos,tabelas,figuras}/
 ```
@@ -48,7 +48,7 @@ Dados escalados (z-score) para modelagem e dashboard.
 
 ## PASSO 4: Metadados
 
-### `3_ANALISE_DE_GRUPOS/outputs/metadados/metadados_escolas_YYYYMMDD_HHMMSS.csv`
+### `3_ANALISE_DE_GRUPOS/outputs/<YYYY-MM-DD>/metadados/metadados_escolas_HHMMSS.csv`
 Perfil agregado de cada escola (1 linha = 1 escola).
 
 | Coluna | Descrição |
@@ -61,11 +61,12 @@ Perfil agregado de cada escola (1 linha = 1 escola).
 | TIPO_ESCOLA | Pública / Privada |
 | AREA | Capital / Interior |
 | LOCALIZACAO | Urbana / Rural |
+| AREA_LOCAL | Combinação de localização e área |
 | GRUPO_INSE | Baixo_INSE / Medio_INSE / Alto_INSE |
 
 ## PASSO 5: Comparações
 
-### `3_ANALISE_DE_GRUPOS/outputs/metadados/resultados_comparacao_YYYYMMDD_HHMMSS.csv`
+### `3_ANALISE_DE_GRUPOS/outputs/<YYYY-MM-DD>/tabelas/resultados_comparacao_HHMMSS.csv`
 Testes estatísticos entre grupos (comparações bidirecionais).
 
 | Coluna | Descrição |
@@ -77,39 +78,51 @@ Testes estatísticos entre grupos (comparações bidirecionais).
 | Mediana1, Mediana2 | Nota mediana de cada grupo |
 | U | Estatística de Wilcoxon |
 | p_valor | P-valor |
+| p_valor_ajustado_bh | P-valor ajustado por Benjamini-Hochberg |
 | r_rank_biserial | Tamanho de efeito (-1 a +1) |
 | Significância | ns, *, **, *** |
+| Significancia_ajustada | Significância após ajuste de multiplicidade |
 
-**Nota:** Cada par de grupos aparece em ambas as direções (ex: Pública→Privada e Privada→Pública), resultando em 16 linhas (8 comparações × 2 disciplinas).
+**Nota:** Cada par de grupos aparece em ambas as direções. Categorias de
+`AREA_LOCAL` sem escolas são informadas no console e não geram comparações vazias.
 
-### `3_ANALISE_DE_GRUPOS/outputs/figuras/01_boxplot_tipo_escola.png`
+### `3_ANALISE_DE_GRUPOS/outputs/<YYYY-MM-DD>/figuras/01_boxplot_tipo_escola_HHMMSS.png`
 Boxplot: Pública vs Privada
 
-### `3_ANALISE_DE_GRUPOS/outputs/figuras/02_boxplot_urbano_rural.png`
+### `3_ANALISE_DE_GRUPOS/outputs/<YYYY-MM-DD>/figuras/02_boxplot_urbano_rural_HHMMSS.png`
 Boxplot: Urbana vs Rural
 
-### `3_ANALISE_DE_GRUPOS/outputs/figuras/03_boxplot_capital_interior.png`
+### `3_ANALISE_DE_GRUPOS/outputs/<YYYY-MM-DD>/figuras/03_boxplot_capital_interior_HHMMSS.png`
 Boxplot: Capital vs Interior
 
-### `3_ANALISE_DE_GRUPOS/outputs/figuras/04_boxplot_inse.png`
+### `3_ANALISE_DE_GRUPOS/outputs/<YYYY-MM-DD>/figuras/04_boxplot_inse_HHMMSS.png`
 Boxplot: Grupos de INSE
+
+### `3_ANALISE_DE_GRUPOS/outputs/<YYYY-MM-DD>/figuras/05_boxplot_area_local_HHMMSS.png`
+Boxplot: quatro categorias de `AREA_LOCAL`
 
 ## PASSO 6: Comparação 2 Escolas
 
-### `3_ANALISE_DE_GRUPOS/outputs/comparacoes/Escola_{A}_vs_{B}_{timestamp}/`
-- `Comparacao_Escola_A_vs_B_*.csv` — Comparação lado a lado
-- `Perfis_Escolas_*.csv` — Resumo das escolas
+### `3_ANALISE_DE_GRUPOS/outputs/<YYYY-MM-DD>/comparacoes/escola_{A}_vs_escola_{B}/`
+- `comparacao_escola_*_vs_*_*.csv` — Comparação lado a lado
+- `perfis_escolas_*.csv` — Resumo das escolas
 - `visualizacao_comparacao_*.png` — Gráfico
 
 ## PASSO 7: Clustering
 
-### `3_ANALISE_DE_GRUPOS/outputs/figuras/dendrograma_geral_ALTO_BAIXO_*.png`
+### `3_ANALISE_DE_GRUPOS/outputs/<YYYY-MM-DD>/figuras/alto_baixo/dendrograma_geral_ALTO_BAIXO_*.png`
 Árvore hierárquica de escolas com desempenho extremo.
 
-### `3_ANALISE_DE_GRUPOS/outputs/metadados/clusters_escolas_YYYYMMDD_HHMMSS.csv`
-Atribuição de cada escola a um cluster.
+### `3_ANALISE_DE_GRUPOS/outputs/<YYYY-MM-DD>/tabelas/tabela_escolas_ALTO_BAIXO_HHMMSS.csv`
+Atribuição das escolas de desempenho extremo aos clusters.
 
 ## PASSO 8: Regressão Linear
+
+### `4_REGRESSAO_LINEAR/outputs/<YYYY-MM-DD>/tabelas/sensibilidade_coeficientes_HC3_*.csv`
+Comparação auxiliar dos coeficientes OLS e WLS com inferência robusta HC3.
+
+### `4_REGRESSAO_LINEAR/outputs/<YYYY-MM-DD>/tabelas/sensibilidade_ajustes_OLS_WLS_*.csv`
+Métricas de ajuste da análise de sensibilidade. Não substitui o modelo principal.
 
 ### `4_REGRESSAO_LINEAR/outputs/tabelas/resumo_modelos_*.csv`
 Diagnósticos dos modelos.
@@ -158,8 +171,13 @@ Efeitos direto, indireto e total.
 | Mediador | INSE_MEDIO |
 | Disciplina | MT ou LP |
 | Efeito_Direto | Efeito direto (c') |
+| IC95_Direto_Inferior / Superior | Intervalo bootstrap do efeito direto |
+| p_Direto | P-valor do efeito direto |
 | Efeito_Indireto | Efeito indireto (a×b) |
+| IC95_Indireto_Inferior / Superior | Intervalo bootstrap do efeito indireto |
+| p_Indireto | P-valor do efeito indireto |
 | Efeito_Total | Efeito total (c' + a×b) |
+| p_Total | P-valor do efeito total |
 | Proporcao_Mediada | % do efeito mediado por INSE |
 
 ### `6_ANALISE_MEDIACAO/outputs/figuras/caminhos_mediacao_MT_*.png`

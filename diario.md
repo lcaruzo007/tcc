@@ -1789,3 +1789,92 @@ Restam **6 modulos** (1-6) e **10 passos** sequenciais.
 **Status:** Refatoracao #3 concluida — pipeline enxuto de 10 passos, modulos HLM/CV/PCA removidos, mediacao renumerada para 6  
 **Proxima etapa:** Validacao em RStudio + redacao final do TCC
 
+---
+
+### 28 de Setembro de 2026
+
+**Horario:** 08:06
+**Fase:** Organizacao, reprodutibilidade e conclusao da migracao de outputs
+**Status:** Implementacao e smoke tests concluidos com R 4.6.0
+
+#### Atividades Realizadas
+
+- Criado `.gitignore` para microdados CSV, outputs regeneraveis e arquivos
+  temporarios do R/RStudio.
+- Removidos do indice do Git 21.362 arquivos gerados ou brutos, sem apagar os
+  arquivos locais. Os scripts R de importacao em `MICRODADOS_SAEB_2023/INPUTS`
+  permanecem versionados.
+- Modulo 3 migrado integralmente para `caminho_saida()`:
+  - metadados, tabelas, figuras, comparacoes entre escolas e dendrogramas;
+  - leitura compativel com pastas datadas e com o layout legado;
+  - nomes de comparacoes sanitizados para uso seguro no Windows.
+- `encontrar_arquivo_mais_recente()` ampliado para buscar tambem na subpasta
+  legada indicada por `tipo`.
+- `caminho_saida()` passou a evitar colisao quando o mesmo nome e gerado mais
+  de uma vez no mesmo segundo.
+- Comparacoes de grupos agora preservam `p_valor` como numerico e acrescentam
+  `p_valor_ajustado_bh` e `Significancia_ajustada`.
+- Corrigida a agregacao do Passo 4: medias de proficiencia agora respeitam os
+  indicadores de validade e a faixa 150-800. Antes, codigos sentinela podiam
+  produzir medias escolares de milhares de pontos e contaminar dendrogramas.
+- Comparacoes de `AREA_LOCAL` passaram a usar apenas categorias observadas;
+  `Rural_Capital` nao possui escolas no recorte MG/2023.
+- Corrigidas quatro escritas restantes do modulo 4 que ainda dependiam de
+  variaveis `DIR_*` nao definidas; modelos e figuras agora usam
+  `caminho_saida()`.
+- Removida a criacao desnecessaria de pastas legacy pelo script ativo do
+  modulo 5.
+- Movida a versao obsoleta do modulo 5 para `arquivo/`; `Scripts/` agora contem
+  apenas o script ativo.
+- Modulo 6 passou a procurar metadados a partir da raiz de `outputs`, mantendo
+  fallback para o formato antigo.
+- Modulo 6 agora ignora tratamentos sem variacao, fixa a semente do bootstrap
+  e exporta ACME/ADE medios, IC 95% e p-valores corretos. A versao anterior
+  rotulava limites inferiores dos intervalos como `p_Direto`/`p_Indireto`.
+- Removidas instalacoes de pacotes durante a execucao dos scripts. Dependencias
+  ausentes agora geram erro explicativo.
+- Criados:
+  - `executar_pipeline.r`, que executa etapas nao interativas em sessoes R
+    isoladas;
+  - `TESTE/DOCUMENTACAO/verificar_dependencias.r`;
+  - `TESTE/DOCUMENTACAO/validar_pipeline.r`, com parse de scripts e invariantes
+    da base agregada.
+- Criado `analise_sensibilidade_regressao.r`, auxiliar do Passo 8, comparando
+  OLS e WLS por numero de alunos com erros-padrao HC3, sem alterar o modelo
+  principal.
+- Atualizados README principal, README do modulo 3, metodologia, requisitos,
+  referencia de outputs, guia de documentacao e AGENTS.md.
+
+#### Desafios Encontrados
+
+- O repositorio rastreava quase todos os outputs historicos e os CSVs brutos.
+  A limpeza foi feita apenas no indice; os arquivos continuam no disco e o
+  historico Git nao foi reescrito.
+- `Rscript` nao estava no PATH; a instalacao R 4.6.0 foi localizada em
+  `AppData/Local/Programs/R` e usada diretamente nos testes.
+- Os scripts dos passos 3 e 6 exigem interacao/configuracao e foram mantidos
+  fora da execucao automatica padrao.
+
+#### Resultados Obtidos
+
+- Estrutura de outputs do modulo 3 alinhada aos demais modulos.
+- Leitura de outputs antigos preservada.
+- Nenhum microdado ou output local foi apagado.
+- Pipeline ganhou ponto unico de execucao e verificacoes reproduziveis.
+- Documentacao atualizada para a versao 4.1.
+- Smoke tests concluidos nos Passos 4, 5, 7, 8, 9 e 10; a validacao analisou 25
+  scripts, 2.338 escolas e todas as dependencias obrigatorias.
+
+#### Proximos Passos
+
+- [x] Executar `Rscript TESTE/DOCUMENTACAO/validar_pipeline.r` em ambiente com R.
+- [x] Executar smoke tests dos passos 4, 5, 7, 8, 9 e 10.
+- [ ] Executar e interpretar a analise de sensibilidade OLS/WLS com HC3.
+- [ ] Renumerar as figuras do PASSO 10 e atualizar o texto final do TCC.
+
+---
+
+**Atualizado:** 28 de Setembro de 2026
+**Status:** Organizacao 4.1 e validacao executavel concluidas
+**Proxima etapa:** Interpretar sensibilidade OLS/WLS + redacao final do TCC
+

@@ -55,13 +55,14 @@ detectar_raiz <- function() {
 
 # Detectar e confirmar caminho
 RAIZ            <- detectar_raiz()
-DIR_PROCESSADOS <- file.path(RAIZ, "TESTE/3_ANALISE_DE_GRUPOS/outputs/metadados")
-DIR_FIGURAS     <- file.path(RAIZ, "TESTE/3_ANALISE_DE_GRUPOS/outputs/figuras/alto_baixo")
+source(file.path(RAIZ, "TESTE", "DOCUMENTACAO", "utils_saeb.r"))
+DIR_ANALISE     <- file.path(RAIZ, "TESTE", "3_ANALISE_DE_GRUPOS")
+DIR_PROCESSADOS <- file.path(DIR_ANALISE, "outputs")
 
 message("Caminhos configurados:")
 message("  RAIZ:              ", RAIZ)
 message("  Metadados:         ", DIR_PROCESSADOS)
-message("  Figuras (saida):   ", DIR_FIGURAS, "\n")
+message("  Outputs:           ", DIR_PROCESSADOS, "\n")
 
 # =============================================================================
 # CONFIGURACAO - Ajuste conforme necessario
@@ -200,9 +201,6 @@ painel_dendrograma <- function(hc, lab_cores, y_expand = 0.28,
 # INICIALIZACAO
 # =============================================================================
 
-dir.create(DIR_FIGURAS, showWarnings = FALSE, recursive = TRUE)
-ts_global <- format(Sys.time(), "%Y%m%d_%H%M%S")
-
 message(strrep("=", 70))
 message("ANALISE DE DENDROGRAMAS - SAEB MG  (Geral ALTO+BAIXO)")
 message(strrep("=", 70))
@@ -211,7 +209,9 @@ message(strrep("=", 70))
 # CARREGAR METADADOS
 # =============================================================================
 
-arq_meta <- arquivo_mais_recente(DIR_PROCESSADOS, "^metadados_escolas_.*\\.csv$")
+arq_meta <- encontrar_arquivo_mais_recente(
+  DIR_PROCESSADOS, "metadados_escolas", "metadados"
+)
 if (is.null(arq_meta)) {
   stop("metadados_escolas_*.csv nao encontrado. Execute classificar_escolas.r primeiro.")
 }
@@ -420,10 +420,12 @@ if (MODO == 1) {
       )
     )
 
-  nome_fig <- paste0("dendrograma_geral_ALTO_BAIXO_", ts_global, ".png")
-  ggsave(file.path(DIR_FIGURAS, nome_fig), final_g,
+  caminho_figura <- caminho_saida(
+    DIR_ANALISE, "figuras/alto_baixo", "dendrograma_geral_ALTO_BAIXO", "png"
+  )
+  ggsave(caminho_figura, final_g,
          width = 16, height = 11, dpi = 180, bg = COR_FUNDO)
-  message("Figura salva: ", nome_fig)
+  message("Figura salva: ", caminho_figura)
 
   # ---- PASSO 7: Tabela resumo ----
   tabela_resumo <- dados_cluster |>
@@ -434,8 +436,8 @@ if (MODO == 1) {
     mutate(across(c(MEDIA_MT, MEDIA_LP, INSE_MEDIO), ~ round(., 2)))
 
   write_csv(tabela_resumo,
-            file.path(DIR_FIGURAS,
-                      paste0("tabela_escolas_ALTO_BAIXO_", ts_global, ".csv")))
+            caminho_saida(DIR_ANALISE, "tabelas",
+                          "tabela_escolas_ALTO_BAIXO", "csv"))
 
   message("\nResumo por cluster:")
   tabela_resumo |>
@@ -452,5 +454,5 @@ if (MODO == 1) {
 # =============================================================================
 
 message("\n", strrep("=", 70))
-message("CONCLUIDO. Saida: ", DIR_FIGURAS)
+message("CONCLUIDO. Saida: ", file.path(DIR_ANALISE, "outputs"))
 message(strrep("=", 70))

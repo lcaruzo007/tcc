@@ -5,9 +5,10 @@ Guia de uso do pipeline de analise.
 ## Comece aqui
 
 1. Verifique as dependencias em [requisitos.md](requisitos.md)
-2. Execute os scripts na ordem indicada no [README principal](../../README.md)
-3. Consulte [referencia_outputs.md](referencia_outputs.md) para entender os CSVs gerados
-4. Use [metodologia.md](metodologia.md) para escrever o TCC
+2. Execute `Rscript TESTE/DOCUMENTACAO/validar_pipeline.r`
+3. Use `Rscript executar_pipeline.r` ou siga a ordem do [README principal](../../README.md)
+4. Consulte [referencia_outputs.md](referencia_outputs.md) para entender os CSVs gerados
+5. Use [metodologia.md](metodologia.md) para escrever o TCC
 
 ## Fluxo de Dados
 
@@ -24,13 +25,13 @@ MICRODADOS_SAEB_2023/DADOS/TS_ALUNO_34EM.csv
 [PASSO 3] 2_ANALISE  -> Dashboard Shiny (opcional)
     |
     v
-[PASSO 4] 3_GRUPOS   -> outputs/metadados/metadados_escolas_*.csv
+[PASSO 4] 3_GRUPOS   -> outputs/<data>/metadados/metadados_escolas_*.csv
     |
     v
-[PASSO 5] 3_GRUPOS   -> outputs/metadados/resultados_comparacao_*.csv + figuras
+[PASSO 5] 3_GRUPOS   -> outputs/<data>/tabelas/resultados_comparacao_*.csv + figuras
     |
     v
-[PASSO 7] 3_GRUPOS   -> outputs/figuras/dendrograma_*.png
+[PASSO 7] 3_GRUPOS   -> outputs/<data>/figuras/dendrograma_*.png
     |
     v
 [PASSO 8] 4_REGRESSAO -> outputs/{modelos,tabelas,figuras}/
@@ -51,10 +52,10 @@ MICRODADOS_SAEB_2023/DADOS/TS_ALUNO_34EM.csv
 | 1 | `1_LIMPEZA/` | `ajeitar_dados.r` | MICRODADOS | `outputs/{ID}/dados_escola_em_numeros.csv` |
 | 2 | `2_ANALISE/` | `correlacao.r` | `1_LIMPEZA/outputs/` | `outputs/{ID}/correlacoes_*.csv` |
 | 3 | `2_ANALISE/` | `graficos.r` | `2_ANALISE/outputs/` | Dashboard Shiny |
-| 4 | `3_GRUPOS/` | `classificar_escolas.r` | MICRODADOS | `outputs/metadados/metadados_*.csv` |
-| 5 | `3_GRUPOS/` | `comparar_grupos.r` | `outputs/metadados/` | `outputs/metadados/resultados_*.csv` + figuras |
-| 6 | `3_GRUPOS/` | `comparar_duas_escolas.r` | `outputs/metadados/` | `outputs/comparacoes/` |
-| 7 | `3_GRUPOS/` | `dendrograma_analise_completa.r` | `outputs/metadados/` | `outputs/figuras/` |
+| 4 | `3_GRUPOS/` | `classificar_escolas.r` | MICRODADOS | `outputs/<data>/metadados/metadados_*.csv` |
+| 5 | `3_GRUPOS/` | `comparar_grupos.r` | metadados mais recentes | `outputs/<data>/tabelas/` + figuras |
+| 6 | `3_GRUPOS/` | `comparar_duas_escolas.r` | metadados mais recentes | `outputs/<data>/comparacoes/` |
+| 7 | `3_GRUPOS/` | `dendrograma_analise_completa.r` | metadados mais recentes | `outputs/<data>/figuras/` |
 | 8 | `4_REGRESSAO/` | `regressao_linear_multipla.r` | MICRODADOS | `outputs/{modelos,tabelas,figuras}/` |
 | 9 | `5_ITENS/` | `regressao_itens_brutos_dummy.r` | MICRODADOS | `outputs/{modelos,tabelas,figuras}/` |
 | 10 | `6_MEDIACAO/` | `analise_mediacao.r` | metadados | `outputs/{tabelas,figuras}/` |

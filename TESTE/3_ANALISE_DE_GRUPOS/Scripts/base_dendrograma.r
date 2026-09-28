@@ -40,6 +40,10 @@ detectar_raiz <- function() {
   }
 }
 
+RAIZ_BASE_DENDROGRAMA <- detectar_raiz()
+source(file.path(RAIZ_BASE_DENDROGRAMA, "TESTE", "DOCUMENTACAO", "utils_saeb.r"))
+rm(RAIZ_BASE_DENDROGRAMA)
+
 # Retorna o arquivo mais recente que bate com o padrao
 arquivo_mais_recente <- function(pasta, padrao) {
   arqs <- list.files(pasta, pattern = padrao, full.names = TRUE)
@@ -308,7 +312,7 @@ painel_scatter <- function(dados,
                             subtitulo  = "Cor = grupo comparado  |  Tamanho = INSE") {
 
   p <- ggplot(dados, aes(x = MEDIA_MT, y = MEDIA_LP, colour = cor_grupo)) +
-    geom_point(aes(size = INSE_MEDIO), alpha = 0.82, shape = 19) +
+    geom_point(aes(size = INSE_MEDIO), alpha = 0.82) +
     scale_colour_identity() +
     scale_size_continuous(range = c(2, 8), name = "INSE") +
     labs(title = titulo, subtitle = subtitulo,
@@ -381,7 +385,9 @@ salvar_figura_completa <- function(p_dend,
 # =============================================================================
 
 carregar_metadados <- function(dir_processados) {
-  arq <- arquivo_mais_recente(dir_processados, "^metadados_escolas_.*\\.csv$")
+  arq <- encontrar_arquivo_mais_recente(
+    dir_processados, "metadados_escolas", "metadados"
+  )
   if (is.null(arq)) {
     stop("metadados_escolas_*.csv nao encontrado em: ", dir_processados,
          "\nExecute classificar_escolas.r primeiro.")

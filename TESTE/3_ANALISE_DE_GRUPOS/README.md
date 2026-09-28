@@ -44,48 +44,31 @@ source("TESTE/3_ANALISE_DE_GRUPOS/Scripts/dendrogramas_artigo.r")
 
 ## Outputs (pastas datadas)
 
-> **Convenção** (refatoração julho/2026): saídas com timestamp vão para
-> `<modulo>/outputs/<YYYY-MM-DD>/<tipo>/<nome>_<HHMMSS>.<ext>`. Os arquivos
-> antigos deste módulo já foram migrados para pastas datadas (vide
-> `diario.md`). Os scripts deste módulo ainda não usam o helper
-> `caminho_saida()` — pendente da Fase 3. Até lá, executar o script gera um
-> novo nível `outputs/<tipo>/` no estilo antigo além das pastas datadas já
-> migradas.
+Todos os scripts usam `caminho_saida()` e gravam em
+`outputs/<YYYY-MM-DD>/<tipo>/<nome>_<HHMMSS>.<ext>`. A leitura procura primeiro
+nas pastas datadas e mantém fallback para outputs antigos.
 
 ```
 outputs/
-+-- <YYYY-MM-DD>/               (uma pasta por dia, contém runs migradas/atuais)
++-- <YYYY-MM-DD>/
 |   +-- metadados/
-|   |   +-- metadados_escolas_<HHMMSS>.csv       (perfil de cada escola)
-|   |   +-- resultados_comparacao_<HHMMSS>.csv    (testes Wilcoxon)
-|   |   +-- clusters_escolas_<HHMMSS>.csv        (atribuicao de clusters)
+|   |   +-- metadados_escolas_<HHMMSS>.csv
+|   +-- tabelas/
+|   |   +-- resultados_comparacao_<HHMMSS>.csv
+|   |   +-- tabela_*_<HHMMSS>.csv
 |   +-- figuras/
-|       +-- dendrograma_geral_ALTO_BAIXO_<HHMMSS>.png
-|       +-- tabela_escolas_ALTO_BAIXO_<HHMMSS>.csv
-|
-+-- comparacoes/                  (mantem subpasta por par - agrupa arquivos)
-|   +-- Escola_{A}_vs_{B}_{YYYYMMDD_HHMMSS}/
-|       +-- Comparacao_Escola_A_vs_B_*.csv
-|       +-- Perfis_Escolas_*.csv
-|       +-- visualizacao_comparacao_*.png
-|
-+-- figuras/                      (boxplots sem timestamp - estilo antigo)
-    +-- 01_boxplot_tipo_escola.png
-    +-- 02_boxplot_urbano_rural.png
-    +-- 03_boxplot_capital_interior.png
-    +-- 04_boxplot_inse.png
-    +-- 05_boxplot_area_local.png (Urbana_Capital/Urbana_Interior/Rural_Capital/Rural_Interior)
-    +-- capital_vs_interior/      (dendrograma comparativo)
-    +-- publica_vs_particular/
-    +-- urbana_vs_rural/
-    +-- area_local/               (dendrograma AREA_LOCAL - 4 categorias)
+|   |   +-- 01_boxplot_tipo_escola_<HHMMSS>.png
+|   |   +-- dendrograma_geral_ALTO_BAIXO_<HHMMSS>.png
+|   |   +-- capital_vs_interior/
+|   |   +-- publica_vs_particular/
+|   |   +-- urbana_vs_rural/
+|   |   +-- area_local/
+|   +-- comparacoes/
+|       +-- escola_{A}_vs_escola_{B}/
+|           +-- comparacao_escola_*_<HHMMSS>.csv
+|           +-- perfis_escolas_<HHMMSS>.csv
+|           +-- visualizacao_comparacao_<HHMMSS>.png
 ```
-
-> 🔧 **Correção**: os 4 scripts de dendrograma comparativo (`capital_vs_interior`,
-> `urbana_vs_rural`, `publica_vs_particular`, `area_local`) usam
-> `DIR_PROCESSADOS = outputs/metadados` e `DIR_SAIDA = outputs/figuras/<subpasta>`.
-> Versões anteriores de 3 desses scripts apontavam para `outputs_escolas/` e
-> `outputs_figuras/<subpasta>`, pastas que não existem mais — corrigido.
 
 ## Comparações realizadas (PASSO 5)
 
@@ -97,10 +80,11 @@ outputs/
 | Alto INSE | Baixo INSE | Nível socioeconômico é determinante? |
 | Urbana_Capital / Urbana_Interior / Rural_Capital / Rural_Interior | (todos os pares) | Localização e área geográfica interagem? |
 
-**Nota:** Cada comparação é feita em **ambas as direções** (ex: Pública→Privada E Privada→Pública). As 4 primeiras comparações geram 16 linhas (8 comparações × 2 disciplinas). A comparação AREA_LOCAL (5ª) cobre os 6 pares possíveis entre as 4 categorias combinadas, também em ambas as direções, gerando mais 24 linhas (12 comparações × 2 disciplinas) — total de 40 linhas na tabela `resultados_comparacao_*.csv`.
+**Nota:** Cada comparação é feita em **ambas as direções** (ex: Pública→Privada E Privada→Pública). As 4 primeiras comparações geram 16 linhas. A comparação AREA_LOCAL cobre os pares entre as categorias efetivamente observadas. Com as 4 categorias presentes, o total é 40 linhas; categorias sem escolas são registradas no console e não geram linhas vazias.
 
 ### Teste estatístico
 - **Wilcoxon** (não-paramétrico, não assume normalidade)
+- **Correção de multiplicidade**: Benjamini-Hochberg (`p_valor_ajustado_bh`)
 - **Tamanho de efeito**: rank-biserial r (0.0 a 1.0)
   - 0.1-0.3: pequeno
   - 0.3-0.5: médio

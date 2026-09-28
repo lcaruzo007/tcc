@@ -81,6 +81,10 @@
 - **Alunos**: 173.918 (3ª série do Ensino Médio)
 - **Escolas**: 2.338 | **Municípios**: 851
 
+Os CSVs brutos não são versionados. Após obter os microdados no INEP, coloque
+`TS_ALUNO_34EM.csv` em `MICRODADOS_SAEB_2023/DADOS/`. Os scripts R de importação
+permanecem versionados; dados e outputs regeneráveis são preservados apenas localmente.
+
 **Disciplinas (variáveis-alvo)**
 
 - `MEDIA_MT` — Matemática (proficiência média por escola)
@@ -99,6 +103,9 @@
 > (bloco *NOTA METODOLÓGICA — ESCOLHA DO INSE*). A Fase 9 (`regressao_itens_brutos_dummy.r`)
 > faz a exploração complementar com os 72 itens brutos.
 
+> **Interpretação**: por se tratar de um estudo observacional com agregação por
+> escola, os modelos estimam associações condicionais, não efeitos causais identificados.
+
 ---
 
 ## Estrutura
@@ -106,6 +113,7 @@
 ```text
 tcc/
 ├── README.md                          (este arquivo)
+├── executar_pipeline.r                (executor em sessões R isoladas)
 ├── diario.md                          (registro cronológico do projeto)
 ├── AGENTS.md                          (convenções para contribuidores/agentes)
 ├── refs/                              (PDFs de referência bibliográfica)
@@ -119,13 +127,13 @@ tcc/
     │   └── requisitos.md
     ├── 1_LIMPEZA_E_TRANSFORMACAO/     (PASSO 1)                ✅
     ├── 2_ANALISE_POR_ESCOLA/          (PASSO 2-3)              ✅
-    ├── 3_ANALISE_DE_GRUPOS/           (PASSO 4-7)              ⏳ migração pendente
+    ├── 3_ANALISE_DE_GRUPOS/           (PASSO 4-7)              ✅
     ├── 4_REGRESSAO_LINEAR/            (PASSO 8)                ✅
     ├── 5_REGRESSAO_ITENS_BRUTOS/      (PASSO 9)                ✅
     └── 6_ANALISE_MEDIACAO/            (PASSO 10)               ✅
 ```
 
-**Legenda**: ✅ migração concluída · ⏳ pendência da Fase 3 (ver `diario.md`)
+**Legenda**: ✅ migração concluída
 
 > **Módulos removidos**: os módulos de **HLM** (modelos hierárquicos), **validação
 > cruzada + ROC** e **índice composto (PCA)** foram retirados do pipeline. O TCC
@@ -148,15 +156,15 @@ Rscript --version
 Execute **uma única vez**, no PowerShell:
 
 ```powershell
-R --vanilla --quiet -e "install.packages(c('tidyverse','data.table','caret','broom','patchwork','car','lmtest','shiny','dendextend','ggdendro','mediation','boot'), repos='https://cloud.r-project.org'); cat('OK pacotes instalados\n')"
+R --vanilla --quiet -e "install.packages(c('tidyverse','data.table','caret','broom','patchwork','car','lmtest','sandwich','shiny','dendextend','ggdendro','mediation','boot','readxl'), repos='https://cloud.r-project.org'); cat('OK pacotes instalados\n')"
 ```
 
 Ou, no console do RStudio:
 
 ```r
 install.packages(c('tidyverse','data.table','caret','broom','patchwork',
-                    'car','lmtest','shiny','dendextend','ggdendro',
-                    'mediation','boot'))
+                    'car','lmtest','sandwich','shiny','dendextend','ggdendro',
+                    'mediation','boot','readxl'))
 ```
 
 ### 3. Dependências principais
@@ -170,17 +178,37 @@ install.packages(c('tidyverse','data.table','caret','broom','patchwork',
 | `patchwork`   | Composição de múltiplos gráficos                 | ≥ 1.1   |
 | `car`         | Testes de multicolinearidade (VIF)               | ≥ 3.1   |
 | `lmtest`      | Testes de regressão (Breusch-Pagan, etc.)        | ≥ 0.9   |
+| `sandwich`    | Erros-padrão robustos HC3 (sensibilidade)        | ≥ 3.0   |
 | `shiny`       | Dashboard interativo (Passo 3)                   | ≥ 1.8   |
 | `dendextend`  | Dendrogramas coloridos (Passo 7)                 | ≥ 1.15  |
 | `ggdendro`    | Wrapper ggplot2 para dendrogramas                | ≥ 0.1   |
 | `mediation`   | Análise de mediação por bootstrap (Passo 10)     | ≥ 4.5   |
 | `boot`        | Bootstrap (Passo 10)                              | ≥ 1.3   |
+| `readxl`      | Entrada XLSX opcional no Passo 6                  | ≥ 1.4   |
 
 Detalhes completos em [`TESTE/DOCUMENTACAO/requisitos.md`](TESTE/DOCUMENTACAO/requisitos.md).
+
+Verifique o ambiente sem instalar ou alterar pacotes:
+
+```powershell
+Rscript TESTE/DOCUMENTACAO/verificar_dependencias.r
+```
 
 ---
 
 ## Pipeline de Execução
+
+Para executar automaticamente as etapas não interativas, cada uma em uma sessão R limpa:
+
+```powershell
+Rscript executar_pipeline.r
+Rscript executar_pipeline.r --passos=1,2,4,5
+Rscript executar_pipeline.r --passos=8,9,10 --auxiliares
+```
+
+Os passos 3 (dashboard Shiny) e 6 (comparação de duas escolas escolhidas pelo
+usuário) permanecem manuais. Antes de uma execução completa, use
+`Rscript TESTE/DOCUMENTACAO/validar_pipeline.r`.
 
 ```mermaid
 graph TD
@@ -294,13 +322,13 @@ frente à escolha da categoria-base.
 |:-----:|-----------------------------|------------------------------------------------|:------:|
 | 1     | Limpeza                     | `ajeitar_dados.r`                              | ✅     |
 | 2-3   | Correlações / Dashboard      | `correlacao.r` · `graficos.r`                  | ✅     |
-| 4-7   | Análise de grupos            | `classificar_escolas.r` + 3 scripts            | ⏳ migração pendente de `caminho_saida()` |
+| 4-7   | Análise de grupos            | `classificar_escolas.r` + scripts de grupos     | ✅     |
 | 8     | Regressão linear             | `regressao_linear_multipla.r`                  | ✅     |
 | 8b    | Regressão (ref. oposta)      | `grafico_coeficientes_referencia_oposta.r`     | ✅     |
 | 9     | Itens brutos                 | `regressao_itens_brutos_dummy.r`               | ✅     |
 | 10    | Mediação                     | `analise_mediacao.r`                           | ✅     |
 
-**Legenda**: ✅ concluído · ⏳ migração parcial pendente (Fase 3 — ver `diario.md`)
+**Legenda**: ✅ concluído
 
 ---
 
@@ -347,15 +375,15 @@ arq <- encontrar_arquivo_mais_recente(DIR_OUTPUTS, "base_escolas_agregada", "tab
 |-------------------|--------------------------------------|--------------------------|
 | `Urbana_Capital`  | urbana + Belo Horizonte/Capital       | alta (referência)        |
 | `Urbana_Interior` | urbana + demais municípios            | dominante                 |
-| `Rural_Capital`   | rural + Capital                       | baixa                     |
+| `Rural_Capital`   | rural + Capital                       | não observada em MG/2023  |
 | `Rural_Interior`  | rural + Interior                      | moderada                  |
 
 - **Modelo principal**: `TIPO_ESCOLA = "Publica"` + `AREA_LOCAL = "Urbana_Capital"`.
 - **Script auxiliar** (`grafico_coeficientes_referencia_oposta.r`): mesmo gráfico com
   referência oposta (`Privada` + `Rural_Interior`); o ponto de quebra do eixo X é
   calculado dinamicamente a partir dos intervalos de confiança de 95%.
-- A análise de mediação (Passo 10) também usa `AREA_LOCAL` (3 dummies, ref.
-  `Urbana_Capital`), além de `TIPO_ESCOLA`.
+- A análise de mediação (Passo 10) também usa as categorias observadas de
+  `AREA_LOCAL` (ref. `Urbana_Capital`), além de `TIPO_ESCOLA`.
 - `AREA` e `LOCALIZACAO` continuam disponíveis para referência descritiva.
 
 ---
@@ -383,6 +411,9 @@ arq <- encontrar_arquivo_mais_recente(DIR_OUTPUTS, "base_escolas_agregada", "tab
 - ✅ Notas metodológicas nos scripts de decisão substantiva (Passos 7, 8, 9, 10)
 - ✅ Scripts executáveis via `Rscript`, sem precisar abrir o R interativo
 - ✅ Detecção automática de caminhos em qualquer computador (`detectar_raiz()`)
+- ✅ Microdados e outputs regeneráveis fora do Git (`.gitignore`)
+- ✅ Executor central em sessões R isoladas e validador de sintaxe/invariantes
+- ✅ P-valores numéricos e ajuste de Benjamini–Hochberg nas comparações de grupos
 
 ---
 
@@ -425,6 +456,7 @@ microdados do SAEB 2023 em Minas Gerais. Trabalho de Conclusão de Curso — [In
 | Julho 2026 | 3.1    | Remoção dos módulos 6 (mapas) e 10 (Moran's I) — dados do SAEB anonimizam municípios              |
 | Julho 2026 | 3.2    | Renumeração sequencial (1-9) após remoção dos módulos 6 e 10                                      |
 | Ago 2026   | **4.0** | Foco no eixo principal: remoção de HLM (Passo 11), validação cruzada (13) e PCA (15); `7_ANALISE_MEDIACAO` renomeado para `6_ANALISE_MEDIACAO`; pipeline reorganizado em **10 passos**; módulo 5 migrado para `caminho_saida()`; documentação atualizada |
+| Set 2026   | **4.1** | Módulo 3 migrado para pastas datadas; higiene do Git; executor central; validações; dependências sem instalação durante a análise |
 
 Detalhes completos em [`diario.md`](diario.md).
 
@@ -432,18 +464,17 @@ Detalhes completos em [`diario.md`](diario.md).
 
 ## Roadmap
 
-- [ ] **Fase 3**: migrar os scripts do módulo 3 para `caminho_saida()` (estilo antigo → datado)
 - [ ] **Limpeza**: remover acentos e emojis dos scripts dos módulos 1 e 2
-- [ ] **Ordem de `source`**: corrigir a chamada de `detectar_raiz()` antes de `source(utils_saeb.r)` no módulo 6
 - [ ] **Figuras**: renumerar as figuras do Passo 10 (21-22 → 15-16) para sequência contínua
+- [x] **Sensibilidade**: comparar regressões não ponderadas, ponderadas por alunos e com erros-padrão robustos
 - [ ] **Redação**: integrar os resultados na escrita final do TCC
 
 ---
 
 <div align="center">
 
-**Versão**: 4.0 (refatoração ago/2026 — pipeline enxuto de 10 passos, módulos HLM/CV/PCA removidos, mediação renumerada para o módulo 6)
-**Última atualização**: 21 de agosto de 2026 — ver [`diario.md`](diario.md)
+**Versão**: 4.1 (organização e reprodutibilidade — setembro/2026)
+**Última atualização**: 28 de setembro de 2026 — ver [`diario.md`](diario.md)
 
 Feito com muito café · Pipeline R · SAEB 2023 · Minas Gerais
 

@@ -1,3 +1,0 @@
-Modelo,Observacoes,Parametros,R2_ajustado,RMSE,F_statistic,p_valor,AIC,BIC
-MEDIA_MT,2326,5,0.3449,17.64,307.08,< 0.001,19965.73,20000.24
-MEDIA_LP,2326,5,0.3456,16.92,307.96,< 0.001,19770.1,19804.61

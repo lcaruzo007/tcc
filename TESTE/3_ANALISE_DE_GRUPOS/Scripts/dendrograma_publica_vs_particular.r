@@ -62,9 +62,7 @@ get_script_dir <- function() {
 
   stop(
     "Nao foi possivel localizar 'base_dendrograma.r' automaticamente.\n",
-    "Solucao definitiva: defina o caminho manualmente substituindo a linha\n",
-    "'source(file.path(get_script_dir(), \"base_dendrograma.r\"))' por, por exemplo:\n",
-    "  source(\"C:/Users/13756596699/tcc/TESTE/3_ANALISE_DE_GRUPOS/Scripts/base_dendrograma.r\")"
+    "Execute o script a partir da raiz do projeto ou pelo RStudio."
   )
 }
 source(file.path(get_script_dir(), "base_dendrograma.r"))
@@ -74,8 +72,8 @@ source(file.path(get_script_dir(), "base_dendrograma.r"))
 # =============================================================================
 
 RAIZ            <- detectar_raiz()
-DIR_PROCESSADOS <- file.path(RAIZ, "TESTE/3_ANALISE_DE_GRUPOS/outputs/metadados")
-DIR_SAIDA       <- file.path(RAIZ, "TESTE/3_ANALISE_DE_GRUPOS/outputs/figuras/publica_vs_particular")
+DIR_ANALISE     <- file.path(RAIZ, "TESTE", "3_ANALISE_DE_GRUPOS")
+DIR_PROCESSADOS <- file.path(DIR_ANALISE, "outputs")
 
 VARS_CLUSTER <- c("MEDIA_MT", "MEDIA_LP", "INSE_MEDIO")
 N_CLUSTERS   <- 2
@@ -93,7 +91,6 @@ COR_PRIVADA  <- "#A23B72"   # roxo-rosa
 # EXECUCAO
 # =============================================================================
 
-ts <- format(Sys.time(), "%Y%m%d_%H%M%S")
 message(strrep("=", 70))
 message("DENDROGRAMA: Publica vs Privada")
 message(strrep("=", 70))
@@ -232,14 +229,17 @@ caption <- paste0(
   "  |  Gerado em: ", format(Sys.time(), "%d/%m/%Y %H:%M")
 )
 
-nome_fig <- paste0("dendrograma_publica_vs_particular_", ts, ".png")
+caminho_figura <- caminho_saida(
+  DIR_ANALISE, "figuras/publica_vs_particular",
+  "dendrograma_publica_vs_particular", "png"
+)
 
 salvar_figura_completa(
   p_dend       = p_dend,
   p_stats      = p_stats,
   p_scatter    = p_scatter,
-  dir_saida    = DIR_SAIDA,
-  nome_arquivo = nome_fig,
+  dir_saida    = dirname(caminho_figura),
+  nome_arquivo = basename(caminho_figura),
   caption_txt  = caption
 )
 
@@ -253,7 +253,8 @@ tabela <- dados_cluster |>
   mutate(across(c(MEDIA_MT, MEDIA_LP, INSE_MEDIO), ~ round(., 2)))
 
 write_csv(tabela,
-          file.path(DIR_SAIDA, paste0("tabela_publica_vs_particular_", ts, ".csv")))
+          caminho_saida(DIR_ANALISE, "tabelas",
+                        "tabela_publica_vs_particular", "csv"))
 
 message("\nResumo por cluster:")
 tabela |>
@@ -265,5 +266,5 @@ tabela |>
   print(width = Inf)
 
 message("\n", strrep("=", 70))
-message("CONCLUIDO. Saida: ", DIR_SAIDA)
+message("CONCLUIDO. Saida: ", dirname(caminho_figura))
 message(strrep("=", 70))

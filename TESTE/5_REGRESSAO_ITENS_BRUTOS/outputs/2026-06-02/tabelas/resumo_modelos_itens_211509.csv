@@ -1,3 +1,0 @@
-Modelo,Observacoes,Preditoras,R2_ajustado,RMSE,F_statistic,p_valor,AIC,BIC
-MEDIA_MT,2325,159,0.7418,10.7,43,< 0.001,17940.93,18866.91
-MEDIA_LP,2325,159,0.6971,11.12,34.64,< 0.001,18119.52,19045.51

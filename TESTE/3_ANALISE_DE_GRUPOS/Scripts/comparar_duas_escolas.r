@@ -11,9 +11,8 @@
 #   - Opcao B: Arquivo XLSX com dados das 2 escolas
 #
 # SAIDA: 
-#   - Comparacao_Escola_A_vs_B_YYYYMMDD.csv
-#   - Perfis_Escolas.csv (resumo lado a lado)
-#   - visualizacao_comparacao.png (grafico)
+#   - outputs/<YYYY-MM-DD>/comparacoes/<comparacao>/*.csv
+#   - outputs/<YYYY-MM-DD>/comparacoes/<comparacao>/*.png
 #
 # VERSAO: 1.0 - Maio 2026
 ################################################################################
@@ -48,14 +47,11 @@ detectar_raiz <- function() {
 
 # Paths
 RAIZ <- detectar_raiz()
+source(file.path(RAIZ, "TESTE", "DOCUMENTACAO", "utils_saeb.r"))
 DIR_MICRODADOS <- file.path(RAIZ, "MICRODADOS_SAEB_2023/DADOS")
 DIR_TESTE <- file.path(RAIZ, "TESTE")
 DIR_ANALISE <- file.path(DIR_TESTE, "3_ANALISE_DE_GRUPOS")
-DIR_PROCESSADOS <- file.path(DIR_ANALISE, "outputs/metadados")
-DIR_COMPARACOES <- file.path(DIR_ANALISE, "outputs/comparacoes")
-
-# Timestamp
-timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
+DIR_OUTPUTS <- file.path(DIR_ANALISE, "outputs")
 
 # ============================================================================
 # FUNCAO: Carregar metadados das escolas (para comparacao de atributos)
@@ -63,12 +59,10 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
 
 carregar_metadados_escola <- function(ID) {
   # Encontrar arquivo mais recente de metadados
-  arquivos_meta <- list.files(DIR_PROCESSADOS, 
-                               pattern = "^metadados_escolas_.*\\.csv$",
-                               full.names = TRUE)
-  if (length(arquivos_meta) == 0) return(NULL)
-  
-  arquivo_meta <- sort(arquivos_meta, decreasing = TRUE)[1]
+  arquivo_meta <- encontrar_arquivo_mais_recente(
+    DIR_OUTPUTS, "metadados_escolas", "metadados"
+  )
+  if (is.null(arquivo_meta)) return(NULL)
   metadados <- read_csv(arquivo_meta, show_col_types = FALSE)
   
   metadados %>%
@@ -153,14 +147,9 @@ if (USAR_IDS) {
   cat(sprintf("OK Escola A: %s (n=%d alunos)\n", nome_A, nrow(dados_A)))
   cat(sprintf("OK Escola B: %s (n=%d alunos)\n\n", nome_B, nrow(dados_B)))
   
-  # Criar subpasta unica para esta comparacao
-  DIR_SAIDA <- file.path(DIR_COMPARACOES, 
-                         sprintf("Escola_%d_vs_Escola_%d_%s", 
-                                 ID_ESCOLA_A, ID_ESCOLA_B, timestamp))
-  if (!dir.exists(DIR_SAIDA)) {
-    dir.create(DIR_SAIDA, showWarnings = FALSE, recursive = TRUE)
-  }
-  cat(sprintf("?? Pasta de saida: %s\n\n", basename(DIR_SAIDA)))
+  SUBPASTA_SAIDA <- file.path(
+    "comparacoes", sprintf("escola_%d_vs_escola_%d", ID_ESCOLA_A, ID_ESCOLA_B)
+  )
   
 } else {
   
@@ -172,16 +161,14 @@ if (USAR_IDS) {
   cat(sprintf("Arquivo A: %s\n", ARQUIVO_XLSX_A))
   cat(sprintf("Arquivo B: %s\n\n", ARQUIVO_XLSX_B))
   
-  # Precisaria de readxl
-  if (!require(readxl, quietly = TRUE)) {
-    install.packages("readxl")
-    library(readxl)
+  if (!requireNamespace("readxl", quietly = TRUE)) {
+    stop("Pacote 'readxl' nao instalado. Consulte TESTE/DOCUMENTACAO/requisitos.md.")
   }
   
-  dados_A <- read_excel(ARQUIVO_XLSX_A) %>%
+  dados_A <- readxl::read_excel(ARQUIVO_XLSX_A) %>%
     as_tibble()
   
-  dados_B <- read_excel(ARQUIVO_XLSX_B) %>%
+  dados_B <- readxl::read_excel(ARQUIVO_XLSX_B) %>%
     as_tibble()
   
   # Tentar extrair info do arquivo
@@ -193,13 +180,7 @@ if (USAR_IDS) {
   cat(sprintf("OK Escola A: %d alunos carregados\n", nrow(dados_A)))
   cat(sprintf("OK Escola B: %d alunos carregados\n\n", nrow(dados_B)))
   
-  # Criar subpasta unica para esta comparacao
-  DIR_SAIDA <- file.path(DIR_COMPARACOES, 
-                         sprintf("Comparacao_XLSX_%s", timestamp))
-  if (!dir.exists(DIR_SAIDA)) {
-    dir.create(DIR_SAIDA, showWarnings = FALSE, recursive = TRUE)
-  }
-  cat(sprintf("?? Pasta de saida: %s\n\n", basename(DIR_SAIDA)))
+  SUBPASTA_SAIDA <- file.path("comparacoes", "comparacao_xlsx")
 }
 
 # ============================================================================
@@ -473,27 +454,34 @@ if (length(lp_a) > 0 & length(lp_b) > 0) {
 cat(">>> Exportando resultados...\n")
 
 # CSV da comparacao
-nome_comparacao <- file.path(DIR_SAIDA,
-                              sprintf("Comparacao_Escola_%s_vs_%s_%s.csv",
-                                      str_sub(nome_A, 1, 10),
-                                      str_sub(nome_B, 1, 10),
-                                      timestamp))
+nome_seguro_A <- str_replace_all(str_to_lower(nome_A), "[^a-z0-9]+", "_") |>
+  str_remove("_$")
+nome_seguro_B <- str_replace_all(str_to_lower(nome_B), "[^a-z0-9]+", "_") |>
+  str_remove("_$")
+nome_comparacao <- caminho_saida(
+  DIR_ANALISE, SUBPASTA_SAIDA,
+  sprintf("comparacao_escola_%s_vs_%s",
+          str_sub(nome_seguro_A, 1, 30), str_sub(nome_seguro_B, 1, 30)),
+  "csv"
+)
 
 write_csv(as_tibble(comparacao), nome_comparacao)
 cat(sprintf("   OK Tabela: %s\n", basename(nome_comparacao)))
 
 # Dados agregados
 dados_agg <- bind_rows(agg_A, agg_B)
-nome_agg <- file.path(DIR_SAIDA,
-                      sprintf("Perfis_Escolas_%s.csv", timestamp))
+nome_agg <- caminho_saida(
+  DIR_ANALISE, SUBPASTA_SAIDA, "perfis_escolas", "csv"
+)
 
 write_csv(dados_agg, nome_agg)
 cat(sprintf("   OK Perfis: %s\n", basename(nome_agg)))
 
 # Exportar tabela de atributos (se disponivel)
 if (!is.null(meta_A) && !is.null(meta_B)) {
-  nome_atributos <- file.path(DIR_SAIDA,
-                              sprintf("Atributos_Escolas_%s.csv", timestamp))
+  nome_atributos <- caminho_saida(
+    DIR_ANALISE, SUBPASTA_SAIDA, "atributos_escolas", "csv"
+  )
   write_csv(as_tibble(atributos), nome_atributos)
   cat(sprintf("   OK Atributos: %s\n", basename(nome_atributos)))
 }
@@ -544,8 +532,9 @@ p <- dados_plot %>%
     legend.key.size = grid::unit(0.5, "cm")
   )
 
-nome_plot <- file.path(DIR_SAIDA,
-                       sprintf("visualizacao_comparacao_%s.png", timestamp))
+nome_plot <- caminho_saida(
+  DIR_ANALISE, SUBPASTA_SAIDA, "visualizacao_comparacao", "png"
+)
 
 ggsave(nome_plot, plot = p, width = 10, height = 6, dpi = 300)
 cat(sprintf("   OK Grafico: %s\n", basename(nome_plot)))
@@ -558,7 +547,7 @@ cat("\n" , strrep("=", 80) , "\n", sep="")
 cat("COMPARACAO COMPLETA\n")
 cat(strrep("=", 80), "\n\n", sep="")
 
-cat(sprintf("Arquivos salvos em: %s\n\n", DIR_SAIDA))
+cat(sprintf("Arquivos salvos em: %s\n\n", dirname(nome_plot)))
 
 # Mostrar resumo de caracteristicas se disponivel
 if (!is.null(meta_A) && !is.null(meta_B)) {

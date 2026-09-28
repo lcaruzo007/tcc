@@ -8,7 +8,7 @@
 # ENTRADA: metadados_escolas_*.csv (saida de classificar_escolas.r)
 #
 # SAIDA: 
-#   - resultados_comparacao_YYYYMMDD_HHMMSS.csv (tabela de testes)
+#   - outputs/<YYYY-MM-DD>/tabelas/resultados_comparacao_<HHMMSS>.csv
 #   - 01_boxplot_tipo_escola.png (Figura 1)
 #   - 02_boxplot_urbano_rural.png (Figura 2)
 #   - 03_boxplot_capital_interior.png (Figura 3)
@@ -26,17 +26,21 @@ library(data.table)
 # CAMINHOS
 # =========================================================================
 
+detectar_raiz <- function() {
+  cwd <- normalizePath(getwd(), winslash = "/", mustWork = TRUE)
+  while (cwd != dirname(cwd)) {
+    if (dir.exists(file.path(cwd, "TESTE"))) return(cwd)
+    cwd <- dirname(cwd)
+  }
+  stop("Nao foi possivel localizar a pasta TESTE.")
+}
+
 RAIZ <- detectar_raiz()
 DIR_TESTE <- file.path(RAIZ, "TESTE")
 DIR_ANALISE <- file.path(DIR_TESTE, "3_ANALISE_DE_GRUPOS")
-DIR_PROCESSADOS <- file.path(DIR_ANALISE, "outputs/metadados")
-DIR_FIGURAS <- file.path(DIR_ANALISE, "outputs/figuras")
+DIR_OUTPUTS <- file.path(DIR_ANALISE, "outputs")
 
 source(file.path(RAIZ, "TESTE", "DOCUMENTACAO", "utils_saeb.r"))
-
-dir.create(DIR_FIGURAS, showWarnings = FALSE, recursive = TRUE)
-
-timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
 
 # =========================================================================
 # CARREGAR METADADOS
@@ -44,15 +48,14 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
 
 cat(">>> Carregando metadados das escolas...\n")
 
-arquivos_meta <- list.files(DIR_PROCESSADOS, 
-                             pattern = "^metadados_escolas_.*\\.csv$",
-                             full.names = TRUE)
+arquivo_meta <- encontrar_arquivo_mais_recente(
+  DIR_OUTPUTS, "metadados_escolas", "metadados"
+)
 
-if (length(arquivos_meta) == 0) {
+if (is.null(arquivo_meta)) {
   stop("? Nenhum arquivo de metadados encontrado! Execute classificar_escolas.r primeiro.")
 }
 
-arquivo_meta <- sort(arquivos_meta, decreasing = TRUE)[1]
 cat(sprintf("   Usando: %s\n", basename(arquivo_meta)))
 
 metadados <- read_csv(arquivo_meta, show_col_types = FALSE)
@@ -101,7 +104,7 @@ fazer_wilcoxon <- function(x, y, nome_x, nome_y, variavel) {
     Mediana1 = median(x_clean),
     Mediana2 = median(y_clean),
     U = round(U, 2),
-    p_valor = format(teste$p.value, digits = 4, scientific = TRUE),
+    p_valor = unname(teste$p.value),
     r_rank_biserial = round(r, 4),
     Significancia = sig
   )
@@ -178,7 +181,19 @@ cat("\n>>> COMPARACAO 5: AREA_LOCAL (Urbana_Capital x Urbana_Interior x Rural_Ca
 # Aqui comparamos as 4 combinacoes par a par, nas duas direcoes, assim como
 # as demais comparacoes deste script.
 
-grupos_area_local <- c("Urbana_Capital", "Urbana_Interior", "Rural_Capital", "Rural_Interior")
+grupos_esperados_area_local <- c(
+  "Urbana_Capital", "Urbana_Interior", "Rural_Capital", "Rural_Interior"
+)
+grupos_area_local <- intersect(
+  grupos_esperados_area_local, unique(na.omit(metadados$AREA_LOCAL))
+)
+grupos_ausentes <- setdiff(grupos_esperados_area_local, grupos_area_local)
+if (length(grupos_ausentes) > 0L) {
+  message(
+    "Categorias AREA_LOCAL sem escolas e ignoradas: ",
+    paste(grupos_ausentes, collapse = ", ")
+  )
+}
 
 pares_area_local <- combn(grupos_area_local, 2, simplify = FALSE)
 
@@ -206,11 +221,23 @@ for (par in pares_area_local) {
 
 cat("\n>>> Exportando tabela de comparacoes...\n")
 
-nome_saida_tabela <- file.path(DIR_PROCESSADOS,
-                                paste0("resultados_comparacao_", timestamp, ".csv"))
+comparacoes <- comparacoes |>
+  mutate(
+    p_valor_ajustado_bh = p.adjust(p_valor, method = "BH"),
+    Significancia_ajustada = case_when(
+      p_valor_ajustado_bh < 0.001 ~ "***",
+      p_valor_ajustado_bh < 0.01 ~ "**",
+      p_valor_ajustado_bh < 0.05 ~ "*",
+      TRUE ~ "ns"
+    )
+  )
+
+nome_saida_tabela <- caminho_saida(
+  DIR_ANALISE, "tabelas", "resultados_comparacao", "csv"
+)
 
 write_csv(comparacoes, nome_saida_tabela)
-cat(sprintf("   OK Tabela salva: resultados_comparacao_%s.csv\n", timestamp))
+cat(sprintf("   OK Tabela salva: %s\n", basename(nome_saida_tabela)))
 
 # =========================================================================
 # BOXPLOTS - DESIGN PROFISSIONAL PARA TCC
@@ -235,6 +262,7 @@ dados_plot <- metadados %>%
     names_to = "Disciplina",
     values_to = "Proficiencia"
   ) %>%
+  filter(!is.na(Proficiencia), is.finite(Proficiencia)) %>%
   mutate(Disciplina = dplyr::case_when(
                               Disciplina == "MEDIA_MT" ~ "Matematica",
                               Disciplina == "MEDIA_LP" ~ "Lingua Portuguesa",
@@ -276,7 +304,7 @@ criar_boxplot <- function(dados, var_x, paleta, titulo, fig_num,
   # Construir grafico
   p <- dados %>%
     ggplot(aes(x = !!sym(var_x), y = Proficiencia, fill = !!sym(var_x))) +
-    geom_violin(alpha = 0.25, size = 0.8, color = NA, trim = FALSE) +
+    geom_violin(alpha = 0.25, linewidth = 0.8, color = NA, trim = FALSE) +
     geom_boxplot(alpha = 0.8, width = 0.3, outlier.alpha = 0.5, outlier.size = 1.8,
                  outlier.color = "#666666", color = "#333333") +
     geom_hline(aes(yintercept = mediana_geral, linetype = "Mediana geral"),
@@ -318,7 +346,7 @@ p1 <- criar_boxplot(
   fig_num = 1
 )
 
-ggsave(file.path(DIR_FIGURAS, "01_boxplot_tipo_escola.png"),
+ggsave(caminho_saida(DIR_ANALISE, "figuras", "01_boxplot_tipo_escola", "png"),
        plot = p1, width = LARGURA_PADRAO, height = ALTURA_PADRAO, 
        dpi = DPI_PADRAO, bg = "white")
 
@@ -333,7 +361,7 @@ p2 <- criar_boxplot(
   fig_num = 2
 )
 
-ggsave(file.path(DIR_FIGURAS, "02_boxplot_urbano_rural.png"),
+ggsave(caminho_saida(DIR_ANALISE, "figuras", "02_boxplot_urbano_rural", "png"),
        plot = p2, width = LARGURA_PADRAO, height = ALTURA_PADRAO, 
        dpi = DPI_PADRAO, bg = "white")
 
@@ -348,7 +376,7 @@ p3 <- criar_boxplot(
   fig_num = 3
 )
 
-ggsave(file.path(DIR_FIGURAS, "03_boxplot_capital_interior.png"),
+ggsave(caminho_saida(DIR_ANALISE, "figuras", "03_boxplot_capital_interior", "png"),
        plot = p3, width = LARGURA_PADRAO, height = ALTURA_PADRAO, 
        dpi = DPI_PADRAO, bg = "white")
 
@@ -365,7 +393,7 @@ p4 <- criar_boxplot(
 ) +
   theme(axis.text.x = element_text(angle = 30, hjust = 1))
 
-ggsave(file.path(DIR_FIGURAS, "04_boxplot_inse.png"),
+ggsave(caminho_saida(DIR_ANALISE, "figuras", "04_boxplot_inse", "png"),
        plot = p4, width = LARGURA_PADRAO, height = ALTURA_PADRAO, 
        dpi = DPI_PADRAO, bg = "white")
 
@@ -398,7 +426,7 @@ mediana_geral5 <- median(dados_area_local$Proficiencia, na.rm = TRUE)
 
 p5 <- dados_area_local %>%
   ggplot(aes(x = AREA_LOCAL, y = Proficiencia, fill = AREA_LOCAL)) +
-  geom_violin(alpha = 0.25, size = 0.8, color = NA, trim = FALSE) +
+  geom_violin(alpha = 0.25, linewidth = 0.8, color = NA, trim = FALSE) +
   geom_boxplot(alpha = 0.8, width = 0.3, outlier.alpha = 0.5, outlier.size = 1.8,
                outlier.color = "#666666", color = "#333333") +
   geom_hline(aes(yintercept = mediana_geral5, linetype = "Mediana geral"),
@@ -428,7 +456,7 @@ if (nrow(dados_area_local) <= 500) {
   p5 <- p5 + geom_jitter(width = 0.15, alpha = 0.25, size = 1.2, color = "#555555")
 }
 
-ggsave(file.path(DIR_FIGURAS, "05_boxplot_area_local.png"),
+ggsave(caminho_saida(DIR_ANALISE, "figuras", "05_boxplot_area_local", "png"),
        plot = p5, width = LARGURA_PADRAO, height = ALTURA_PADRAO,
        dpi = DPI_PADRAO, bg = "white")
 
@@ -445,11 +473,6 @@ cat(strrep("=", 80), "\n\n", sep = "")
 cat("Tabela de Resultados:\n")
 print(comparacoes, n = Inf)
 
-cat(sprintf("\n? Testes concluidos! Arquivos salvos em: %s\n", DIR_PROCESSADOS))
-cat("   ?? Tabela: resultados_comparacao_%s.csv\n", timestamp)
-cat("   ?? Figuras (DPI = %d):\n", DPI_PADRAO)
-cat("      - 01_boxplot_tipo_escola.png\n")
-cat("      - 02_boxplot_urbano_rural.png\n")
-cat("      - 03_boxplot_capital_interior.png\n")
-cat("      - 04_boxplot_inse.png\n")
-cat("      - 05_boxplot_area_local.png\n")
+cat(sprintf("\n? Testes concluidos! Arquivos salvos em: %s\n", dirname(nome_saida_tabela)))
+cat(sprintf("   ?? Tabela: %s\n", basename(nome_saida_tabela)))
+cat(sprintf("   ?? Figuras com DPI = %d em outputs/<data>/figuras/\n", DPI_PADRAO))

@@ -35,7 +35,19 @@ caminho_saida <- function(DIR_BASE_MODULO, subpasta, nome, ext = "csv") {
   } else {
     arquivo <- paste0(nome, "_", hhmmss)
   }
-  file.path(pasta_out, arquivo)
+  caminho <- file.path(pasta_out, arquivo)
+  contador <- 1L
+  while (file.exists(caminho)) {
+    sufixo <- paste0("_", contador)
+    if (nzchar(ext)) {
+      arquivo <- paste0(nome, "_", hhmmss, sufixo, ".", ext)
+    } else {
+      arquivo <- paste0(nome, "_", hhmmss, sufixo)
+    }
+    caminho <- file.path(pasta_out, arquivo)
+    contador <- contador + 1L
+  }
+  caminho
 }
 
 # -------------------------------------------------------------------------
@@ -71,9 +83,18 @@ encontrar_arquivo_mais_recente <- function(pasta, nome_base, tipo = NULL) {
     }
   }
 
-  # 2) Compatibilidade: pasta direta (padrao antigo de sufixo)
+  # 2) Compatibilidade: pasta direta ou subpasta de tipo no padrao antigo
   padrao_antigo <- paste0("^", nome_base, "(_[0-9]{8}_[0-9]{6}(_[0-9]+)?)?\\.[Cc][Ss][Vv]$")
-  arqs_antigos <- list.files(pasta, pattern = padrao_antigo, full.names = TRUE)
+  pastas_antigas <- pasta
+  if (!is.null(tipo)) {
+    pasta_tipo_antiga <- file.path(pasta, tipo)
+    if (dir.exists(pasta_tipo_antiga)) {
+      pastas_antigas <- c(pastas_antigas, pasta_tipo_antiga)
+    }
+  }
+  arqs_antigos <- unlist(lapply(pastas_antigas, function(p) {
+    list.files(p, pattern = padrao_antigo, full.names = TRUE)
+  }))
   candidatos <- c(candidatos, arqs_antigos)
 
   if (length(candidatos) == 0L) return(NULL)

@@ -40,8 +40,9 @@ A Fase 5 substitui o INSE por seus itens brutos:
 ```
 5_REGRESSAO_ITENS_BRUTOS/
 ├── Scripts/
-│   ├── regressao_itens_brutos_dummy.r          [Script principal]
-│   └── NAO_regressao_itens_brutos_dummy_v2.r   [versão alternativa — não executar]
+│   └── regressao_itens_brutos_dummy.r          [Script principal]
+├── arquivo/
+│   └── regressao_itens_brutos_dummy_v2_obsoleto.r [histórico — não executar]
 └── outputs/
     └── <YYYY-MM-DD>/                  (uma pasta por dia de execução)
         ├── modelos/

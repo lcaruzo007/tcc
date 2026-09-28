@@ -1,0 +1,18 @@
+# R / RStudio
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+*.Rproj
+
+# Dados locais do SAEB
+MICRODADOS_SAEB_2023/DADOS/
+MICRODADOS_SAEB_2023/INPUTS/*.csv
+
+# Resultados regeneraveis
+**/outputs/
+
+# Arquivos temporarios
+*.tmp
+*.log
+~$*

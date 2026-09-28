@@ -31,14 +31,14 @@ install.packages(c("mediation", "boot"))
 
 1. **Caminho A**: Variável independente → INSE (mediador)
 2. **Caminho B + C'**: INSE + variável independente → Proficiência
-3. **Efeito indireto** (A × B): bootstrap BCa com 1000 simulações (Preacher & Hayes, 2008)
-4. **Proporção mediada**: |indireto| / |total| × 100
+3. **Efeito indireto** (A × B): bootstrap percentil com 1000 simulações (Preacher & Hayes, 2008)
+4. **Proporção mediada**: estimativa média do objeto `mediate()` × 100; pode exceder 100% em mediação inconsistente
 
 Base teórica: Baron & Kenny (1986), estendida por Preacher & Hayes. Detalhes no bloco `NOTA METODOLOGICA - MEDIACAO COM INSE` no cabeçalho do script.
 
 ## Análises
 
 - `TIPO_ESCOLA` → INSE → Proficiência (MT e LP; referência: Pública)
-- `AREA_LOCAL` → INSE → Proficiência (MT e LP; 3 dummies — `Rural_Interior`, `Rural_Capital`, `Urbana_Interior` — com referência `Urbana_Capital`, capturando a interação urbano/rural × capital/interior)
+- `AREA_LOCAL` → INSE → Proficiência (MT e LP; categorias observadas contra a referência `Urbana_Capital`). Categorias sem variação são registradas e ignoradas.
 
-Tabela `mediacao_*.csv` consolida 8 linhas: 2 (TIPO_ESCOLA × {MT,LP}) + 6 (3 dummies de AREA_LOCAL × {MT,LP}).
+Tabela `mediacao_*.csv` consolida 2 linhas de `TIPO_ESCOLA` e 2 linhas por categoria observada de `AREA_LOCAL`. Em MG/2023, `Rural_Capital` não foi observada, portanto a execução atual gera 6 linhas.

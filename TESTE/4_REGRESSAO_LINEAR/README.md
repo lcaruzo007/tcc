@@ -25,7 +25,7 @@ Com base em preditores categóricos (tipo de escola, localização, área) e con
 ├── Scripts/
 │   ├── regressao_linear_multipla.r                 [PRINCIPAL]
 │   ├── grafico_coeficientes_referencia_oposta.r   [AUXILIAR — ref oposta Privada+Rural_Interior]
-│   └── testes_pressupostos.r                      [COMPLEMENTAR — verifique se existe]
+│   └── analise_sensibilidade_regressao.r          [AUXILIAR — OLS/WLS + HC3]
 └── outputs/
     └── <YYYY-MM-DD>/             (uma pasta por dia de execução)
         ├── modelos/
@@ -39,7 +39,9 @@ Com base em preditores categóricos (tipo de escola, localização, área) e con
         │   ├── coeficientes_MT_<HHMMSS>.csv / coeficientes_LP_<HHMMSS>.csv
         │   ├── comparacao_todas_referencias_MT_<HHMMSS>.csv
         │   ├── comparacao_todas_referencias_LP_<HHMMSS>.csv
-        │   └── coeficientes_referencia_oposta_{MT,LP}_<HHMMSS>.csv   (script auxiliar)
+        │   ├── coeficientes_referencia_oposta_{MT,LP}_<HHMMSS>.csv
+        │   ├── sensibilidade_coeficientes_HC3_<HHMMSS>.csv
+        │   └── sensibilidade_ajustes_OLS_WLS_<HHMMSS>.csv
         ├── diagnosticos/
         │   ├── diagnosticos_MT_<HHMMSS>.csv
         │   └── diagnosticos_LP_<HHMMSS>.csv
@@ -65,7 +67,7 @@ Com base em preditores categóricos (tipo de escola, localização, área) e con
    internamente). Não depende de `classificar_escolas.r`.
 2. **Dependências R**:
    ```r
-   install.packages(c("tidyverse", "broom", "patchwork", "car", "lmtest"))
+   install.packages(c("tidyverse", "broom", "patchwork", "car", "lmtest", "sandwich"))
    ```
 
 ### Passo 1: Ajuste do Modelo (Principal)
@@ -124,31 +126,24 @@ figuras/
   └── resumo_qualidade_ajuste_<HHMMSS>.png
 ```
 
-### Passo 2: Validação de Pressupostos (Complementar)
+### Passo 1c: Análise de Sensibilidade (Auxiliar)
 
 ```r
-# Executar após o Passo 1:
-source("TESTE/4_REGRESSAO_LINEAR/Scripts/testes_pressupostos.r")
+source("TESTE/4_REGRESSAO_LINEAR/Scripts/analise_sensibilidade_regressao.r")
 ```
 
 **O que faz**:
-- ✓ Teste Shapiro-Wilk (normalidade)
-- ✓ Teste Breusch-Pagan (homocedasticidade)
-- ✓ VIF (multicolinearidade)
-- ✓ Durbin-Watson (independência)
-- ✓ Cook's Distance (outliers influentes)
+- ✓ Reutiliza a base agregada mais recente do modelo principal
+- ✓ Compara OLS com WLS ponderado pelo número de alunos da escola
+- ✓ Calcula erros-padrão e intervalos de confiança robustos HC3
+- ✓ Mantém as referências `Publica` e `Urbana_Capital`
+- ✓ Não substitui nem altera o modelo principal
 
-**Saídas geradas** (~6 arquivos):
+**Saídas geradas**:
 ```
-outputs_diagnosticos/
-  ├── resumo_testes_*.csv
-  ├── vif_MT_*.csv
-  └── vif_LP_*.csv
-
-outputs_figuras/
-  ├── multicolinearidade_VIF_*.png
-  ├── outliers_cooks_MT_*.png
-  └── outliers_cooks_LP_*.png
+outputs/<YYYY-MM-DD>/tabelas/
+  ├── sensibilidade_coeficientes_HC3_<HHMMSS>.csv
+  └── sensibilidade_ajustes_OLS_WLS_<HHMMSS>.csv
 ```
 
 ---
@@ -162,8 +157,8 @@ outputs_figuras/
 | (Intercept) | 275.34 | 2.15 | 128.07 | < 0.001 | *** | 271.12 | 279.56 |
 | INSE_MEDIO_norm | 18.45 | 1.23 | 15.00 | < 0.001 | *** | 16.04 | 20.86 |
 | TIPO_ESCOLA_Privada | 28.67 | 3.42 | 8.38 | < 0.001 | *** | 22.00 | 35.34 |
-| AREA_Rural | -12.34 | 2.87 | -4.30 | < 0.001 | *** | -17.96 | -6.72 |
-| LOCALIZACAO_Interior | -5.67 | 1.95 | -2.91 | 0.0036 | ** | -9.49 | -1.85 |
+| AREA_LOCAL_Rural_Interior | -12.34 | 2.87 | -4.30 | < 0.001 | *** | -17.96 | -6.72 |
+| AREA_LOCAL_Urbana_Interior | -5.67 | 1.95 | -2.91 | 0.0036 | ** | -9.49 | -1.85 |
 
 **Interpretação**:
 - **Coeficiente**: Mudança esperada em MEDIA_MT para cada 1 unidade na variável preditora
@@ -302,19 +297,14 @@ Para variável categórica com $k$ categorias, criar $k-1$ dummies:
 
 ```mermaid
 graph TD
-    A["1. classificar_escolas.r"] -->|gera| B["metadados_escolas_*.csv"]
-    B --> C["regressao_linear_multipla.r"]
+    A["TS_ALUNO_34EM.csv"] --> C["regressao_linear_multipla.r"]
     C -->|ajusta| D["Modelo MT"]
     C -->|ajusta| E["Modelo LP"]
     D --> F["Tabelas de Coeficientes"]
     E --> F
-    F --> G["testes_pressupostos.r"]
-    G -->|valida| H["Normalidade?"]
-    G -->|valida| I["Homocedasticidade?"]
-    G -->|valida| J["Multicolinearidade?"]
-    H --> K["Resumo dos Pressupostos"]
-    I --> K
-    J --> K
+    C --> B["base_escolas_agregada_*.csv"]
+    B --> G["analise_sensibilidade_regressao.r"]
+    G --> H["OLS/WLS + HC3"]
 ```
 
 ---
@@ -325,8 +315,8 @@ Para erros ou dúvidas:
 1. Verificar logs de execução no console
 2. Conferir estrutura de pastas (`4_REGRESSAO_LINEAR/` deve estar em `TESTE/`)
 3. Garantir que `TS_ALUNO_34EM.csv` está em `MICRODADOS_SAEB_2023/DADOS/`
-4. Revisar pressupostos com `testes_pressupostos.r`
+4. Rodar `analise_sensibilidade_regressao.r` e comparar OLS/WLS com HC3
 
 ---
 
-**Versão**: 2.1 (refatoração julho/2026 — pastas datadas, variável `AREA_LOCAL`, script auxiliar de referência oposta)
+**Versão**: 2.2 (setembro/2026 — sensibilidade OLS/WLS com HC3)

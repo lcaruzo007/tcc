@@ -78,7 +78,9 @@
 library(tidyverse)
 library(broom)
 library(patchwork)
-if (!requireNamespace("car", quietly = TRUE)) install.packages("car")
+if (!requireNamespace("car", quietly = TRUE)) {
+  stop("Pacote 'car' nao instalado. Consulte TESTE/DOCUMENTACAO/requisitos.md.")
+}
 library(car)
 
 
@@ -219,9 +221,6 @@ formatar_pvalor <- function(p) {
 # =============================================================================
 # INICIALIZACAO
 # =============================================================================
-
-for (d in c(DIR_MODELOS, DIR_DIAGNOSTICOS, DIR_FIGURAS, DIR_TABELAS))
-  dir.create(d, showWarnings = FALSE, recursive = TRUE)
 
 ts_global <- format(Sys.time(), "%H%M%S")
 
@@ -724,9 +723,9 @@ gerar_grafico_coef_tcc <- function(colorido = TRUE) {
                linetype = "dashed", colour = "#999999", linewidth = 0.8) +
 
     # ?? IC 95% ???????????????????????????????????????????????????????????????
-    geom_errorbarh(aes(xmin = IC_95_inf, xmax = IC_95_sup),
-                   position = position_dodge(width = 0.55),
-                   height = 0.25, linewidth = 1.3, alpha = 0.45) +
+    geom_errorbar(aes(xmin = IC_95_inf, xmax = IC_95_sup),
+                  orientation = "y", position = position_dodge(width = 0.55),
+                  width = 0.25, linewidth = 1.3, alpha = 0.45) +
 
     # ?? Pontos ???????????????????????????????????????????????????????????????
     geom_point(position = position_dodge(width = 0.55),
@@ -992,7 +991,7 @@ gerar_grafico_coef <- function(coef_df, nome, cor_sig, refs_usadas) {
   ggplot(dados_plot, aes(y = Termo, x = Coef, fill = Significancia)) +
     geom_col(alpha = 0.85) +
     geom_errorbar(aes(xmin = IC_95_inf, xmax = IC_95_sup),
-                  height = 0.25, linewidth = 0.6) +
+                  orientation = "y", width = 0.25, linewidth = 0.6) +
     geom_text(aes(label = Sig,
                   x = if_else(Coef >= 0, IC_95_sup + 0.5, IC_95_inf - 0.5)),
               size = 4.5, fontface = "bold", colour = "#333333") +
@@ -1059,7 +1058,7 @@ gerar_pred_obs <- function(modelo, summary_mod, nome, cor) {
     annotate("label", x = Inf, y = -Inf,
              label = paste0("R2 = ", r2, "\nRMSE = ", rmse, "\nCorr = ", corr),
              hjust = 1.05, vjust = -0.3, size = 4, fontface = "bold",
-             colour = "#333333", fill = "#FFFFEE", label.size = 0.3) +
+             colour = "#333333", fill = "#FFFFEE", linewidth = 0.3) +
     coord_fixed(ratio = 1) +
     labs(
       title    = paste0("Preditos vs Observados (", nome, ")"),
@@ -1079,7 +1078,7 @@ ggsave(caminho_saida(DIR_BASE, "figuras", "preditos_vs_observados_MT", "png"),
        p_pred_mt, width = 9, height = 9, dpi = 180, bg = "white", device = "png")
 message("Figura salva: preditos_vs_observados_MT")
 
-ggsave(file.path(DIR_FIGURAS, paste0("preditos_vs_observados_LP_", ts_global, ".png")),
+ggsave(caminho_saida(DIR_BASE, "figuras", "preditos_vs_observados_LP", "png"),
        p_pred_lp, width = 9, height = 9, dpi = 180, bg = "white", device = "png")
 message("Figura salva: preditos_vs_observados_LP")
 
@@ -1104,7 +1103,7 @@ p_r2 <- ggplot(dados_r2, aes(x = Modelo, y = R2, fill = Modelo)) +
   annotate("text", x = 0.55, y = 0.51, label = "50% - bom",       size = 3.5, colour = "#FFA500",  hjust = 0) +
   annotate("text", x = 0.55, y = 0.71, label = "70% - excelente", size = 3.5, colour = "#D62728",  hjust = 0) +
   scale_y_continuous(
-    limits = c(0, max(dados_r2$R2) * 1.2),
+    limits = c(0, max(0.75, max(dados_r2$R2) * 1.2)),
     labels = scales::percent_format(accuracy = 1)
   ) +
   scale_fill_manual(values = setNames(dados_r2$Cor, dados_r2$Modelo), guide = "none") +
@@ -1117,7 +1116,7 @@ p_r2 <- ggplot(dados_r2, aes(x = Modelo, y = R2, fill = Modelo)) +
   ) +
   tema_saeb()
 
-ggsave(file.path(DIR_FIGURAS, paste0("resumo_qualidade_ajuste_", ts_global, ".png")),
+ggsave(caminho_saida(DIR_BASE, "figuras", "resumo_qualidade_ajuste", "png"),
        p_r2, width = 8, height = 6, dpi = 180, bg = "white", device = "png")
 message("Figura salva: resumo_qualidade_ajuste")
 
@@ -1125,8 +1124,8 @@ message("Figura salva: resumo_qualidade_ajuste")
 # SALVAR MODELOS RDS
 # =============================================================================
 
-saveRDS(modelo_mt, file.path(DIR_MODELOS, paste0("modelo_MT_", ts_global, ".rds")))
-saveRDS(modelo_lp, file.path(DIR_MODELOS, paste0("modelo_LP_", ts_global, ".rds")))
+saveRDS(modelo_mt, caminho_saida(DIR_BASE, "modelos", "modelo_MT", "rds"))
+saveRDS(modelo_lp, caminho_saida(DIR_BASE, "modelos", "modelo_LP", "rds"))
 
 # =============================================================================
 # RELATORIO FINAL
@@ -1166,9 +1165,7 @@ message("    -> Escolas RURAIS DO INTERIOR tem ~8,5 pontos MENOS de proficiencia
 message("    -> comparadas as escolas URBANAS DA CAPITAL (referencia Urbana_Capital)")
 
 message("\nArquivos gerados em:")
-message("  ", DIR_TABELAS)
-message("  ", DIR_FIGURAS)
-message("  ", DIR_MODELOS)
+message("  ", file.path(DIR_BASE, "outputs", format(Sys.Date(), "%Y-%m-%d")))
 
 message("\nArquivos de referencia:")
 message("  ? REFERENCIAS_MODELOS_", ts_global, ".csv (categorias de referencia de cada dummy)")

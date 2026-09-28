@@ -53,6 +53,8 @@ Justificativas estatísticas das decisões metodológicas.
 ### Teste de Wilcoxon
 - Não-paramétrico: não assume normalidade
 - Robusto para dados de proficiência (podem ser assimétricos)
+- P-valores mantidos como números para permitir reanálise
+- Correção de Benjamini-Hochberg reportada para controlar múltiplas comparações
 
 ### Tamanho de efeito: rank-biserial r
 - 0.0-0.1: negligenciável
@@ -65,6 +67,7 @@ Justificativas estatísticas das decisões metodológicas.
 2. Urbana vs Rural
 3. Capital vs Interior
 4. Alto INSE vs Baixo INSE
+5. Todos os pares das quatro categorias de AREA_LOCAL
 
 ## PASSO 7: Clustering
 
@@ -83,6 +86,11 @@ Justificativas estatísticas das decisões metodológicas.
 - Vermelho: Privada
 
 ## PASSO 8: Regressão Linear Múltipla
+
+Os coeficientes são associações condicionais. O desenho observacional e agregado
+por escola não identifica, sozinho, efeitos causais. Termos como "impacto" devem
+ser usados como motivação substantiva; na interpretação dos resultados, prefira
+"associação" ou "diferença ajustada".
 
 ### Variáveis dummy
 - TIPO_ESCOLA: referência = Pública
@@ -125,12 +133,12 @@ Testar se INSE media o efeito de variáveis de contexto sobre a proficiência.
 ### Metodologia
 1. **Caminho A**: Variável independente → INSE (mediador)
 2. **Caminho B + C'**: INSE + variável independente → Proficiência
-3. **Efeito indireto** (A × B): bootstrap BCa com 1000 simulações (Preacher & Hayes, 2008)
-4. **Proporção mediada**: |indireto| / |total| × 100
+3. **Efeito indireto** (A × B): bootstrap percentil com 1000 simulações (Preacher & Hayes, 2008)
+4. **Proporção mediada**: estimativa média fornecida por `mediate()` × 100
 
 ### Análises
 - TIPO_ESCOLA → INSE → Proficiência (MT e LP; referência: Pública)
-- AREA_LOCAL → INSE → Proficiência (MT e LP; 3 dummies — `Rural_Interior`, `Rural_Capital`, `Urbana_Interior` — com referência `Urbana_Capital`)
+- AREA_LOCAL → INSE → Proficiência (MT e LP; categorias observadas contra `Urbana_Capital`; categorias sem variação são ignoradas)
 
 ### Justificativa
 - Responde: "Escolas privadas têm melhor desempenho PORQUE têm INSE maior?"

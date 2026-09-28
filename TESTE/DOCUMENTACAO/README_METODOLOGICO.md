@@ -57,7 +57,7 @@ Passos entre colchetes sao opcionais.
 | 7 | Clustering | `dendrograma_analise_completa.r` | Ward.D2 em 2D e 3D |
 | 8 | Regressao | `regressao_linear_multipla.r` | Modelo linear com dummies (INSE + TIPO_ESCOLA + AREA_LOCAL) |
 | 9 | Itens brutos | `regressao_itens_brutos_dummy.r` | Regressao exploratoria com ~150 itens |
-| 10 | Mediacao | `analise_mediacao.r` | INSE como mediador (bootstrap BCa) |
+| 10 | Mediacao | `analise_mediacao.r` | INSE como mediador (bootstrap percentil) |
 
 ---
 
@@ -112,7 +112,7 @@ de escola rural no interior.
 |-----------|------------|------------|
 | `Urbana_Capital` | urbana + BH/Capital | alta (referencia) |
 | `Urbana_Interior` | urbana + demais municipios | dominante |
-| `Rural_Capital` | rural + Capital | baixa |
+| `Rural_Capital` | rural + Capital | nao observada em MG/2023 |
 | `Rural_Interior` | rural + Interior | moderada |
 
 ### 3.5 PASSO 5 -- Comparacoes entre Grupos
@@ -210,14 +210,14 @@ tem INSE maior?"
 
 1. **Caminho A**: VI -> INSE (mediador)
 2. **Caminho B + C'**: INSE + VI -> Proficiencia
-3. **Efeito indireto** (A x B): bootstrap BCa com 1.000 simulacoes
+3. **Efeito indireto** (A x B): bootstrap percentil com 1.000 simulacoes
 4. **Proporcao mediada**: |indireto| / |total| x 100
 
 **Análises realizadas**:
 
 - `TIPO_ESCOLA` -> `INSE` -> Proficiencia (MT e LP; ref.: Publica)
-- `AREA_LOCAL` -> `INSE` -> Proficiencia (MT e LP; 3 dummies --
-  `Rural_Interior`, `Rural_Capital`, `Urbana_Interior` -- com ref. `Urbana_Capital`)
+- `AREA_LOCAL` -> `INSE` -> Proficiencia (MT e LP; categorias observadas
+  contra `Urbana_Capital`; categorias sem variacao sao ignoradas)
 
 **Justificativa para politicas publicas**: separar efeito direto (tipo de
 escola) do efeito indireto (via INSE) informa se investimentos em
@@ -253,10 +253,10 @@ MICRODADOS_SAEB_2023/DADOS/TS_ALUNO_34EM.csv
 [PASSO 3] Dashboard   -> Shiny (opcional)
     |
     v
-[PASSO 4] Metadados   -> outputs/metadados/metadados_escolas_*.csv
+[PASSO 4] Metadados   -> outputs/<data>/metadados/metadados_escolas_*.csv
     |
     +---> [PASSO 5] Comparacoes  -> resultados_comparacao_*.csv + figuras
-    +---> [PASSO 6] 2 escolas    -> outputs/comparacoes/
+    +---> [PASSO 6] 2 escolas    -> outputs/<data>/comparacoes/
     +---> [PASSO 7] Clustering   -> dendrograma_*.png
     |
     v
@@ -298,7 +298,7 @@ MICRODADOS_SAEB_2023/DADOS/TS_ALUNO_34EM.csv
 | Teste de grupos | Wilcoxon | Nao-parametrico; dados assimetricos |
 | Tamanho de efeito | rank-biserial r | Equivalente nao-parametrico de Cohen's d |
 | Clustering | Ward.D2 | Minimiza variancia intra-cluster |
-| Mediacao | Bootstrap BCa (1000x) | Nao assume normalidade do efeito indireto |
+| Mediacao | Bootstrap percentil (1000x) | Nao assume normalidade do efeito indireto |
 | VIF iterativo | Limiar 10 | Controle de multicolinearidade (Fase 9) |
 
 ---

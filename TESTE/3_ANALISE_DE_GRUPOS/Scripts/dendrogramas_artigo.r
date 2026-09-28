@@ -155,7 +155,7 @@ gerar_geral <- function(metadados) {
   message("Figura salva: ", caminho)
 }
 
-DIR_PROCESSADOS <- file.path(DIR_MODULO, "outputs", "metadados")
+DIR_PROCESSADOS <- file.path(DIR_MODULO, "outputs")
 metadados <- carregar_metadados(DIR_PROCESSADOS)
 
 gerar_geral(metadados)

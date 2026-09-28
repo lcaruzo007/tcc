@@ -11,7 +11,7 @@
 #   - outputs/tabelas/mediacao_*.csv (efeitos direto, indireto, total)
 #   - outputs/figuras/caminhos_mediacao_MT.png (Figura 21)
 #   - outputs/figuras/caminhos_mediacao_LP.png (Figura 22)
-#   - outputs/figuras/caminhos_mediacao_AREA_LOCAL_*.png (Figuras 23 a 28)
+#   - outputs/figuras/caminhos_mediacao_AREA_LOCAL_*.png (categorias observadas)
 #
 # VERSAO: 1.0 - Julho 2026
 #
@@ -37,8 +37,8 @@
 # 2. Em vez de teste Sobel, usamos bootstrap
 #    O teste de Sobel assume normalidade do produto a*b, que raramente e
 #    satisfeita em amostras moderadas. Segundo Preacher & Hayes (2008),
-#    intervalos de confianca via bootstrap (percentil ou BCa, 5.000 repeticoes)
-#    sao mais robustos para testar o efeito indireto. Reportamos IC 95% BCa.
+#    intervalos de confianca via bootstrap percentil (1.000 repeticoes)
+#    sao mais robustos para testar o efeito indireto. Reportamos IC 95%.
 #
 # 3. Direcao causal e pressuposto de nao confundimento
 #    A mediacao pressupoe que nao exista confundidor nao medido do caminho
@@ -61,7 +61,7 @@
 #    supressao (c' e a*b de sinais opostos) - caso em que reportamos PM
 #    mas advertimos contra interpretacao literal como "porcentagem".
 #
-# CONCLUSAO: A medicao com IC bootstrap BCa, baseada no modelo Baron & Kenny
+# CONCLUSAO: A medicao com IC bootstrap percentil, baseada no modelo Baron & Kenny
 # estendido por Preacher & Hayes, e o arcabouco metodologicamente defensavel
 # para estimar em que proporcao o efeito institucional (tipo/area) sobre a
 # proficiencia passa pelo nivel socioeconomico da escola.
@@ -97,7 +97,7 @@ detectar_raiz <- function() {
 RAIZ <- detectar_raiz()
 DIR_TESTE <- file.path(RAIZ, "TESTE")
 DIR_ANALISE <- file.path(DIR_TESTE, "3_ANALISE_DE_GRUPOS")
-DIR_OUTPUTS_ANALISE <- file.path(DIR_ANALISE, "outputs", "metadados")
+DIR_OUTPUTS_ANALISE <- file.path(DIR_ANALISE, "outputs")
 
 DIR_BASE <- file.path(DIR_TESTE, "6_ANALISE_MEDIACAO")
 
@@ -110,11 +110,14 @@ ts_global <- format(Sys.time(), "%H%M%S")
 # =========================================================================
 
 pacotes_necessarios <- c("mediation", "boot")
-for (pkg in pacotes_necessarios) {
-  if (!requireNamespace(pkg, quietly = TRUE)) {
-    message("Instalando pacote: ", pkg)
-    install.packages(pkg, dependencies = TRUE)
-  }
+pacotes_ausentes <- pacotes_necessarios[
+  !vapply(pacotes_necessarios, requireNamespace, logical(1), quietly = TRUE)
+]
+if (length(pacotes_ausentes) > 0L) {
+  stop(
+    "Pacotes ausentes: ", paste(pacotes_ausentes, collapse = ", "),
+    ". Consulte TESTE/DOCUMENTACAO/requisitos.md."
+  )
 }
 
 library(mediation)
@@ -146,6 +149,28 @@ metadados <- read_csv(arq_meta, show_col_types = FALSE) %>%
   )
 
 message("Escolas validas: ", nrow(metadados))
+
+tratamentos_area <- c(
+  RURAL_INTERIOR = "Rural_Interior",
+  RURAL_CAPITAL = "Rural_Capital",
+  URBANA_INTERIOR = "Urbana_Interior"
+)
+tratamentos_disponiveis <- names(tratamentos_area)[
+  vapply(
+    names(tratamentos_area),
+    function(x) dplyr::n_distinct(metadados[[x]]) == 2L,
+    logical(1)
+  )
+]
+tratamentos_ausentes <- setdiff(names(tratamentos_area), tratamentos_disponiveis)
+if (length(tratamentos_ausentes) > 0L) {
+  message(
+    "Tratamentos AREA_LOCAL sem variacao e ignorados: ",
+    paste(tratamentos_ausentes, collapse = ", ")
+  )
+}
+
+set.seed(2023)
 
 # =========================================================================
 # PASSO 2: MEDIACAO - TIPO_ESCOLA -> INSE -> PROFICIENCIA
@@ -189,43 +214,40 @@ message("\n", strrep("-", 50))
 message("MEDIACAO 2: LOCALIZACAO -> INSE -> PROFICIENCIA")
 message(strrep("-", 50))
 
-# --- MATEMATICA: 3 mediacoes por dummy de AREA_LOCAL (ref: Urbana_Capital) ---
-helper_mediar_area_local <- function(tratamento) {
+# Mediacao por dummy observada de AREA_LOCAL (ref: Urbana_Capital)
+mediar_area_local <- function(tratamento, resposta, disciplina) {
   formula_a <- reformulate(tratamento, response = "INSE_MEDIO")
-  formula_b <- reformulate(c("INSE_MEDIO", tratamento), response = "MEDIA_MT")
+  formula_b <- reformulate(c("INSE_MEDIO", tratamento), response = resposta)
   lm_a <- lm(formula_a, data = metadados)
   lm_b <- lm(formula_b, data = metadados)
   lm_a$call$formula <- formula_a
   lm_b$call$formula <- formula_b
   m <- mediate(lm_a, lm_b, treat = tratamento, mediator = "INSE_MEDIO",
                boot = TRUE, sims = 1000)
-  message("\n>>> Matematica - Mediacao por INSE (",
+  message("\n>>> ", disciplina, " - Mediacao por INSE (",
           tratamento, " vs Urbana_Capital):")
   print(summary(m))
   m
 }
-med_loc_mt_ri <- helper_mediar_area_local("RURAL_INTERIOR")
-med_loc_mt_rc <- helper_mediar_area_local("RURAL_CAPITAL")
-med_loc_mt_ui <- helper_mediar_area_local("URBANA_INTERIOR")
 
-# --- LINGUA PORTUGUESA: 3 mediacoes por dummy de AREA_LOCAL ---
-helper_mediar_area_local_lp <- function(tratamento) {
-  formula_a <- reformulate(tratamento, response = "INSE_MEDIO")
-  formula_b <- reformulate(c("INSE_MEDIO", tratamento), response = "MEDIA_LP")
-  lm_a <- lm(formula_a, data = metadados)
-  lm_b <- lm(formula_b, data = metadados)
-  lm_a$call$formula <- formula_a
-  lm_b$call$formula <- formula_b
-  m <- mediate(lm_a, lm_b, treat = tratamento, mediator = "INSE_MEDIO",
-               boot = TRUE, sims = 1000)
-  message("\n>>> Lingua Portuguesa - Mediacao por INSE (",
-          tratamento, " vs Urbana_Capital):")
-  print(summary(m))
-  m
-}
-med_loc_lp_ri <- helper_mediar_area_local_lp("RURAL_INTERIOR")
-med_loc_lp_rc <- helper_mediar_area_local_lp("RURAL_CAPITAL")
-med_loc_lp_ui <- helper_mediar_area_local_lp("URBANA_INTERIOR")
+med_loc_mt <- setNames(
+  lapply(
+    tratamentos_disponiveis,
+    mediar_area_local,
+    resposta = "MEDIA_MT",
+    disciplina = "Matematica"
+  ),
+  tratamentos_disponiveis
+)
+med_loc_lp <- setNames(
+  lapply(
+    tratamentos_disponiveis,
+    mediar_area_local,
+    resposta = "MEDIA_LP",
+    disciplina = "Lingua Portuguesa"
+  ),
+  tratamentos_disponiveis
+)
 
 # =========================================================================
 # PASSO 4: EXPORTAR RESULTADOS
@@ -246,67 +268,49 @@ extrair_seguro <- function(med_obj, campo) {
   as.numeric(valor[1])
 }
 
-extrair_ci_seguro <- function(med_obj, campo_ci) {
+extrair_ci_seguro <- function(med_obj, campo_ci, posicao) {
   if (is.null(med_obj)) return(NA_real_)
   valor <- med_obj[[campo_ci]]
   if (is.null(valor) || length(valor) == 0 || anyNA(valor)) {
     return(NA_real_)
   }
-  as.numeric(valor[1])
+  as.numeric(valor[posicao])
 }
 
-# Tabela consolidada de mediacao - 8 linhas:
-#   2 (TIPO_ESCOLA: MT e LP) + 6 (3 dummies de AREA_LOCAL x 2 disciplinas)
-resultados_mediacao <- tibble(
-  Variavel_Independente = c(
-    "Tipo Escola (Privada)", "Tipo Escola (Privada)",
-    "AREA_LOCAL: Rural_Interior", "AREA_LOCAL: Rural_Interior",
-    "AREA_LOCAL: Rural_Capital",  "AREA_LOCAL: Rural_Capital",
-    "AREA_LOCAL: Urbana_Interior","AREA_LOCAL: Urbana_Interior"
-  ),
-  Mediador = rep("INSE_MEDIO", 8),
-  Disciplina = c("MT", "LP", "MT", "LP", "MT", "LP", "MT", "LP"),
-  Efeito_Direto = c(
-    extrair_seguro(med_tipo_mt, "d0"), extrair_seguro(med_tipo_lp, "d0"),
-    extrair_seguro(med_loc_mt_ri, "d0"), extrair_seguro(med_loc_lp_ri, "d0"),
-    extrair_seguro(med_loc_mt_rc, "d0"), extrair_seguro(med_loc_lp_rc, "d0"),
-    extrair_seguro(med_loc_mt_ui, "d0"), extrair_seguro(med_loc_lp_ui, "d0")
-  ),
-  Efeito_Indireto = c(
-    extrair_seguro(med_tipo_mt, "d1"), extrair_seguro(med_tipo_lp, "d1"),
-    extrair_seguro(med_loc_mt_ri, "d1"), extrair_seguro(med_loc_lp_ri, "d1"),
-    extrair_seguro(med_loc_mt_rc, "d1"), extrair_seguro(med_loc_lp_rc, "d1"),
-    extrair_seguro(med_loc_mt_ui, "d1"), extrair_seguro(med_loc_lp_ui, "d1")
-  ),
-  p_Direto = c(
-    extrair_ci_seguro(med_tipo_mt, "d0.ci"), extrair_ci_seguro(med_tipo_lp, "d0.ci"),
-    extrair_ci_seguro(med_loc_mt_ri, "d0.ci"), extrair_ci_seguro(med_loc_lp_ri, "d0.ci"),
-    extrair_ci_seguro(med_loc_mt_rc, "d0.ci"), extrair_ci_seguro(med_loc_lp_rc, "d0.ci"),
-    extrair_ci_seguro(med_loc_mt_ui, "d0.ci"), extrair_ci_seguro(med_loc_lp_ui, "d0.ci")
-  ),
-  p_Indireto = c(
-    extrair_ci_seguro(med_tipo_mt, "d1.ci"), extrair_ci_seguro(med_tipo_lp, "d1.ci"),
-    extrair_ci_seguro(med_loc_mt_ri, "d1.ci"), extrair_ci_seguro(med_loc_lp_ri, "d1.ci"),
-    extrair_ci_seguro(med_loc_mt_rc, "d1.ci"), extrair_ci_seguro(med_loc_lp_rc, "d1.ci"),
-    extrair_ci_seguro(med_loc_mt_ui, "d1.ci"), extrair_ci_seguro(med_loc_lp_ui, "d1.ci")
+montar_resultado <- function(nome, disciplina, med_obj) {
+  tibble(
+    Variavel_Independente = nome,
+    Mediador = "INSE_MEDIO",
+    Disciplina = disciplina,
+    Efeito_Direto = extrair_seguro(med_obj, "z.avg"),
+    IC95_Direto_Inferior = extrair_ci_seguro(med_obj, "z.avg.ci", 1),
+    IC95_Direto_Superior = extrair_ci_seguro(med_obj, "z.avg.ci", 2),
+    p_Direto = extrair_seguro(med_obj, "z.avg.p"),
+    Efeito_Indireto = extrair_seguro(med_obj, "d.avg"),
+    IC95_Indireto_Inferior = extrair_ci_seguro(med_obj, "d.avg.ci", 1),
+    IC95_Indireto_Superior = extrair_ci_seguro(med_obj, "d.avg.ci", 2),
+    p_Indireto = extrair_seguro(med_obj, "d.avg.p"),
+    Efeito_Total = extrair_seguro(med_obj, "tau.coef"),
+    p_Total = extrair_seguro(med_obj, "tau.p"),
+    Proporcao_Mediada = 100 * extrair_seguro(med_obj, "n.avg")
   )
+}
+
+resultados_mediacao <- bind_rows(
+  montar_resultado("Tipo Escola (Privada)", "MT", med_tipo_mt),
+  montar_resultado("Tipo Escola (Privada)", "LP", med_tipo_lp),
+  map_dfr(tratamentos_disponiveis, function(tratamento) {
+    nome <- paste0("AREA_LOCAL: ", tratamentos_area[[tratamento]])
+    bind_rows(
+      montar_resultado(nome, "MT", med_loc_mt[[tratamento]]),
+      montar_resultado(nome, "LP", med_loc_lp[[tratamento]])
+    )
+  })
 ) %>%
   mutate(
-    Efeito_Total = Efeito_Direto + Efeito_Indireto,
-    Proporcao_Mediada = if_else(
-      is.na(Efeito_Total) | Efeito_Total == 0,
-      NA_real_,
-      abs(Efeito_Indireto) / abs(Efeito_Total) * 100
-    ),
-    Efeito_Direto = round(Efeito_Direto, 3),
-    Efeito_Indireto = round(Efeito_Indireto, 3),
-    Efeito_Total = round(Efeito_Total, 3),
-    Proporcao_Mediada = round(Proporcao_Mediada, 1),
-    Nota = if_else(
-      is.na(Efeito_Direto),
-      "Grupo com dados insuficientes/coeficiente nao estimavel - ver log",
-      NA_character_
-    )
+    across(starts_with("Efeito_"), ~ round(., 3)),
+    across(starts_with("IC95_"), ~ round(., 3)),
+    Proporcao_Mediada = round(Proporcao_Mediada, 1)
   )
 
 write_csv(resultados_mediacao, caminho_saida(DIR_BASE, "tabelas", "mediacao", "csv"))
@@ -482,10 +486,10 @@ ggsave(caminho_saida(DIR_BASE, "figuras", "caminhos_mediacao_LP", "png"),
 message("   OK Figura 22: caminhos_mediacao_LP_", ts_global, ".png")
 
 # -------------------------------------------------------------------------
-# Figuras 23 a 28: Mediacao AREA_LOCAL -> INSE -> proficiencia
+# Figuras a partir de 23: AREA_LOCAL observado -> INSE -> proficiencia
 # -------------------------------------------------------------------------
 salvar_diagrama_area_local <- function(tratamento, nome_grupo, disciplina,
-                                       med, fig_num) {
+                                       fig_num) {
   resposta <- if (disciplina == "Matematica") "MEDIA_MT" else "MEDIA_LP"
   modelo_a <- lm(as.formula(paste("INSE_MEDIO ~", tratamento)),
                  data = metadados)
@@ -510,18 +514,16 @@ salvar_diagrama_area_local <- function(tratamento, nome_grupo, disciplina,
   message("   OK Figura ", fig_num, ": ", nome_arquivo, "_", ts_global, ".png")
 }
 
-salvar_diagrama_area_local("RURAL_INTERIOR", "Rural_Interior", "Matematica",
-                           med_loc_mt_ri, 23)
-salvar_diagrama_area_local("RURAL_INTERIOR", "Rural_Interior", "Lingua Portuguesa",
-                           med_loc_lp_ri, 24)
-salvar_diagrama_area_local("RURAL_CAPITAL", "Rural_Capital", "Matematica",
-                           med_loc_mt_rc, 25)
-salvar_diagrama_area_local("RURAL_CAPITAL", "Rural_Capital", "Lingua Portuguesa",
-                           med_loc_lp_rc, 26)
-salvar_diagrama_area_local("URBANA_INTERIOR", "Urbana_Interior", "Matematica",
-                           med_loc_mt_ui, 27)
-salvar_diagrama_area_local("URBANA_INTERIOR", "Urbana_Interior", "Lingua Portuguesa",
-                           med_loc_lp_ui, 28)
+for (i in seq_along(tratamentos_disponiveis)) {
+  tratamento <- tratamentos_disponiveis[i]
+  nome_grupo <- tratamentos_area[[tratamento]]
+  salvar_diagrama_area_local(
+    tratamento, nome_grupo, "Matematica", 21 + 2 * i
+  )
+  salvar_diagrama_area_local(
+    tratamento, nome_grupo, "Lingua Portuguesa", 22 + 2 * i
+  )
+}
 
 # =========================================================================
 # RESUMO
@@ -536,4 +538,7 @@ print(resultados_mediacao)
 message("\nFiguras geradas:")
 message("  ? Figura 21: caminhos_mediacao_MT_", ts_global, ".png")
 message("  ? Figura 22: caminhos_mediacao_LP_", ts_global, ".png")
-message("  ? Figuras 23-28: caminhos_mediacao_AREA_LOCAL_*_", ts_global, ".png")
+message(
+  "  ? Figuras AREA_LOCAL: ", 2 * length(tratamentos_disponiveis),
+  " arquivo(s) caminhos_mediacao_AREA_LOCAL_*_", ts_global, ".png"
+)

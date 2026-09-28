@@ -287,14 +287,8 @@ DIR_DADOS_BRUTOS     <- file.path(RAIZ, "MICRODADOS_SAEB_2023", "DADOS")
 ARQUIVO_DADOS_BRUTOS <- arquivo_mais_recente(DIR_DADOS_BRUTOS, "^TS_ALUNO_34EM\\.csv$")
 
 # Subpastas proprias - separadas do script principal.
-# DIR_BASE e base para caminho_saida(); DIR_* legacy sao mantidos apenas
-# para mensagens de log e fallback de leitura (compatibilidade com run
-# antigas). As escritas usam caminho_saida() -> outputs/<YYYY-MM-DD>/<tipo>/
+# DIR_BASE e base para caminho_saida().
 DIR_BASE <- file.path(RAIZ, "TESTE", "5_REGRESSAO_ITENS_BRUTOS")
-DIR_MODELOS     <- file.path(DIR_BASE, "outputs/modelos")
-DIR_DIAGNOSTICOS<- file.path(DIR_BASE, "outputs/diagnosticos")
-DIR_FIGURAS     <- file.path(DIR_BASE, "outputs/figuras")
-DIR_TABELAS     <- file.path(DIR_BASE, "outputs/tabelas")
 
 # Subpastas de figuras (organizacao por tipo, dentro de outputs/<data>/figuras/).
 # Usadas como argumento `subpasta` de caminho_saida() -> cria figuras/<tipo>/.
@@ -307,8 +301,7 @@ FIG_COEF_GRUPO <- file.path("figuras", "coeficientes_grupo")
 message("Caminhos configurados:")
 message("  Dados brutos : ", ARQUIVO_DADOS_BRUTOS)
 message("  Modulo (base): ", DIR_BASE)
-message("  Saidas       : ", DIR_BASE, "/outputs/<YYYY-MM-DD>/<tipo>/")
-message("  (legacy)     : ", DIR_TABELAS, " | ", DIR_FIGURAS, "\n")
+message("  Saidas       : ", DIR_BASE, "/outputs/<YYYY-MM-DD>/<tipo>/\n")
 
 # =============================================================================
 # CONFIGURACOES
@@ -418,11 +411,6 @@ eliminar_por_vif <- function(df_modelo, resposta, limiar = LIMIAR_VIF) {
 # =============================================================================
 # INICIALIZACAO
 # =============================================================================
-
-# Pastas datadas sao criadas automaticamente por caminho_saida().
-# Os DIR_* legacy seguintes so existem para mensagens de log/fallback.
-for (d in c(DIR_MODELOS, DIR_DIAGNOSTICOS, DIR_FIGURAS, DIR_TABELAS))
-  dir.create(d, showWarnings = FALSE, recursive = TRUE)
 
 message(strrep("=", 70))
 message("REGRESSAO COM ITENS BRUTOS (DUMMIES) - DADOS SAEB")
@@ -1199,7 +1187,7 @@ gerar_pred_obs <- function(modelo, summary_mod, nome, cor) {
              label = paste0("R2 = ", r2, "\nRMSE = ", rmse,
                             "\nCorr = ", corr),
              hjust = 1.05, vjust = -0.3, size = 4.2, fontface = "bold",
-             colour = "#1A1A1A", fill = "#FFFFEE", label.size = 0.5) +
+             colour = "#1A1A1A", fill = "#FFFFEE", linewidth = 0.5) +
     coord_fixed(ratio = 1) +
     labs(
       title    = paste0("Preditos vs Observados (", nome,
@@ -1266,7 +1254,7 @@ p_r2 <- ggplot(dados_r2, aes(x = Modelo, y = R2, fill = Modelo)) +
   annotate("text", x = 0.55, y = 0.71, label = "70% - excelente",
            size = 3.8, colour = "#D62728", hjust = 0, fontface = "bold") +
   scale_y_continuous(
-    limits = c(0, max(dados_r2$R2) * 1.2),
+    limits = c(0, max(0.75, max(dados_r2$R2) * 1.2)),
     labels = scales::percent_format(accuracy = 1)
   ) +
   scale_fill_manual(values = setNames(dados_r2$Cor, dados_r2$Modelo),

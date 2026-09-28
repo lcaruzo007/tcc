@@ -24,6 +24,8 @@ pkgs <- c(
   "patchwork",    # composição de gráficos
   "car",          # VIF, Durbin-Watson
   "lmtest",       # Breusch-Pagan
+  "sandwich",     # erros-padrao robustos HC3 (sensibilidade do PASSO 8)
+  "readxl",       # entrada XLSX opcional no PASSO 6
   
   # Mediação (PASSO 10)
   "mediation",    # análise de mediação bootstrap
@@ -39,6 +41,15 @@ sapply(pkgs, require, character.only = TRUE)
 # Todos devem retornar TRUE
 ```
 
+Ou execute a verificacao sem instalar ou alterar o ambiente:
+
+```powershell
+Rscript TESTE/DOCUMENTACAO/verificar_dependencias.r
+```
+
+Os scripts de analise nao executam `install.packages()`. Dependencias ausentes
+geram uma mensagem de erro com referencia a este arquivo.
+
 ## Versões testadas
 
 | Pacote | Versão mínima | Fase |
@@ -53,6 +64,8 @@ sapply(pkgs, require, character.only = TRUE)
 | patchwork | 1.1.0 | 8-9 |
 | car | 3.1.0 | 8-9 |
 | lmtest | 0.9.0 | 8-9 |
+| sandwich | 3.0.0 | 8 (sensibilidade) |
+| readxl | 1.4.0 | 6 (opcional) |
 | mediation | 4.5.0 | 10 |
 | boot | 1.3.28 | 10 |
 
