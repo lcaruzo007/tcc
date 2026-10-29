@@ -6,6 +6,18 @@
 # VERSAO: 1.0 - Setembro 2026
 ################################################################################
 
+detectar_raiz <- function() {
+  pasta <- normalizePath(getwd(), winslash = "/")
+  while (pasta != dirname(pasta)) {
+    if (dir.exists(file.path(pasta, "TESTE"))) return(pasta)
+    pasta <- dirname(pasta)
+  }
+  stop("Pasta TESTE nao encontrada.")
+}
+RAIZ <- detectar_raiz()
+source(file.path(RAIZ, "TESTE", "DOCUMENTACAO", "ambiente_saeb.r"))
+ativar_ambiente_saeb(RAIZ)
+
 pacotes_obrigatorios <- c(
   "tidyverse", "data.table", "caret", "broom", "patchwork", "car",
   "lmtest", "sandwich", "ggdendro", "mediation", "boot"

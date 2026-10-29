@@ -80,7 +80,7 @@ DIR_ANALISE     <- file.path(RAIZ, "TESTE", "3_ANALISE_DE_GRUPOS")
 DIR_PROCESSADOS <- file.path(DIR_ANALISE, "outputs")
 
 VARS_CLUSTER <- c("MEDIA_MT", "MEDIA_LP", "INSE_MEDIO")
-N_CLUSTERS   <- 4L    # um cluster-alvo por categoria de AREA_LOCAL
+N_CLUSTERS   <- 4L    # corte exploratorio fixo; nao equivale ao numero de categorias observadas
 
 # NULL = usa todas; numero = seleciona as mais extremas de cada categoria
 # Com 4 grupos, um numero baixo mantem o dendrograma legivel
@@ -172,8 +172,8 @@ lab_cores <- dados_cluster |>
   transmute(label = sprintf("%d", ID_ESCOLA), cor = cor_grupo)
 
 legenda_df <- tibble(
-  cor    = unname(PALETA_AREA_LOCAL),
-  rotulo = names(PALETA_AREA_LOCAL)
+  cor    = unname(PALETA_AREA_LOCAL[unique(dados_cluster$AREA_LOCAL)]),
+  rotulo = unique(dados_cluster$AREA_LOCAL)
 )
 
 p_dend <- painel_dendrograma(

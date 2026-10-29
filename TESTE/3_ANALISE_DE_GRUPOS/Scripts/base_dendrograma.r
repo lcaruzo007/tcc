@@ -8,7 +8,7 @@
 #
 # NAO execute diretamente. Use source("base_dendrograma.r") nos scripts acima.
 #
-# VERSAO: 1.0 — Mai 2026
+# VERSAO: 1.0 - Mai 2026
 ################################################################################
 
 library(tidyverse)
@@ -23,17 +23,17 @@ detectar_raiz <- function() {
   cwd <- getwd()
   while (cwd != dirname(cwd)) {
     if (dir.exists(file.path(cwd, "TESTE"))) {
-      message("✓ Projeto encontrado em: ", cwd)
+      message(" Projeto encontrado em: ", cwd)
       return(cwd)
     }
     cwd <- dirname(cwd)
   }
-  message("⚠️  Pasta 'TESTE' nao encontrada automaticamente.")
+  message("  Pasta 'TESTE' nao encontrada automaticamente.")
   if (interactive()) {
     raiz <- utils::choose.dir(default = getwd(),
                               caption = "Selecione a pasta raiz do projeto TCC")
     if (is.na(raiz) || raiz == "") stop("Caminho nao selecionado.")
-    message("✓ Pasta selecionada: ", raiz)
+    message(" Pasta selecionada: ", raiz)
     return(raiz)
   } else {
     stop("Execute no RStudio ou terminal interativo.")
@@ -64,34 +64,20 @@ COR_GRUPO2 <- "#D62728"   # segundo grupo  (Interior / Rural / Privada)
 # TEMA BASE
 # =============================================================================
 
-tema_saeb <- function(base_size = 11) {
-  theme_minimal(base_size = base_size) +
-    theme(
-      plot.title       = element_text(face = "bold", size = base_size + 2,
-                                      colour = "#1A1A1A", margin = margin(b = 4)),
-      plot.subtitle    = element_text(size = base_size - 1, colour = "#555555",
-                                      margin = margin(b = 8)),
-      plot.background  = element_rect(fill = COR_FUNDO,  colour = NA),
-      panel.background = element_rect(fill = "#FFFFFF",  colour = NA),
-      panel.grid.major = element_line(colour = "#E8E8E8", linewidth = 0.4),
-      panel.grid.minor = element_blank(),
-      plot.margin      = margin(16, 16, 8, 16)
-    )
-}
 
 # =============================================================================
 # PAINEL: DENDROGRAMA
 # =============================================================================
 #
-# hc           — objeto hclust
-# lab_cores    — tibble com colunas (label, cor)  — uma linha por folha
-# y_expand     — espaco inferior para labels (default 0.30)
-# titulo       — string para plot title
-# subtitulo    — string para plot subtitle
-# annot_texto  — texto da anotacao no topo (distancia, corte, etc.)
-# altura_corte — valor numerico para linha tracejada horizontal (opcional)
-# legenda_df   — tibble (cor, label) para legenda manual no canto (opcional)
-# prof_labels  — tibble (label, prof) para linha de proficiencia abaixo do nome
+# hc           - objeto hclust
+# lab_cores    - tibble com colunas (label, cor)  - uma linha por folha
+# y_expand     - espaco inferior para labels (default 0.30)
+# titulo       - string para plot title
+# subtitulo    - string para plot subtitle
+# annot_texto  - texto da anotacao no topo (distancia, corte, etc.)
+# altura_corte - valor numerico para linha tracejada horizontal (opcional)
+# legenda_df   - tibble (cor, label) para legenda manual no canto (opcional)
+# prof_labels  - tibble (label, prof) para linha de proficiencia abaixo do nome
 # =============================================================================
 
 painel_dendrograma <- function(hc,
@@ -104,7 +90,7 @@ painel_dendrograma <- function(hc,
                                 legenda_df   = NULL,
                                 prof_labels  = NULL) {
 
-  dend_data <- dendro_data(hc, type = "rectangle")
+  dend_data <- dados_dendrograma_saeb(hc, type = "rectangle")
   seg       <- dend_data$segments
   lab       <- dend_data$labels |> left_join(lab_cores, by = "label")
 
@@ -125,7 +111,7 @@ painel_dendrograma <- function(hc,
     scale_colour_identity() +
     scale_y_continuous(
       expand = expansion(mult = c(y_expand, 0.07)),
-      name   = "Distancia Euclidiana (Ward.D2)"
+      name   = "Altura de fusao (Ward.D2; entrada euclidiana)"
     ) +
     scale_x_continuous(expand = expansion(mult = c(0.02, 0.18))) +
     labs(title = titulo, subtitle = subtitulo) +
@@ -197,10 +183,10 @@ painel_dendrograma <- function(hc,
 # PAINEL: ESTATISTICAS DO GRUPO (lateral direita)
 # =============================================================================
 #
-# resumo_grupos — tibble com colunas:
+# resumo_grupos - tibble com colunas:
 #   GRUPO, N, MT_medio, MT_dp, LP_medio, LP_dp, INSE_medio, INSE_dp
 #   cor_grupo
-# titulo        — string
+# titulo        - string
 # =============================================================================
 
 painel_estatisticas <- function(resumo_grupos, titulo = "Estatisticas por Grupo") {
@@ -215,9 +201,9 @@ painel_estatisticas <- function(resumo_grupos, titulo = "Estatisticas por Grupo"
       cor   = g$cor_grupo,
       linhas_txt = c(
         sprintf("n = %d escolas", g$N),
-        sprintf("MT: %.1f  (dp ±%.1f)", g$MT_medio,   g$MT_dp),
-        sprintf("LP: %.1f  (dp ±%.1f)", g$LP_medio,   g$LP_dp),
-        sprintf("INSE: %.2f  (dp ±%.2f)", g$INSE_medio, g$INSE_dp)
+        sprintf("MT: %.1f  (dp %.1f)", g$MT_medio,   g$MT_dp),
+        sprintf("LP: %.1f  (dp %.1f)", g$LP_medio,   g$LP_dp),
+        sprintf("INSE: %.2f  (dp %.2f)", g$INSE_medio, g$INSE_dp)
       )
     )
   })
@@ -302,8 +288,8 @@ painel_estatisticas <- function(resumo_grupos, titulo = "Estatisticas por Grupo"
 # PAINEL: SCATTER VALIDADOR
 # =============================================================================
 #
-# dados       — tibble com ID_ESCOLA, MEDIA_MT, MEDIA_LP, INSE_MEDIO, GRUPO, cor_grupo
-# var_forma   — string: coluna para shape (ex. "TIPO_ESCOLA")
+# dados       - tibble com ID_ESCOLA, MEDIA_MT, MEDIA_LP, INSE_MEDIO, GRUPO, cor_grupo
+# var_forma   - string: coluna para shape (ex. "TIPO_ESCOLA")
 # =============================================================================
 
 painel_scatter <- function(dados,
@@ -376,7 +362,7 @@ salvar_figura_completa <- function(p_dend,
 
   caminho <- file.path(dir_saida, nome_arquivo)
   ggsave(caminho, final, width = largura, height = 11, dpi = 180, bg = COR_FUNDO)
-  message("✓ Figura salva: ", nome_arquivo)
+  message(" Figura salva: ", nome_arquivo)
   invisible(caminho)
 }
 
@@ -394,8 +380,9 @@ carregar_metadados <- function(dir_processados) {
   }
   message("Metadados: ", basename(arq))
   df <- read_csv(arq, show_col_types = FALSE)
+  validar_metadados_saeb(df)
   message("Escolas carregadas: ", nrow(df))
   df
 }
 
-message("✓ base_dendrograma.r carregado.")
+message(" base_dendrograma.r carregado.")

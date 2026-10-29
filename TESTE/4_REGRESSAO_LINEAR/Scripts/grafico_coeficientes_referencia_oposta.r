@@ -122,8 +122,8 @@ extrair_coef <- function(modelo) {
   broom::tidy(modelo) |>
     mutate(
       Sig      = formatar_pvalor(p.value),
-      IC_lower = estimate - 1.96 * std.error,
-      IC_upper = estimate + 1.96 * std.error
+      IC_lower = estimate - qt(0.975, df.residual(modelo)) * std.error,
+      IC_upper = estimate + qt(0.975, df.residual(modelo)) * std.error
     ) |>
     select(
       Termo    = term,
@@ -241,7 +241,7 @@ gerar_grafico <- function(colorido = TRUE) {
     ) +
 
     labs(
-      title    = "Determinantes da proficiencia escolar - SAEB 2023 (3º serie EM)",
+      title    = "Associacoes com a proficiencia escolar - SAEB 2023 (3a/4a series EM)",
       subtitle = paste0(
         "Coeficientes da regressao linear multipla com intervalos de confianca 95%\n",
         "Comparado as escolas privadas e rurais do Interior (referencia: Privada_Rural_Interior)"
@@ -255,8 +255,8 @@ gerar_grafico <- function(colorido = TRUE) {
         "N = ", n_escolas, " escolas  |  ",
         "R2 ajustado: Matematica = ", r2_mt, "%  .  Lingua Portuguesa = ", r2_lp, "%\n",
         "*** p<0,001  ** p<0,01  * p<0,05  |  ",
-        "IC 95% calculado como Coef +/- 1,96 x EP\n",
-        "INSE normalizado (z-score): coeficiente representa o efeito de +1 desvio-padrao ",
+        "IC 95% calculado como Coef +/- t(gl residual) x EP\n",
+        "INSE normalizado (z-score): coeficiente representa a associacao com +1 desvio-padrao ",
         "no nivel socioeconomico medio da escola"
       )
     ) +

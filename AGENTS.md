@@ -120,7 +120,7 @@ categorias sem variacao em vez de ajustar coeficientes nao estimaveis.
 - Nao commitar secrets/credenciais. Nao commitar arquivos `outputs/` (sao
   regeneraveis). Use `git status` antes de commitar.
 
-## Estado atual (Agosto 2026)
+## Estado atual (Outubro 2026)
 
 - Pipeline enxuto de **10 passos** em **6 modulos** (1-6). Os modulos de HLM
   (modelos hierarquicos), validacao cruzada + ROC e indice composto (PCA)
@@ -137,6 +137,18 @@ categorias sem variacao em vez de ajustar coeficientes nao estimaveis.
 - `executar_pipeline.r` executa as etapas nao interativas em sessoes R isoladas.
 - `TESTE/DOCUMENTACAO/validar_pipeline.r` verifica sintaxe e invariantes basicos.
 - Microdados CSV e pastas `outputs/` sao locais e ignorados pelo Git.
+- Todos os seis modulos gravam novas saidas datadas; os modulos 1 e 2 usam
+  `tabelas/<ID_ESCOLA>/` dentro da pasta datada e preservam leitura legada.
+- `dados_saeb.r` centraliza recorte MG/2023, validade, dominios, agregacao e
+  elegibilidade. Medias descritivas e pareadas tem denominadores explicitos.
+- Mediacao de AREA_LOCAL usa contrastes par a par com Urbana_Capital.
+- `renv.lock` fixa R/pacotes; o executor confere versoes, resolve produtores e
+  vincula entradas ao catalogo da execucao. Manifestos/logs ficam em
+  `TESTE/DOCUMENTACAO/outputs/<data>/`.
+- `testar_contratos.r` usa dados sinteticos. `validar_pipeline.r --exigir-dados`
+  tambem exige metadados locais; `--somente-sintaxe` verifica apenas parse.
+- `metodologia.md` e a fonte metodologica principal; `README_METODOLOGICO.md`
+  e um indice para evitar justificativas divergentes.
 
 ## Fontes de verdade
 

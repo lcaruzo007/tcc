@@ -12,6 +12,10 @@ MICRODADOS_SAEB_2023/INPUTS/*.csv
 # Resultados regeneraveis
 **/outputs/
 
+# Auditoria local (nao versionar)
+/auditoria_tcc/
+/RELATORIO_AUDITORIA_TCC.md
+
 # Arquivos temporarios
 *.tmp
 *.log

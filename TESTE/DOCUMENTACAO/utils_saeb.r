@@ -1,7 +1,7 @@
 # =========================================================================
 # utils_saeb.r ? Funcoes utilitarias compartilhadas entre os scripts SAEB
 # =========================================================================
-# Fonte: source("utils_saeb.r")  (use caminho absoluto se necessario)
+# Fonte: source(file.path(RAIZ, "TESTE", "DOCUMENTACAO", "utils_saeb.r"))
 
 # =========================================================================
 # STRUCTURE DE PASTAS DATADAS
@@ -47,6 +47,7 @@ caminho_saida <- function(DIR_BASE_MODULO, subpasta, nome, ext = "csv") {
     caminho <- file.path(pasta_out, arquivo)
     contador <- contador + 1L
   }
+  registrar_artefato_saeb(caminho, DIR_BASE_MODULO, nome, subpasta)
   caminho
 }
 
@@ -61,14 +62,18 @@ caminho_saida <- function(DIR_BASE_MODULO, subpasta, nome, ext = "csv") {
 #   <nome_base>.<ext>                            (sem timestamp)
 # -------------------------------------------------------------------------
 encontrar_arquivo_mais_recente <- function(pasta, nome_base, tipo = NULL) {
+  if (Sys.getenv("SAEB_LEITURA_ESTRITA", "0") == "1") {
+    arquivo <- resolver_artefato_execucao_saeb(pasta, nome_base, tipo)
+    registrar_entrada_saeb(arquivo)
+    return(arquivo)
+  }
   candidatos <- c()
 
   # 1) Procurar em subpastas datadas (YYYY-MM-DD)
   if (dir.exists(pasta)) {
-    subpastas <- list.dirs(pasta, full.names = TRUE, recursive = TRUE)
-    # Filtra apenas subpastas que terminam em YYYY-MM-DD (eventualmente aninhadas)
-    datas <- grep("[0-9]{4}-[0-9]{2}-[0-9]{2}$", basename(subpastas), value = TRUE)
-    pasta_datas <- subpastas[basename(subpastas) %in% datas]
+    pasta_datas <- list.files(pasta, pattern = "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+                               full.names = TRUE)
+    pasta_datas <- pasta_datas[dir.exists(pasta_datas)]
     if (length(pasta_datas) > 0L) {
       # Se tipo especificado, concatena com subpasta do tipo
       if (!is.null(tipo)) {
@@ -95,18 +100,30 @@ encontrar_arquivo_mais_recente <- function(pasta, nome_base, tipo = NULL) {
   arqs_antigos <- unlist(lapply(pastas_antigas, function(p) {
     list.files(p, pattern = padrao_antigo, full.names = TRUE)
   }))
-  candidatos <- c(candidatos, arqs_antigos)
+  if (!length(candidatos)) candidatos <- arqs_antigos
 
   if (length(candidatos) == 0L) return(NULL)
 
-  # Critério de "mais recente": mtime do arquivo OU, se empate, lexico do path
-  info <- file.info(candidatos)
-  candidatos[which.max(info$mtime)]
+  # Prioriza o layout datado e a ordem cronologica dos nomes, incluindo colisao.
+  chaves <- gsub("\\", "/", candidatos, fixed = TRUE)
+  datas <- sub(".*?/([0-9]{4}-[0-9]{2}-[0-9]{2})/.*", "\\1", chaves)
+  datas[!grepl("^[0-9]{4}-[0-9]{2}-[0-9]{2}$", datas)] <- "0000-00-00"
+  nomes <- basename(candidatos)
+  antigos <- datas == "0000-00-00" & grepl("_[0-9]{8}_[0-9]{6}", nomes)
+  datas[antigos] <- sub(".*_([0-9]{4})([0-9]{2})([0-9]{2})_[0-9]{6}.*", "\\1-\\2-\\3", nomes[antigos])
+  horarios <- sub(".*_([0-9]{6})(_[0-9]+)?[.][Cc][Ss][Vv]$", "\\1", nomes)
+  horarios[!grepl("^[0-9]{6}$", horarios)] <- "000000"
+  contador <- rep(0, length(nomes))
+  colisoes <- grepl("_[0-9]{6}_[0-9]+[.]", nomes)
+  contador[colisoes] <- as.numeric(sub(".*_[0-9]{6}_([0-9]+)[.].*", "\\1", nomes[colisoes]))
+  arquivo <- candidatos[order(datas, horarios, contador, candidatos, decreasing = TRUE)[1]]
+  registrar_entrada_saeb(arquivo)
+  arquivo
 }
 
 # -------------------------------------------------------------------------
 # Verifica se existe ao menos um arquivo com o padrao de nome_base
-# (mantém compatibilidade com sufixo timestamp antigo).
+# (mantem compatibilidade com sufixo timestamp antigo).
 # -------------------------------------------------------------------------
 arquivo_com_versao_existe <- function(pasta, nome_base, tipo = NULL) {
   !is.null(encontrar_arquivo_mais_recente(pasta, nome_base, tipo))
@@ -190,12 +207,12 @@ ORDINAIS_SAEB <- list(
 NOMINAIS_SAEB <- list(
   TX_RESP_Q01 = list(
     prefix = "Q01",
-    mapping = c("A" = "masculino", "B" = "feminino")
+    mapping = c("A" = "masculino", "B" = "feminino", "C" = "Nao_declarado")
   ),
   TX_RESP_Q04 = list(
     prefix = "Q04",
     mapping = c("A" = "Branca", "B" = "Preta", "C" = "Parda", 
-                "D" = "Amarela", "E" = "Indigena")
+                "D" = "Amarela", "E" = "Indigena", "F" = "Nao_declarada")
   )
 )
 
@@ -224,8 +241,8 @@ DICT_PERGUNTAS_SAEB <- c(
   TX_RESP_Q06 = "Quantas pessoas moram na sua casa, contando com voce?",
   TX_RESP_Q07a = "Normalmente, quem mora na sua casa? - Mae(s) ou madrasta(s).",
   TX_RESP_Q07b = "Normalmente, quem mora na sua casa? - Pai(s) ou padrasto(s).",
-  TX_RESP_Q07c = "Normalmente, quem mora na sua casa? - Avo(s).",
-  TX_RESP_Q07d = "Normalmente, quem mora na sua casa? - Avo(s).",
+  TX_RESP_Q07c = "Normalmente, quem mora na sua casa? - Avos (mulheres).",
+  TX_RESP_Q07d = "Normalmente, quem mora na sua casa? - Avos (homens).",
   TX_RESP_Q07e = "Normalmente, quem mora na sua casa? - Outros familiares, irmaos(as), tios(as), primos(as) etc.",
   TX_RESP_Q08 = "Qual e a maior escolaridade da sua mae (ou madrasta ou mulher responsavel por voce)?",
   TX_RESP_Q09 = "Qual e a maior escolaridade de seu pai (ou padrasto homem responsavel por voce)?",
@@ -529,3 +546,5 @@ detectar_raiz <- function() {
     stop("Nao foi possivel detectar o caminho automaticamente.")
   }
 }
+source(file.path(detectar_raiz(), "TESTE", "DOCUMENTACAO", "execucao_saeb.r"))
+source(file.path(detectar_raiz(), "TESTE", "DOCUMENTACAO", "dados_saeb.r"))

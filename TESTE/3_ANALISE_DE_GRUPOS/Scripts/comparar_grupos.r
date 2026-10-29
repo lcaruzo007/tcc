@@ -59,6 +59,7 @@ if (is.null(arquivo_meta)) {
 cat(sprintf("   Usando: %s\n", basename(arquivo_meta)))
 
 metadados <- read_csv(arquivo_meta, show_col_types = FALSE)
+validar_metadados_saeb(metadados)
 cat(sprintf("   OK Metadados carregados: %d escolas\n", nrow(metadados)))
 
 # =========================================================================
@@ -87,7 +88,7 @@ fazer_wilcoxon <- function(x, y, nome_x, nome_y, variavel) {
   n1 <- length(x_clean)
   n2 <- length(y_clean)
   U <- teste$statistic
-  r <- 1 - (2 * U) / (n1 * n2)
+  r <- (2 * U) / (n1 * n2) - 1
   
   sig <- case_when(
     teste$p.value < 0.001 ~ "***",
@@ -275,25 +276,20 @@ criar_boxplot <- function(dados, var_x, paleta, titulo, fig_num,
                           mostrar_jitter = TRUE, max_jitter = 500) {
   
   n_total <- nrow(dados)
-  n_grupos <- dados %>% group_by(!!sym(var_x)) %>% summarise(n = n())
+  n_grupos <- dados |> group_by(.data[[var_x]]) |> summarise(n = n_distinct(ID_ESCOLA))
   n_txt <- paste(n_grupos[[var_x]], "(n=", n_grupos$n, ")", sep = "", collapse = " | ")
   
   # Obter resultados estatisticos para anotacao
   comp_filtradas <- comparacoes %>%
-    filter(Variavel == "PROFICIENCIA_MT") %>%
     filter(Grupo1 %in% dados[[var_x]] & Grupo2 %in% dados[[var_x]])
   
   if (nrow(comp_filtradas) > 0) {
-    p_val <- comp_filtradas$p_valor[1]
-    r_val <- comp_filtradas$r_rank_biserial[1]
-    sig_txt <- comp_filtradas$Significancia[1]
-    
-    annot_texto <- paste0(
-      formatar_p_annot(as.numeric(p_val)),
-      " | Efeito ", interpretar_efeito(r_val),
-      " (r = ", format(round(r_val, 3), nsmall = 3), ")",
-      " ", sig_txt
-    )
+    comp_filtradas <- comp_filtradas |> distinct(Variavel, .keep_all = TRUE)
+    annot_texto <- paste(vapply(seq_len(nrow(comp_filtradas)), function(i) {
+      x <- comp_filtradas[i, ]
+      paste0(sub("PROFICIENCIA_", "", x$Variavel), ": ", x$Grupo1, " vs ", x$Grupo2,
+             "; BH ", formatar_p_annot(x$p_valor_ajustado_bh), "; r = ", x$r_rank_biserial)
+    }, character(1)), collapse = "\n")
   } else {
     annot_texto <- NULL
   }
@@ -314,9 +310,9 @@ criar_boxplot <- function(dados, var_x, paleta, titulo, fig_num,
     scale_linetype_manual(name = NULL, values = c("Mediana geral" = "dashed")) +
     labs(
       title = paste0("Figura ", fig_num, " - ", titulo),
-      subtitle = paste0(n_txt, " | Mediana geral = ", round(mediana_geral, 1)),
+      subtitle = paste0(n_txt, " escolas com alguma nota valida | Mediana conjunta = ", round(mediana_geral, 1)),
       x = NULL,
-      y = "Proficiencia Media (escala SAEB 0-500)",
+      y = "Proficiencia media (pontos SAEB)",
       caption = if (!is.null(annot_texto)) paste0("Wilcoxon: ", annot_texto) else NULL
     ) +
     tema_saeb(base_size = 12) +
@@ -420,7 +416,7 @@ annot_kw <- sprintf(
   formatar_p_annot(kw_lp$p.value)
 )
 
-n_grupos5 <- dados_area_local %>% group_by(AREA_LOCAL) %>% summarise(n = n())
+n_grupos5 <- dados_area_local |> group_by(AREA_LOCAL) |> summarise(n = n_distinct(ID_ESCOLA))
 n_txt5 <- paste(n_grupos5$AREA_LOCAL, "(n=", n_grupos5$n, ")", sep = "", collapse = " | ")
 mediana_geral5 <- median(dados_area_local$Proficiencia, na.rm = TRUE)
 
@@ -435,10 +431,10 @@ p5 <- dados_area_local %>%
   scale_fill_manual(values = PALETA_AREA_LOCAL) +
   scale_linetype_manual(name = NULL, values = c("Mediana geral" = "dashed")) +
   labs(
-    title = "Figura 5 - Distribuicao de Proficiencia por Area x Localizacao (4 categorias)",
+    title = "Figura 5 - Proficiencia por categorias observadas de AREA_LOCAL",
     subtitle = paste0(n_txt5, " | Mediana geral = ", round(mediana_geral5, 1)),
     x = NULL,
-    y = "Proficiencia Media (escala SAEB 0-500)",
+    y = "Proficiencia media (pontos SAEB)",
     caption = paste0("Kruskal-Wallis: ", annot_kw, "  |  comparacoes par a par na tabela")
   ) +
   tema_saeb(base_size = 12) +

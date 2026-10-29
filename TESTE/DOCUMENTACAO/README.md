@@ -1,104 +1,119 @@
-# Documentacao — Analise SAEB 2023
+# Guia do pipeline · SAEB 2023
 
-Guia de uso do pipeline de analise.
+[Visão geral](../../README.md) · [Metodologia](metodologia.md) · [Outputs](referencia_outputs.md) · [Requisitos](requisitos.md)
 
-## Comece aqui
+## Executar
 
-1. Verifique as dependencias em [requisitos.md](requisitos.md)
-2. Execute `Rscript TESTE/DOCUMENTACAO/validar_pipeline.r`
-3. Use `Rscript executar_pipeline.r` ou siga a ordem do [README principal](../../README.md)
-4. Consulte [referencia_outputs.md](referencia_outputs.md) para entender os CSVs gerados
-5. Use [metodologia.md](metodologia.md) para escrever o TCC
+Abra o terminal na raiz. O executor confere as versões de R e pacotes contra
+[renv.lock](../../renv.lock), resolve dependências e executa cada script em um
+processo R isolado.
 
-## Fluxo de Dados
-
-```
-MICRODADOS_SAEB_2023/DADOS/TS_ALUNO_34EM.csv
-    |
-    v
-[PASSO 1] 1_LIMPEZA  -> outputs/{ID_ESCOLA}/dados_escola_em_numeros.csv
-    |
-    v
-[PASSO 2] 2_ANALISE  -> outputs/{ID_ESCOLA}/correlacoes_*.csv, dados_FINAL_*.csv
-    |
-    v
-[PASSO 3] 2_ANALISE  -> Dashboard Shiny (opcional)
-    |
-    v
-[PASSO 4] 3_GRUPOS   -> outputs/<data>/metadados/metadados_escolas_*.csv
-    |
-    v
-[PASSO 5] 3_GRUPOS   -> outputs/<data>/tabelas/resultados_comparacao_*.csv + figuras
-    |
-    v
-[PASSO 7] 3_GRUPOS   -> outputs/<data>/figuras/dendrograma_*.png
-    |
-    v
-[PASSO 8] 4_REGRESSAO -> outputs/{modelos,tabelas,figuras}/
-    |
-    v
-[PASSO 9] 5_ITENS     -> outputs/{modelos,tabelas,figuras}/  (complementar)
-    |
-    v
-[PASSO 10] 6_MEDIACAO -> outputs/{tabelas,figuras}/
+```powershell
+Rscript TESTE/DOCUMENTACAO/verificar_dependencias.r
+Rscript TESTE/DOCUMENTACAO/validar_pipeline.r --somente-sintaxe
+Rscript executar_pipeline.r
+Rscript TESTE/DOCUMENTACAO/validar_pipeline.r --exigir-dados
 ```
 
-> O `metadados_escolas_*.csv` gerado no PASSO 4 e a entrada dos PASSOS 5, 7 e 10.
+A validação completa usa casos sintéticos e os metadados locais. Sem metadados,
+a execução sem `--exigir-dados` informa explicitamente que a validação foi parcial.
 
-## Estrutura de cada fase
+```powershell
+# Acrescenta automaticamente o passo 4 antes da mediacao
+Rscript executar_pipeline.r --passos=10
 
-| Fase | Pasta | Script principal | Entrada | Saida |
-|------|-------|-----------------|---------|-------|
-| 1 | `1_LIMPEZA/` | `ajeitar_dados.r` | MICRODADOS | `outputs/{ID}/dados_escola_em_numeros.csv` |
-| 2 | `2_ANALISE/` | `correlacao.r` | `1_LIMPEZA/outputs/` | `outputs/{ID}/correlacoes_*.csv` |
-| 3 | `2_ANALISE/` | `graficos.r` | `2_ANALISE/outputs/` | Dashboard Shiny |
-| 4 | `3_GRUPOS/` | `classificar_escolas.r` | MICRODADOS | `outputs/<data>/metadados/metadados_*.csv` |
-| 5 | `3_GRUPOS/` | `comparar_grupos.r` | metadados mais recentes | `outputs/<data>/tabelas/` + figuras |
-| 6 | `3_GRUPOS/` | `comparar_duas_escolas.r` | metadados mais recentes | `outputs/<data>/comparacoes/` |
-| 7 | `3_GRUPOS/` | `dendrograma_analise_completa.r` | metadados mais recentes | `outputs/<data>/figuras/` |
-| 8 | `4_REGRESSAO/` | `regressao_linear_multipla.r` | MICRODADOS | `outputs/{modelos,tabelas,figuras}/` |
-| 9 | `5_ITENS/` | `regressao_itens_brutos_dummy.r` | MICRODADOS | `outputs/{modelos,tabelas,figuras}/` |
-| 10 | `6_MEDIACAO/` | `analise_mediacao.r` | metadados | `outputs/{tabelas,figuras}/` |
+# Acrescenta o passo 1; limita apenas o ramo individual aos IDs informados
+Rscript executar_pipeline.r --passos=2 --escolas=61399103,61432986
 
-> **Modulos removidos**: HLM (modelos hierarquicos), validacao cruzada + ROC e
-> indice composto (PCA) nao fazem mais parte do pipeline. Vide `diario.md`.
-
-## Ordem de execucao
-
-```
-PASSO 1 -> PASSO 2 -> [PASSO 3] -> PASSO 4 -> PASSO 5 -> [PASSO 6] -> PASSO 7 -> PASSO 8 -> [PASSO 9] -> PASSO 10
+# Modelo principal, referencias alternativas e sensibilidade OLS/WLS com HC3
+Rscript executar_pipeline.r --passos=8 --auxiliares
 ```
 
-Passos entre colchetes sao opcionais.
+Os passos 3 (Shiny) e 6 (duas escolas) permanecem manuais. No R:
 
-## Deteccao Automatica de Caminhos
-
-Todos os scripts detectam automaticamente a pasta raiz do projeto (funcao `detectar_raiz()`). Funciona em qualquer computador, independente do nome da pasta de usuario.
-
-Se a deteccao falhar, o script pedira para selecionar a pasta raiz manualmente.
-
-## Configuracoes
-
-Cada script tem configuracoes no topo. As principais:
-
-### correlacao.r
 ```r
-modo_execucao <- "pendentes"   # "todas", "pendentes", "especificas"
-limiar_cor <- 0.30             # |r| minimo para manter
+shiny::runApp("TESTE/2_ANALISE_POR_ESCOLA/Scripts/graficos.r")
 ```
 
-### comparar_duas_escolas.r
+No passo 6, configure os IDs ou os arquivos XLSX. Ambos os modos exigem
+indicadores de validade das notas e do INSE; campos ausentes provocam erro.
+
+## Dependências reais
+
+```text
+CSV -> 1: limpeza -> 2: correlacoes -> 3: dashboard
+CSV -> 4: metadados -> 5: grupos / 6: duas escolas / 7: dendrogramas / 10: mediacao
+CSV -> 8: regressao principal -> auxiliares
+CSV -> 9: itens brutos
+```
+
+O CSV deve conter exclusivamente `ID_SAEB = 2023`, `ID_UF = 31` e séries
+`12/13`. A leitura interrompe o processamento se esse contrato não for cumprido.
+Não há filtragem silenciosa do arquivo nacional.
+
+A entrada `MICRODADOS_SAEB_2023/DADOS/TS_ALUNO_34EM.csv` foi substituída em
+29/10/2026 pelo recorte MG conferido na base nacional fornecida, mantendo os
+173.918 alunos e 2.338 escolas. O arquivo anterior foi preservado em backup.
+A proveniência está em `outputs/2026-10-29/metadados/atualizacao_fonte_MG_102852.json`.
+As saídas anteriores permanecem históricas e precisam ser regeneradas com
+essa entrada; validar o CSV não atualiza automaticamente os modelos salvos.
+
+## Organização das saídas
+
+Todos os módulos gravam novas saídas por meio de `caminho_saida()`:
+
+```text
+<modulo>/outputs/<YYYY-MM-DD>/<tipo>/<nome>_<HHMMSS>.<ext>
+```
+
+Nos módulos 1 e 2, tabelas escolares ficam em `tabelas/<ID_ESCOLA>/`.
+Os relatórios de respostas do módulo 1 ficam em `diagnosticos/<ID_ESCOLA>/`.
+Um contador evita colisões no mesmo segundo. Os leitores continuam aceitando
+os caminhos antigos para consulta manual; arquivos históricos não são movidos.
+Na consulta manual, a lista de escolas prioriza a pasta datada mais recente com
+tabelas escolares. O ranking do buscador é exploratório e sensível ao tamanho da escola.
+
+## Rastreabilidade
+
+Cada execução gera em `DOCUMENTACAO/outputs/<data>/`:
+
+| Artefato | Conteúdo |
+|----------|----------|
+| `metadados/manifesto_*.rds` | ID, argumentos, revisão e estado do Git, hashes MD5, ambiente e estado de cada etapa |
+| `metadados/artefatos_*.csv` | Entradas e saídas declaradas, etapa e horário |
+| `metadados/ambiente_*.csv` | Versões instaladas de pacotes e versão de compilação |
+| `metadados/entradas_*.rds` | Catálogo de artefatos disponibilizados ao próximo subprocesso |
+| `diagnosticos/etapa_*.log` | Console de cada script |
+
+O executor só permite ler artefatos produzidos na execução corrente. A seleção
+de `--passos` acrescenta seus produtores; uma dependência ausente gera erro.
+Na consulta manual, a busca prioriza o layout datado e ordena por data, horário
+e contador do nome, sem depender de quando o arquivo foi copiado.
+
+Para inspecionar um manifesto no R:
+
 ```r
-ID_ESCOLA_A <- 61432986        # Altere para a escola desejada
-ID_ESCOLA_B <- 61466120        # Altere para a escola desejada
+m <- readRDS("caminho/para/manifesto_da_execucao.rds")
+m$Status
+m$Etapas
+m$MD5_Entrada
+stopifnot(identical(
+  unname(tools::md5sum(names(m$MD5_Artefatos))),
+  unname(m$MD5_Artefatos)
+))
 ```
 
-## Troubleshooting
+## Infraestrutura compartilhada
 
-| Problema | Solucao |
-|----------|---------|
-| "Arquivo nao encontrado" | Use `/` nao `\` nos caminhos |
-| "Pacote X nao instalado" | Execute `install.packages("X")` |
-| "metadados_escolas nao encontrado" | Execute PASSO 4 antes |
-| "dados_FINAL nao encontrado" | Execute PASSO 2 antes |
-| Demora muito | Normal: 173k registros na primeira execucao |
+| Arquivo | Responsabilidade |
+|---------|------------------|
+| `utils_saeb.r` | Dicionários, caminhos, temas e carregamento dos helpers |
+| `dados_saeb.r` | Recorte, validade, respostas, médias, classificações e elegibilidade |
+| `execucao_saeb.r` | Catálogo de artefatos e compatibilidade de leitura |
+| `ambiente_saeb.r` | Conferência do ambiente contra o lockfile |
+| `executar_etapa.r` | Inicialização de cada subprocesso |
+| `testar_contratos.r` | Casos sintéticos de regressão |
+| `validar_pipeline.r` | Sintaxe, testes e invariantes dos metadados reais |
+
+A [análise do projeto](analise_projeto.md) preserva o diagnóstico inicial e
+registra as correções. O [diário](../../diario.md) guarda as sessões.

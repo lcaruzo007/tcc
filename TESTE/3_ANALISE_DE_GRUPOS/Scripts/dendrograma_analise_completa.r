@@ -89,7 +89,7 @@ N_MAX_POR_GRUPO <- 30
 
 # Remover outliers de MEDIA_LP antes do clustering? (TRUE recomendado)
 # Remove escolas com MEDIA_LP fora de [media - 3*dp, media + 3*dp]
-REMOVER_OUTLIERS_LP <- TRUE
+REMOVER_OUTLIERS_LP <- FALSE
 
 # Variaveis usadas no clustering (devem existir nos metadados)
 VARS_CLUSTER <- c("MEDIA_MT_escala", "MEDIA_LP_escala", "INSE_escala")
@@ -112,20 +112,6 @@ arquivo_mais_recente <- function(pasta, padrao) {
 }
 
 # Tema base compartilhado entre todos os paineis
-tema_saeb <- function(base_size = 11) {
-  theme_minimal(base_size = base_size) +
-    theme(
-      plot.title       = element_text(face = "bold", size = base_size + 2,
-                                      colour = "#1A1A1A", margin = margin(b = 4)),
-      plot.subtitle    = element_text(size = base_size - 1, colour = "#555555",
-                                      margin = margin(b = 8)),
-      plot.background  = element_rect(fill = COR_FUNDO,  colour = NA),
-      panel.background = element_rect(fill = "#FFFFFF",  colour = NA),
-      panel.grid.major = element_line(colour = "#E8E8E8", linewidth = 0.4),
-      panel.grid.minor = element_blank(),
-      plot.margin      = margin(16, 16, 8, 16)
-    )
-}
 
 # Interpreta a distancia euclidiana entre dois pontos
 interpretar_distancia <- function(d) {
@@ -141,7 +127,7 @@ painel_dendrograma <- function(hc, lab_cores, y_expand = 0.28,
                                titulo = "", subtitulo = "",
                                annot_texto = NULL, annot_y_frac = 1.02,
                                prof_labels = NULL) {
-  dend_data <- dendro_data(hc, type = "rectangle")
+  dend_data <- dados_dendrograma_saeb(hc, type = "rectangle")
   seg       <- dend_data$segments
   lab       <- dend_data$labels |>
     left_join(lab_cores, by = "label")
@@ -163,7 +149,7 @@ painel_dendrograma <- function(hc, lab_cores, y_expand = 0.28,
     scale_colour_identity() +
     scale_y_continuous(
       expand = expansion(mult = c(y_expand, 0.06)),
-      name = "Distancia Euclidiana (Ward.D2)"
+      name = "Altura de fusao (Ward.D2; entrada euclidiana)"
     ) +
     labs(title = titulo, subtitle = subtitulo) +
     tema_saeb() +
@@ -217,6 +203,7 @@ if (is.null(arq_meta)) {
 }
 message("Metadados: ", basename(arq_meta))
 metadados <- read_csv(arq_meta, show_col_types = FALSE)
+validar_metadados_saeb(metadados)
 message("Escolas carregadas: ", nrow(metadados))
 
 # =============================================================================
@@ -256,24 +243,6 @@ if (MODO == 1) {
   dados_modo1 <- metadados |>
     filter(CATEGORIA_DESEMPENHO %in% c("ALTO", "BAIXO"),
            !is.na(MEDIA_MT), !is.na(MEDIA_LP), !is.na(INSE_MEDIO))
-
-  # Remover outliers/sentinelas de MEDIA_MT e MEDIA_LP (fora do intervalo
-  # plausivel da escala SAEB — valores sentinela de dados corrompidos ficam
-  # fora de 150-500)
-  if (REMOVER_OUTLIERS_LP) {
-    lim_inf <- 150
-    lim_sup <- 500
-    n_antes <- nrow(dados_modo1)
-    dados_modo1 <- dados_modo1 |>
-      filter(
-        MEDIA_MT >= lim_inf, MEDIA_MT <= lim_sup,
-        MEDIA_LP >= lim_inf, MEDIA_LP <= lim_sup
-      )
-    n_depois <- nrow(dados_modo1)
-    message("\nRemocao de outliers/sentinelas de MEDIA_MT e MEDIA_LP: ", n_antes - n_depois,
-            " escolas removidas (fora do intervalo plausivel ", lim_inf, " a ", lim_sup, ")")
-  }
-  
 
   message("Escolas apos limpeza: ", nrow(dados_modo1),
           "  (ALTO: ", sum(dados_modo1$CATEGORIA_DESEMPENHO == "ALTO"),
@@ -410,8 +379,7 @@ if (MODO == 1) {
       caption = paste0(
         "Percentil ALTO >= ", PERCENTIL_ALTO * 100, "%  (>= ", round(q_alto, 1), ")",
         "  |  Percentil BAIXO <= ", PERCENTIL_BAIXO * 100, "%  (<= ", round(q_baixo, 1), ")",
-        if (REMOVER_OUTLIERS_LP) paste0("  |  Outliers LP removidos (fora de ?3dp: ",
-                                        round(lim_inf, 1), " a ", round(lim_sup, 1), ")") else "",
+        "  |  Base validada; sem exclusao adicional de extremos escolares",
         "\nGerado em: ", format(Sys.time(), "%d/%m/%Y %H:%M")
       ),
       theme = theme(

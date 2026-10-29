@@ -64,6 +64,9 @@ gerar_comparativo <- function(metadados, coluna, grupos, paleta, nome, titulo,
     ungroup() |>
     mutate(.cor = unname(paleta[as.character(.data[[coluna]])]))
 
+  write_csv(dados |> select(ID_ESCOLA, all_of(coluna)),
+    caminho_saida(DIR_MODULO, "metadados", paste0("selecao_artigo_", nome), "csv"))
+
   if (nrow(dados) < 3L || any(is.na(dados$.cor))) {
     stop("Dados insuficientes ou grupo sem cor para: ", nome)
   }
@@ -78,7 +81,8 @@ gerar_comparativo <- function(metadados, coluna, grupos, paleta, nome, titulo,
 
   lab_cores <- dados |>
     transmute(label = sprintf("%d", ID_ESCOLA), cor = .cor)
-  legenda_df <- tibble(cor = unname(paleta[grupos]), rotulo = grupos)
+  grupos_observados <- intersect(grupos, unique(dados[[coluna]]))
+  legenda_df <- tibble(cor = unname(paleta[grupos_observados]), rotulo = grupos_observados)
 
   p <- painel_dendrograma(
     hc,
@@ -115,12 +119,14 @@ gerar_geral <- function(metadados) {
       TRUE ~ "INTERMEDIARIO"
     )) |>
     filter(CATEGORIA_DESEMPENHO %in% c("ALTO", "BAIXO"),
-           between(MEDIA_MT, 150, 500), between(MEDIA_LP, 150, 500),
            !is.na(INSE_MEDIO)) |>
     group_by(CATEGORIA_DESEMPENHO) |>
     group_modify(~ selecionar_extremas(.x, N_ESCOLAS_POR_GRUPO)) |>
     ungroup() |>
     mutate(.cor = unname(PALETAS$desempenho[CATEGORIA_DESEMPENHO]))
+
+  write_csv(dados |> select(ID_ESCOLA, CATEGORIA_DESEMPENHO),
+    caminho_saida(DIR_MODULO, "metadados", "selecao_artigo_geral", "csv"))
 
   mat <- dados |>
     transmute(MEDIA_MT = as.numeric(scale(MEDIA_MT)),

@@ -1,44 +1,38 @@
-# 6. Análise de Mediação (PASSO 10)
+# Mediação exploratória · passo 10
 
-Testa se o INSE media o efeito de variáveis de contexto (tipo de escola, área/localização) sobre a proficiência.
+Estuda a decomposição de associações entre contexto escolar, INSE médio e
+proficiência. A descrição metodológica principal está em
+[metodologia.md](../DOCUMENTACAO/metodologia.md#mediação-exploratória--passo-10).
 
-## Execução
+## Executar
 
-```r
-source("TESTE/6_ANALISE_MEDIACAO/Scripts/analise_mediacao.r")
+```powershell
+Rscript executar_pipeline.r --passos=10
 ```
 
-## Pré-requisitos
+O executor gera metadados atualizados no passo 4 antes da mediação e registra
+entradas, saídas, ambiente e logs no manifesto.
 
-- `metadados_escolas_*.csv` gerado pelo PASSO 4 (`3_ANALISE_DE_GRUPOS/Scripts/classificar_escolas.r`)
-- Pacotes R: `tidyverse`, `data.table`, `mediation`, `boot`
+## Contrastes
 
-```r
-install.packages(c("mediation", "boot"))
-```
+| Análise | Tratamento | Referência | Base utilizada |
+|---------|------------|------------|----------------|
+| Tipo | Privada | Pública | Escolas elegíveis |
+| Localização | Categoria observada de `AREA_LOCAL` | `Urbana_Capital` | Somente os dois grupos do contraste |
 
-## Saídas (pastas datadas)
+A elegibilidade exige cinco notas válidas por disciplina, três valores válidos
+de INSE e contexto completo. Não há covariáveis adicionais nas fórmulas.
+Categorias sem variação são ignoradas. Os diagramas usam os modelos do contraste,
+sem ajustar novamente outra amostra.
 
-> Saídas via `caminho_saida()` em `6_ANALISE_MEDIACAO/outputs/<YYYY-MM-DD>/<tipo>/<nome>_<HHMMSS>.<ext>`.
+## Saídas
 
-| Arquivo | Descrição |
-|---------|-----------|
-| `outputs/<data>/tabelas/mediacao_*.csv` | Efeitos direto, indireto e total + proporção mediada |
-| `outputs/<data>/figuras/caminhos_mediacao_MT_*.png` | Figura 21: Diagrama de caminhos (MT) |
-| `outputs/<data>/figuras/caminhos_mediacao_LP_*.png` | Figura 22: Diagrama de caminhos (LP) |
+Todas ficam em `outputs/<YYYY-MM-DD>/<tipo>/<nome>_<HHMMSS>.<ext>`.
 
-## Metodologia
+- `tabelas/mediacao_*.csv`: efeitos, intervalos, p-valores, proporção mediada,
+  referência, tamanho de cada grupo e indicação do ajuste exploratório.
+- `diagnosticos/fluxo_amostra_mediacao_*.csv`: denominadores e elegibilidade.
+- `figuras/caminhos_mediacao_*.png`: diagramas dos modelos estimados.
 
-1. **Caminho A**: Variável independente → INSE (mediador)
-2. **Caminho B + C'**: INSE + variável independente → Proficiência
-3. **Efeito indireto** (A × B): bootstrap percentil com 1000 simulações (Preacher & Hayes, 2008)
-4. **Proporção mediada**: estimativa média do objeto `mediate()` × 100; pode exceder 100% em mediação inconsistente
-
-Base teórica: Baron & Kenny (1986), estendida por Preacher & Hayes. Detalhes no bloco `NOTA METODOLOGICA - MEDIACAO COM INSE` no cabeçalho do script.
-
-## Análises
-
-- `TIPO_ESCOLA` → INSE → Proficiência (MT e LP; referência: Pública)
-- `AREA_LOCAL` → INSE → Proficiência (MT e LP; categorias observadas contra a referência `Urbana_Capital`). Categorias sem variação são registradas e ignoradas.
-
-Tabela `mediacao_*.csv` consolida 2 linhas de `TIPO_ESCOLA` e 2 linhas por categoria observada de `AREA_LOCAL`. Em MG/2023, `Rural_Capital` não foi observada, portanto a execução atual gera 6 linhas.
+Bootstrap percentil com 1.000 simulações e semente 2023. O desenho observacional
+agregado e o bootstrap, sozinhos, não identificam efeitos causais.

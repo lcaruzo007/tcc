@@ -1,78 +1,56 @@
-# Requisitos
+# Ambiente e dependências
 
-Dependências e instalação.
+## Ambiente reproduzível
 
-## Sistema
+O ambiente registrado usa **R 4.6.0**. As versões exatas dos pacotes e suas
+dependências transitivas estão em [renv.lock](../../renv.lock).
 
-- **R**: >= 4.0.0 (testado em 4.2.0+)
-- **RStudio**: Recomendado (opcional)
-
-## Pacotes R
-
-### Instalação rápida (todas as fases)
+No R, a partir da raiz, para preparar outra máquina:
 
 ```r
-pkgs <- c(
-  # Base (PASSO 1-9)
-  "tidyverse",    # ggplot2, dplyr, readr, tidyr
-  "data.table",   # leitura rápida de CSVs grandes
-  "caret",        # nearZeroVar, preprocessamento
-  "shiny",        # dashboard interativo (PASSO 3)
-  "dendextend",   # dendrogramas
-  "ggdendro",     # dendrogramas com ggplot2
-  "broom",        # tidy models (PASSO 8-9)
-  "patchwork",    # composição de gráficos
-  "car",          # VIF, Durbin-Watson
-  "lmtest",       # Breusch-Pagan
-  "sandwich",     # erros-padrao robustos HC3 (sensibilidade do PASSO 8)
-  "readxl",       # entrada XLSX opcional no PASSO 6
-  
-  # Mediação (PASSO 10)
-  "mediation",    # análise de mediação bootstrap
-  "boot"          # bootstrap
-)
-install.packages(pkgs[!pkgs %in% rownames(installed.packages())])
+install.packages("renv")
+renv::restore(prompt = FALSE)
 ```
 
-### Verificação
+O executor confere a versão de R e todas as versões registradas antes de iniciar
+as análises. Havendo uma biblioteca restaurada em `renv/library/`, ela é carregada
+explicitamente tanto no processo principal quanto em cada subprocesso, mesmo com
+`--vanilla`. Em um ambiente já compatível, é possível usar a biblioteca existente.
 
-```r
-sapply(pkgs, require, character.only = TRUE)
-# Todos devem retornar TRUE
-```
+Não se instala nem atualiza pacote durante a análise. Para atualizar o ambiente
+deliberadamente, valide a nova configuração antes de gerar outro lockfile.
+`renv::restore()` restaura pacotes, mas não instala a versão do próprio R.
 
-Ou execute a verificacao sem instalar ou alterar o ambiente:
+## Dependências diretas
+
+| Pacotes | Uso |
+|---------|-----|
+| `tidyverse`, `data.table` | Leitura, transformação e gráficos |
+| `caret` | Filtro near-zero opcional das correlações |
+| `broom`, `car`, `patchwork` | Modelos, VIF e composição de figuras |
+| `lmtest`, `sandwich` | Diagnósticos e erros-padrão HC3 |
+| `ggdendro`, `dendextend` | Dendrogramas |
+| `mediation`, `boot` | Mediação e bootstrap |
+| `shiny` | Dashboard manual |
+| `readxl` | Comparação manual com entrada XLSX |
+| `jsonlite` | Leitura do lockfile; dependência transitiva registrada |
+
+O pipe nativo exige R >= 4.1, mas isso é apenas um requisito de sintaxe.
+O ambiente suportado pelo executor é o que está registrado no lockfile.
+
+## Verificar
 
 ```powershell
 Rscript TESTE/DOCUMENTACAO/verificar_dependencias.r
+Rscript TESTE/DOCUMENTACAO/testar_contratos.r
+Rscript TESTE/DOCUMENTACAO/validar_pipeline.r --exigir-dados
 ```
 
-Os scripts de analise nao executam `install.packages()`. Dependencias ausentes
-geram uma mensagem de erro com referencia a este arquivo.
+A verificação de dependências confere o lockfile e a disponibilidade dos pacotes.
+Os testes sintéticos independem dos microdados. `--exigir-dados` solicita também
+a validação dos metadados reais; sem esse argumento, sua ausência é explicitamente
+reportada como validação parcial.
 
-## Versões testadas
-
-| Pacote | Versão mínima | Fase |
-|--------|---------------|------|
-| tidyverse | 1.3.0 | 1-9 |
-| data.table | 1.14.0 | 1-9 |
-| caret | 6.0.88 | 1-9 |
-| shiny | 1.6.0 | 3 |
-| dendextend | 1.16.0 | 3, 7 |
-| ggdendro | 0.1.23 | 3, 7 |
-| broom | 0.8.0 | 8-9 |
-| patchwork | 1.1.0 | 8-9 |
-| car | 3.1.0 | 8-9 |
-| lmtest | 0.9.0 | 8-9 |
-| sandwich | 3.0.0 | 8 (sensibilidade) |
-| readxl | 1.4.0 | 6 (opcional) |
-| mediation | 4.5.0 | 10 |
-| boot | 1.3.28 | 10 |
-
-## Troubleshooting
-
-| Problema | Solução |
-|----------|---------|
-| "Pacote X não encontrado" | `install.packages("X")` |
-| Erro de compilação | Instalar Rtools (Windows) |
-| "namespace X not found" | Reiniciar R e recarregar |
+Se `Rscript` não estiver no PATH, use o executável da instalação ou configure o
+PATH. RStudio é opcional. Referência de funcionamento:
+[documentação do renv](https://pkgs.rstudio.com/renv/articles/renv.html).

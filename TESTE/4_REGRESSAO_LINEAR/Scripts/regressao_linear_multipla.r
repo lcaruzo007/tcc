@@ -1,78 +1,13 @@
 ################################################################################
 # SCRIPT: regressao_linear_multipla.r
-#
-# FUNCIONALIDADE:
-#   Regressao Linear Multipla com variaveis dummy
-#   Parte dos dados brutos dos alunos (TS_ALUNO_34EM.csv),
-#   agrega por escola e modela MEDIA_MT e MEDIA_LP
-#
-# ENTRADA:
-#   - TS_ALUNO_34EM.csv  (dados brutos SAEB - nivel aluno)
-#
-# SAIDA:
-#   - resumo_modelos_<ts>.csv
-#   - coeficientes_MT_<ts>.csv / coeficientes_LP_<ts>.csv
-#   - diagnosticos_MT_<ts>.csv / diagnosticos_LP_<ts>.csv
-#   - diagnosticos_residuos_MT_<ts>.png / _LP_<ts>.png
-#   - preditos_vs_observados_MT_<ts>.png / _LP_<ts>.png
-#   - resumo_qualidade_ajuste_<ts>.png
-#   - coeficientes_MT_<ts>.png / coeficientes_LP_<ts>.png
-#
-# VERSAO: 2.0 - Maio 2026
-#
-# ---------------------------------------------------------------------------
-# NOTA METODOLOGICA - ESCOLHA DO INSE COMO VARIAVEL SOCIOECONOMICA
-# ---------------------------------------------------------------------------
-#
-# O questionario contextual do SAEB contem 72 itens socioeconomicos
-# (colunas TX_RESP_Q01 a TX_RESP_Q25, incluindo subitens como Q05a/b/c).
-# Poder-se-ia questionar se essas perguntas brutas nao deveriam ser usadas
-# diretamente como preditoras no modelo. A opcao pelo INSE_ALUNO (agregado
-# como INSE_MEDIO por escola) e deliberada e sustentada pelos seguintes
-# argumentos:
-#
-# 1. O INSE ja e a sintese psicometrica das perguntas brutas
-#    O INEP constroi o INSE_ALUNO por meio de um modelo de Teoria de
-#    Resposta ao Item (TRI), calibrado sobre exatamente esses itens
-#    (Q01-Q25). Ele sintetiza em um unico score continuo a informacao
-#    latente de todas as respostas, com pesos derivados de modelagem
-#    psicometrica validada. Usar os itens brutos em lugar do INSE seria
-#    equivalente a descartar o produto final em favor dos insumos,
-#    perdendo precisao e coerencia metodologica.
-#    Referencia: INEP (2021). Nota Tecnica - Indicador de Nivel
-#    Socioeconomico das Escolas de Educacao Basica (INSE).
-#
-# 2. Risco de multicolinearidade severa
-#    Os 72 itens medem facetas do mesmo constructo latente (nivel
-#    socioeconomico) e sao, portanto, altamente correlacionados entre si.
-#    Inclui-los simultaneamente como preditores independentes viola a
-#    premissa de ausencia de multicolinearidade perfeita da regressao OLS,
-#    tornando os estimadores instaveis (variancias infladas) e a
-#    interpretacao dos coeficientes inviavel. O VIF (Variance Inflation
-#    Factor) de varios preditores ultrapassaria o limiar critico de 10.
-#
-# 3. Explosao dimensional e custo de graus de liberdade
-#    As respostas sao variaveis categoricas ordinais codificadas como
-#    letras (A, B, C, D, ...). A codificacao dummy de todos os itens
-#    geraria facilmente 150-200 variaveis adicionais, consumindo graus
-#    de liberdade e comprometendo o ajuste em amostras de tamanho
-#    moderado (nivel escola).
-#
-# 4. Validade e reprodutibilidade
-#    O INSE possui metodologia publica, documentada e reproduzivel,
-#    facilitando comparacoes com outros estudos que utilizem dados SAEB.
-#    Uma construcao ad hoc de indice a partir dos itens brutos exigiria
-#    validacao psicometrica propria (analise fatorial confirmatoria ou
-#    TRI), o que extrapolaria o escopo deste trabalho.
-#
-# CONCLUSAO: O uso de INSE_MEDIO como proxy socioeconomico e a escolha
-# metodologicamente mais rigorosa, parcimoniana e defensavel para os
-# objetivos desta analise. Pesquisadores que desejarem decompor o efeito
-# de dimensoes especificas do NSE (ex.: capital cultural vs. capital
-# economico) deverao conduzir uma analise fatorial exploratoria previa
-# sobre os itens brutos, construindo subescores interpretaveis antes de
-# inclui-los em qualquer modelo preditivo.
-# ---------------------------------------------------------------------------
+# ENTRADA: Microdados MG/2023, com validade e agregacao compartilhadas.
+# SAIDA: Modelos, coeficientes, diagnosticos, figuras e fluxo de elegibilidade.
+# VERSAO: 3.0 - Outubro 2026
+# Modelo escolar de associacao: INSE padronizado + TIPO_ESCOLA + AREA_LOCAL.
+# Medias de MT/LP usam alunos com ambas as notas validas (minimo 5 pares).
+# INSE exige no minimo 3 valores validos. Referencias: Publica/Urbana_Capital.
+# A escolha do indicador oficial nao implica que todos os itens o componham.
+# RMSE descreve ajuste na amostra; o desenho nao identifica efeitos causais.
 ################################################################################
 
 library(tidyverse)
@@ -191,23 +126,6 @@ criar_dummies_com_refs <- function(df, vars_cat, refs_explicitas = NULL) {
   df
 }
 
-tema_saeb <- function(base_size = 11) {
-  theme_minimal(base_size = base_size) +
-    theme(
-      plot.title       = element_text(face = "bold", size = base_size + 2,
-                                      colour = "#1A1A1A", margin = margin(b = 4)),
-      plot.subtitle    = element_text(size = base_size - 1, colour = "#555555",
-                                      margin = margin(b = 8)),
-      plot.caption     = element_text(size = base_size - 2, colour = "#777777",
-                                      face = "italic", hjust = 0,
-                                      margin = margin(t = 10)),
-      plot.background  = element_rect(fill = "#FFFFFF", colour = NA),
-      panel.background = element_rect(fill = "#F5F5F5", colour = NA),
-      panel.grid.major = element_line(colour = "#D0D0D0", linewidth = 0.3),
-      panel.grid.minor = element_blank(),
-      plot.margin      = margin(16, 16, 12, 16)
-    )
-}
 
 formatar_pvalor <- function(p) {
   case_when(
@@ -238,30 +156,14 @@ message(strrep("-", 50))
 
 if (is.null(ARQUIVO_DADOS_BRUTOS) || !file.exists(ARQUIVO_DADOS_BRUTOS)) {
   stop(
-    "Arquivo TS_ALUNO*.csv nao encontrado em:\n  ", DIR_DADOS_BRUTOS,
+    "Arquivo TS_ALUNO*.csv nao encontrado em:\n  ", dirname(ARQUIVO_DADOS_BRUTOS),
     "\nVerifique se a pasta MICRODADOS_SAEB_2023/DADOS existe na raiz do projeto."
   )
 }
 
 message("Arquivo: ", basename(ARQUIVO_DADOS_BRUTOS))
 
-dados_brutos <- read_csv(
-  ARQUIVO_DADOS_BRUTOS,
-  col_types = cols(
-    ID_ESCOLA          = col_character(),
-    IN_PUBLICA         = col_integer(),
-    ID_AREA            = col_integer(),
-    ID_LOCALIZACAO     = col_integer(),
-    IN_PROFICIENCIA_MT = col_integer(),
-    IN_PROFICIENCIA_LP = col_integer(),
-    PROFICIENCIA_MT_SAEB = col_double(),
-    PROFICIENCIA_LP_SAEB = col_double(),
-    IN_INSE            = col_integer(),
-    INSE_ALUNO         = col_double(),
-    .default           = col_skip()     # ignora todas as outras colunas
-  ),
-  show_col_types = FALSE
-)
+dados_brutos <- ler_microdados_saeb(ARQUIVO_DADOS_BRUTOS)
 
 message("Alunos carregados: ", nrow(dados_brutos))
 message("Escolas distintas: ", n_distinct(dados_brutos$ID_ESCOLA))
@@ -286,64 +188,10 @@ refs_modelo <- list(
 )
 
 # ?? Medias de proficiencia ????????????????????????????????????????????????????
-media_prof <- dados_brutos |>
-  filter(
-    IN_PROFICIENCIA_MT == 1,
-    IN_PROFICIENCIA_LP == 1,
-    between(PROFICIENCIA_MT_SAEB, PROF_MIN, PROF_MAX),
-    between(PROFICIENCIA_LP_SAEB, PROF_MIN, PROF_MAX)
-  ) |>
-  group_by(ID_ESCOLA) |>
-  summarise(
-    MEDIA_MT    = mean(PROFICIENCIA_MT_SAEB, na.rm = TRUE),
-    MEDIA_LP    = mean(PROFICIENCIA_LP_SAEB, na.rm = TRUE),
-    N_ALUNOS_MT = n(),
-    .groups     = "drop"
-  ) |>
-  filter(N_ALUNOS_MT >= MIN_ALUNOS_ESCOLA)
-
-message("\nEscolas apos filtro de proficiencia: ", nrow(media_prof))
-
-# ?? INSE medio por escola ?????????????????????????????????????????????????????
-# NOTA: utilizamos INSE_ALUNO (score TRI calculado pelo INEP) como proxy
-# socioeconomico, e nao os itens brutos do questionario (TX_RESP_Q01-Q25).
-# Justificativa detalhada no cabecalho deste script (secao NOTA METODOLOGICA).
-# Em sintese: o INSE ja sintetiza os 72 itens via TRI com validacao psicometrica
-# publicada; usar os itens brutos introduziria multicolinearidade severa e
-# explosao dimensional inviavel para regressao OLS no nivel escola.
-inse_escola <- dados_brutos |>
-  filter(IN_INSE == 1, !is.na(INSE_ALUNO)) |>
-  group_by(ID_ESCOLA) |>
-  summarise(
-    INSE_MEDIO   = mean(INSE_ALUNO, na.rm = TRUE),
-    N_ALUNOS_INSE = n(),
-    .groups      = "drop"
-  ) |>
-  filter(N_ALUNOS_INSE >= MIN_ALUNOS_INSE)
-
-# ?? Variaveis categoricas (1 linha por escola) ????????????????????????????????
-categ_escola <- dados_brutos |>
-  group_by(ID_ESCOLA) |>
-  summarise(
-    IN_PUBLICA     = first(IN_PUBLICA),
-    ID_AREA        = first(ID_AREA),
-    ID_LOCALIZACAO = first(ID_LOCALIZACAO),
-    .groups        = "drop"
-  ) |>
-  mutate(
-      TIPO_ESCOLA = if_else(IN_PUBLICA == 1, "Publica", "Privada"),
-      AREA        = if_else(ID_AREA == 1, "Capital", "Interior"),
-      LOCALIZACAO = if_else(ID_LOCALIZACAO == 1, "Urbana", "Rural"),
-      AREA_LOCAL  = paste0(LOCALIZACAO, "_", AREA)
-    ) |>
-  select(ID_ESCOLA, TIPO_ESCOLA, AREA, LOCALIZACAO, AREA_LOCAL)
-
-# ?? Juntar tudo ???????????????????????????????????????????????????????????????
-dados_escola <- media_prof |>
-  inner_join(inse_escola,  by = "ID_ESCOLA") |>
-  inner_join(categ_escola, by = "ID_ESCOLA") |>
-  select(ID_ESCOLA, TIPO_ESCOLA, AREA, LOCALIZACAO, AREA_LOCAL,
-         MEDIA_MT, MEDIA_LP, INSE_MEDIO, N_ALUNOS_MT, N_ALUNOS_INSE)
+base_escolas <- agregar_escolas_saeb(dados_brutos, pareadas = TRUE)
+fluxo_amostra <- amostra_escolas_saeb(base_escolas, MIN_ALUNOS_ESCOLA, MIN_ALUNOS_INSE)
+write_csv(fluxo_amostra, caminho_saida(DIR_BASE, "diagnosticos", "fluxo_amostra_INSE", "csv"))
+dados_escola <- fluxo_amostra |> filter(Incluida) |> select(-Incluida, -Motivo)
 
 message("Escolas na base final (com INSE): ", nrow(dados_escola))
 message("\nDistribuicao por variavel categorica:")
@@ -426,12 +274,7 @@ message("INSE_MEDIO normalizado (z-score) -> INSE_MEDIO_norm")
 # Preditoras: dummies + INSE_MEDIO_norm
 # (exclui as colunas categoricas originais + AREA e LOCALIZACAO separadas,
 #  que e redundant com AREA_LOCAL nos modelos; e INSE_MEDIO bruto)
-preditoras <- setdiff(
-  names(dados_modelo),
-  c(VARIAVEL_DEPENDENTE, VARS_CATEGORICAS, VARS_CONTINUAS,
-    "AREA", "LOCALIZACAO",
-    "ID_ESCOLA", "N_ALUNOS_MT", "N_ALUNOS_INSE")
-)
+preditoras <- c(names(dummies_info), "INSE_MEDIO_norm")
 
 message("Preditoras no modelo: ", paste(preditoras, collapse = ", "))
 
@@ -511,8 +354,8 @@ extrair_coef <- function(modelo) {
   tidy(modelo) |>
     mutate(
       Sig      = formatar_pvalor(p.value),
-      IC_lower = estimate - 1.96 * std.error,
-      IC_upper = estimate + 1.96 * std.error
+      IC_lower = estimate - qt(0.975, df.residual(modelo)) * std.error,
+      IC_upper = estimate + qt(0.975, df.residual(modelo)) * std.error
     ) |>
     select(
       Termo    = term,
@@ -755,7 +598,7 @@ gerar_grafico_coef_tcc <- function(colorido = TRUE) {
     ) +
 
     labs(
-      title    = "Determinantes da proficiencia escolar - SAEB 2023 (3º serie EM)",
+      title    = "Associacoes com a proficiencia escolar - SAEB 2023 (3a/4a series EM)",
       subtitle = paste0(
         "Coeficientes da regressao linear multipla com intervalos de confianca 95%\n",
         "Comparado as escolas publicas e urbanas da Capital (referencia: Urbana_Capital)"
@@ -769,8 +612,8 @@ gerar_grafico_coef_tcc <- function(colorido = TRUE) {
         "N = ", n_escolas, " escolas  |  ",
         "R2 ajustado: Matematica = ", r2_mt, "%  .  Lingua Portuguesa = ", r2_lp, "%\n",
         "*** p<0,001  ** p<0,01  * p<0,05  |  ",
-        "IC 95% calculado como Coef ? 1,96 ? EP\n",
-        "INSE normalizado (z-score): coeficiente representa o efeito de +1 desvio-padrao ",
+        "IC 95% calculado como Coef +/- t(gl residual) x EP\n",
+        "INSE normalizado (z-score): coeficiente representa a associacao com +1 desvio-padrao ",
         "no nivel socioeconomico medio da escola"
       )
     ) +
@@ -867,7 +710,8 @@ tabela_resumo <- tibble(
   RMSE         = c(round(sqrt(mean(summary_mt$residuals^2)), 2),
                    round(sqrt(mean(summary_lp$residuals^2)), 2)),
   F_statistic  = c(round(summary_mt$fstatistic[1], 2), round(summary_lp$fstatistic[1], 2)),
-  p_valor      = "< 0.001",
+  p_valor      = c(pf(summary_mt$fstatistic[1], summary_mt$fstatistic[2], summary_mt$fstatistic[3], lower.tail = FALSE),
+                   pf(summary_lp$fstatistic[1], summary_lp$fstatistic[2], summary_lp$fstatistic[3], lower.tail = FALSE)),
   AIC          = c(round(AIC(modelo_mt), 2), round(AIC(modelo_lp), 2)),
   BIC          = c(round(BIC(modelo_mt), 2), round(BIC(modelo_lp), 2))
 )
@@ -1004,14 +848,14 @@ gerar_grafico_coef <- function(coef_df, nome, cor_sig, refs_usadas) {
     ) +
     labs(
       title    = paste0("Coeficientes estimados (", nome, ")"),
-      subtitle = "Efeito parcial de cada variavel sobre a proficiencia, mantendo as demais constantes",
+      subtitle = "Associacao condicional de cada variavel com a proficiencia",
       y        = NULL,
       x        = "Coeficiente (pontos de proficiencia SAEB)",
       fill     = "Significancia estatistica",
       caption  = paste0(
         refs_texto, "\n",
-        "Coef > 0: variavel aumenta a proficiencia em relacao a referencia\n",
-        "Coef < 0: variavel reduz a proficiencia em relacao a referencia\n",
+        "Coef > 0: maior proficiencia associada, em relacao a referencia\n",
+        "Coef < 0: menor proficiencia associada, em relacao a referencia\n",
         "Barras de erro = intervalo de confianca 95% (se cruzar o zero, efeito pode ser nulo)\n",
         "*** p<0,001 | ** p<0,01 | * p<0,05"
       )
@@ -1056,7 +900,7 @@ gerar_pred_obs <- function(modelo, summary_mod, nome, cor) {
     geom_smooth(method = "lm", se = FALSE, colour = "#2CA02C",
                 linewidth = 1) +
     annotate("label", x = Inf, y = -Inf,
-             label = paste0("R2 = ", r2, "\nRMSE = ", rmse, "\nCorr = ", corr),
+             label = paste0("R2 ajustado = ", r2, "\nRMSE = ", rmse, "\nCorr = ", corr),
              hjust = 1.05, vjust = -0.3, size = 4, fontface = "bold",
              colour = "#333333", fill = "#FFFFEE", linewidth = 0.3) +
     coord_fixed(ratio = 1) +
@@ -1065,7 +909,7 @@ gerar_pred_obs <- function(modelo, summary_mod, nome, cor) {
       subtitle = "Linha vermelha tracejada = ajuste perfeito | Linha verde = ajuste do modelo",
       x        = "Proficiencia observada (media da escola)",
       y        = "Proficiencia predita pelo modelo",
-      caption  = "Quanto mais proximos os pontos da linha diagonal, mais preciso o modelo.\nPontos acima da linha = modelo subestimou | Pontos abaixo = modelo superestimou."
+      caption  = "Quanto mais proximos os pontos da linha diagonal, mais preciso o modelo.\nPontos acima da linha = modelo superestimou | Pontos abaixo = modelo subestimou."
     ) +
     tema_saeb() +
     theme(aspect.ratio = 1)
@@ -1096,12 +940,6 @@ p_r2 <- ggplot(dados_r2, aes(x = Modelo, y = R2, fill = Modelo)) +
   geom_col(alpha = 0.85, colour = "black", linewidth = 0.8) +
   geom_text(aes(label = paste0(round(R2 * 100, 1), "%")),
             vjust = -0.5, size = 5.5, fontface = "bold") +
-  geom_hline(yintercept = 0.30, linetype = "dotted", colour = "#2CA02C",  linewidth = 1) +
-  geom_hline(yintercept = 0.50, linetype = "dotted", colour = "#FFA500",  linewidth = 1) +
-  geom_hline(yintercept = 0.70, linetype = "dotted", colour = "#D62728",  linewidth = 1) +
-  annotate("text", x = 0.55, y = 0.31, label = "30% - razoavel",  size = 3.5, colour = "#2CA02C",  hjust = 0) +
-  annotate("text", x = 0.55, y = 0.51, label = "50% - bom",       size = 3.5, colour = "#FFA500",  hjust = 0) +
-  annotate("text", x = 0.55, y = 0.71, label = "70% - excelente", size = 3.5, colour = "#D62728",  hjust = 0) +
   scale_y_continuous(
     limits = c(0, max(0.75, max(dados_r2$R2) * 1.2)),
     labels = scales::percent_format(accuracy = 1)
@@ -1112,7 +950,7 @@ p_r2 <- ggplot(dados_r2, aes(x = Modelo, y = R2, fill = Modelo)) +
     subtitle = "Percentual da variancia da proficiencia explicado pelos preditores",
     x        = NULL,
     y        = "R2 Ajustado",
-    caption  = "R2 ajustado penaliza a inclusao de variaveis irrelevantes (diferente do R2 simples).\nLinhas de referencia indicam patamares convencionais de qualidade de ajuste."
+    caption  = "R2 ajustado penaliza a inclusao de variaveis irrelevantes (diferente do R2 simples).\nAjuste na propria amostra; nao mede desempenho fora dela."
   ) +
   tema_saeb()
 

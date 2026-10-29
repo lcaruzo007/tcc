@@ -64,6 +64,7 @@ carregar_metadados_escola <- function(ID) {
   )
   if (is.null(arquivo_meta)) return(NULL)
   metadados <- read_csv(arquivo_meta, show_col_types = FALSE)
+  validar_metadados_saeb(metadados)
   
   metadados %>%
     filter(ID_ESCOLA == ID) %>%
@@ -82,8 +83,8 @@ ID_ESCOLA_B <- 61466120    # ? ALTERAR AQUI
 
 # ? OPCAO B: Ler dados de arquivo XLSX (descomente para usar)
 # USAR_IDS <- FALSE
-# ARQUIVO_XLSX_A <- "C:/caminho/para/escola_A_dados.xlsx"
-# ARQUIVO_XLSX_B <- "C:/caminho/para/escola_B_dados.xlsx"
+# ARQUIVO_XLSX_A <- file.path(RAIZ, "escola_A_dados.xlsx")
+# ARQUIVO_XLSX_B <- file.path(RAIZ, "escola_B_dados.xlsx")
 
 # ============================================================================
 # PASSO 1: CARREGAR DADOS
@@ -102,35 +103,15 @@ if (USAR_IDS) {
   cat(sprintf("Escola B: ID = %d\n\n", ID_ESCOLA_B))
   
   # Carregar dados brutos
-  alunos <- fread(file.path(DIR_MICRODADOS, "TS_ALUNO_34EM.csv"),
-                   encoding = "Latin-1") %>%
-    as_tibble()
+  alunos <- ler_microdados_saeb(file.path(DIR_MICRODADOS, "TS_ALUNO_34EM.csv"))
   
   # Filtrar Escola A
   dados_A <- alunos %>%
-    filter(ID_ESCOLA == ID_ESCOLA_A) %>%
-    select(
-      ID_ESCOLA,
-      PROFICIENCIA_MT_SAEB,
-      PROFICIENCIA_LP_SAEB,
-      INSE_ALUNO,
-      NU_TIPO_NIVEL_INSE,
-      ID_AREA,
-      ID_LOCALIZACAO
-    )
+    filter(ID_ESCOLA == ID_ESCOLA_A)
   
   # Filtrar Escola B
   dados_B <- alunos %>%
-    filter(ID_ESCOLA == ID_ESCOLA_B) %>%
-    select(
-      ID_ESCOLA,
-      PROFICIENCIA_MT_SAEB,
-      PROFICIENCIA_LP_SAEB,
-      INSE_ALUNO,
-      NU_TIPO_NIVEL_INSE,
-      ID_AREA,
-      ID_LOCALIZACAO
-    )
+    filter(ID_ESCOLA == ID_ESCOLA_B)
   
   # Validar se escolas existem
   if (nrow(dados_A) == 0) {
@@ -183,6 +164,9 @@ if (USAR_IDS) {
   SUBPASTA_SAIDA <- file.path("comparacoes", "comparacao_xlsx")
 }
 
+dados_A <- limpar_indicadores_saeb(dados_A)
+dados_B <- limpar_indicadores_saeb(dados_B)
+
 # ============================================================================
 # PASSO 2: AGREGACAO POR ESCOLA
 # ============================================================================
@@ -195,8 +179,11 @@ agg_A <- dados_A %>%
     ID_ESCOLA = first(ID_ESCOLA),
     NOME = nome_A,
     N_ALUNOS = n(),
-    MEDIA_MT = mean(PROFICIENCIA_MT_SAEB, na.rm = TRUE),
-    MEDIA_LP = mean(PROFICIENCIA_LP_SAEB, na.rm = TRUE),
+    N_ALUNOS_MT_VALIDOS = sum(is.finite(PROFICIENCIA_MT_SAEB)),
+    N_ALUNOS_LP_VALIDOS = sum(is.finite(PROFICIENCIA_LP_SAEB)),
+    N_ALUNOS_INSE = sum(is.finite(INSE_ALUNO)),
+    MEDIA_MT = media_segura_saeb(PROFICIENCIA_MT_SAEB),
+    MEDIA_LP = media_segura_saeb(PROFICIENCIA_LP_SAEB),
     SD_MT = sd(PROFICIENCIA_MT_SAEB, na.rm = TRUE),
     SD_LP = sd(PROFICIENCIA_LP_SAEB, na.rm = TRUE),
     MIN_MT = min(PROFICIENCIA_MT_SAEB, na.rm = TRUE),
@@ -209,7 +196,7 @@ agg_A <- dados_A %>%
     Q1_LP = quantile(PROFICIENCIA_LP_SAEB, 0.25, na.rm = TRUE),
     Q2_LP = quantile(PROFICIENCIA_LP_SAEB, 0.50, na.rm = TRUE),
     Q3_LP = quantile(PROFICIENCIA_LP_SAEB, 0.75, na.rm = TRUE),
-    INSE_MEDIO = mean(INSE_ALUNO, na.rm = TRUE),
+    INSE_MEDIO = media_segura_saeb(INSE_ALUNO),
     SD_INSE = sd(INSE_ALUNO, na.rm = TRUE)
   )
 
@@ -219,8 +206,11 @@ agg_B <- dados_B %>%
     ID_ESCOLA = first(ID_ESCOLA),
     NOME = nome_B,
     N_ALUNOS = n(),
-    MEDIA_MT = mean(PROFICIENCIA_MT_SAEB, na.rm = TRUE),
-    MEDIA_LP = mean(PROFICIENCIA_LP_SAEB, na.rm = TRUE),
+    N_ALUNOS_MT_VALIDOS = sum(is.finite(PROFICIENCIA_MT_SAEB)),
+    N_ALUNOS_LP_VALIDOS = sum(is.finite(PROFICIENCIA_LP_SAEB)),
+    N_ALUNOS_INSE = sum(is.finite(INSE_ALUNO)),
+    MEDIA_MT = media_segura_saeb(PROFICIENCIA_MT_SAEB),
+    MEDIA_LP = media_segura_saeb(PROFICIENCIA_LP_SAEB),
     SD_MT = sd(PROFICIENCIA_MT_SAEB, na.rm = TRUE),
     SD_LP = sd(PROFICIENCIA_LP_SAEB, na.rm = TRUE),
     MIN_MT = min(PROFICIENCIA_MT_SAEB, na.rm = TRUE),
@@ -233,7 +223,7 @@ agg_B <- dados_B %>%
     Q1_LP = quantile(PROFICIENCIA_LP_SAEB, 0.25, na.rm = TRUE),
     Q2_LP = quantile(PROFICIENCIA_LP_SAEB, 0.50, na.rm = TRUE),
     Q3_LP = quantile(PROFICIENCIA_LP_SAEB, 0.75, na.rm = TRUE),
-    INSE_MEDIO = mean(INSE_ALUNO, na.rm = TRUE),
+    INSE_MEDIO = media_segura_saeb(INSE_ALUNO),
     SD_INSE = sd(INSE_ALUNO, na.rm = TRUE)
   )
 

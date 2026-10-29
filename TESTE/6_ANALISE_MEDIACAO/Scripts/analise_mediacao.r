@@ -1,71 +1,12 @@
 ################################################################################
 # SCRIPT: analise_mediacao.r
-#
-# OBJETIVO: Testar se INSE media o efeito de variaveis de contexto
-#           (tipo escola, localizacao) sobre a proficiencia
-#
-# ENTRADA:
-#   - metadados_escolas_*.csv (PASSO 4)
-#
-# SAIDA:
-#   - outputs/tabelas/mediacao_*.csv (efeitos direto, indireto, total)
-#   - outputs/figuras/caminhos_mediacao_MT.png (Figura 21)
-#   - outputs/figuras/caminhos_mediacao_LP.png (Figura 22)
-#   - outputs/figuras/caminhos_mediacao_AREA_LOCAL_*.png (categorias observadas)
-#
-# VERSAO: 1.0 - Julho 2026
-#
-# ---------------------------------------------------------------------------
-# NOTA METODOLOGICA - MEDIACAO COM INSE
-# ---------------------------------------------------------------------------
-#
-# A analise de mediacao testa se o INSE_ALUNO (nivel socioeconomico individual,
-# agregado como INSE_MEDIO por escola) funciona como mecanismo intermediario
-# entre variaveis estruturais (tipo da escola, localizacao) e a proficiencia.
-# Ou seja: em que medida o "efeito" de ser escola privada se da por recrutar
-# alunos de maior INSE (efeito indireto mediado) vs. por caracteristicas
-# institucionais proprias (efeito direto).
-#
-# 1. Modelo de mediacao classico (Baron & Kenny, 1986)
-#    Estima tres regressoes:
-#      (a) Y ~ X               [efeito total c]
-#      (b) M ~ X               [efeito X -> M, a]
-#      (c) Y ~ X + M           [efeito direto c', efeito M -> Y b]
-#    Efeito indireto (mediado) = a * b. Efeito total = c = c' + a*b.
-#    Medicao parcial: c' significativo e nao-zero. Medicao completa: c' ~ 0.
-#
-# 2. Em vez de teste Sobel, usamos bootstrap
-#    O teste de Sobel assume normalidade do produto a*b, que raramente e
-#    satisfeita em amostras moderadas. Segundo Preacher & Hayes (2008),
-#    intervalos de confianca via bootstrap percentil (1.000 repeticoes)
-#    sao mais robustos para testar o efeito indireto. Reportamos IC 95%.
-#
-# 3. Direcao causal e pressuposto de nao confundimento
-#    A mediacao pressupoe que nao exista confundidor nao medido do caminho
-#    M -> Y. Para SAEB, essa hipotese e plausivel mas nao testavel com os
-#    dados administrativos: caracteristicas familiares nao observadas podem
-#    afetar simultaneamente INSE e proficiencia. A interpretação correta e
-#    "associacao indireta condicional aos preditores do modelo", nao prova
-#    causal.
-#
-# 4. INSE como mediador vs. moderador
-#    Testamos INSE como mediador (linha de teste causal X -> M -> Y). Uma
-#    alternativa conceitual seria INSE como moderador (interacao X*INSE).
-#    Optamos pela medicao porque o referencial teorico do INEP (2021) trata
-#    INSE como dimensao socioeconomica antecedente ao desempenho, nao como
-#    fator que modifica como tipo de escola afeta desempenho.
-#
-# 5. Tamanho de efeito
-#    Reportamos proporcao mediada (PM = ab/c), que varia de 0 (nenhuma
-#    mediacao) a 1 (mediacao completa). Valores podem exceder 1 quando ha
-#    supressao (c' e a*b de sinais opostos) - caso em que reportamos PM
-#    mas advertimos contra interpretacao literal como "porcentagem".
-#
-# CONCLUSAO: A medicao com IC bootstrap percentil, baseada no modelo Baron & Kenny
-# estendido por Preacher & Hayes, e o arcabouco metodologicamente defensavel
-# para estimar em que proporcao o efeito institucional (tipo/area) sobre a
-# proficiencia passa pelo nivel socioeconomico da escola.
-# ---------------------------------------------------------------------------
+# ENTRADA: Metadados escolares validos do passo 4.
+# SAIDA: Mediacao exploratoria, tamanhos de grupos, fluxo de inclusao e figuras.
+# VERSAO: 3.0 - Outubro 2026
+# Bootstrap percentil: 1000 simulacoes, semente 2023. Sem covariaveis adicionais.
+# AREA_LOCAL: cada categoria e comparada somente com Urbana_Capital.
+# Diagramas reutilizam os modelos ajustados no respectivo contraste.
+# A decomposicao observacional nao identifica efeitos causais por si so.
 ################################################################################
 
 library(tidyverse)
@@ -133,7 +74,12 @@ message(strrep("=", 70))
 arq_meta <- encontrar_arquivo_mais_recente(DIR_OUTPUTS_ANALISE, "metadados_escolas", tipo = "metadados")
 if (is.null(arq_meta)) stop("metadados_escolas_*.csv nao encontrado.")
 
-metadados <- read_csv(arq_meta, show_col_types = FALSE) %>%
+base_mediacao <- read_csv(arq_meta, show_col_types = FALSE)
+validar_metadados_saeb(base_mediacao)
+fluxo_mediacao <- amostra_escolas_saeb(base_mediacao)
+write_csv(fluxo_mediacao, caminho_saida(DIR_BASE, "diagnosticos", "fluxo_amostra_mediacao", "csv"))
+metadados <- fluxo_mediacao |>
+  filter(Incluida) |>
   filter(!is.na(MEDIA_MT), !is.na(MEDIA_LP), !is.na(INSE_MEDIO)) %>%
   filter(TIPO_ESCOLA %in% c("Publica", "Privada")) %>%
   filter(AREA_LOCAL %in% c("Urbana_Capital", "Urbana_Interior",
@@ -216,10 +162,11 @@ message(strrep("-", 50))
 
 # Mediacao por dummy observada de AREA_LOCAL (ref: Urbana_Capital)
 mediar_area_local <- function(tratamento, resposta, disciplina) {
+  dados_contraste <- preparar_contraste_area_saeb(metadados, tratamentos_area[[tratamento]])
   formula_a <- reformulate(tratamento, response = "INSE_MEDIO")
   formula_b <- reformulate(c("INSE_MEDIO", tratamento), response = resposta)
-  lm_a <- lm(formula_a, data = metadados)
-  lm_b <- lm(formula_b, data = metadados)
+  lm_a <- lm(formula_a, data = dados_contraste)
+  lm_b <- lm(formula_b, data = dados_contraste)
   lm_a$call$formula <- formula_a
   lm_b$call$formula <- formula_b
   m <- mediate(lm_a, lm_b, treat = tratamento, mediator = "INSE_MEDIO",
@@ -282,6 +229,11 @@ montar_resultado <- function(nome, disciplina, med_obj) {
     Variavel_Independente = nome,
     Mediador = "INSE_MEDIO",
     Disciplina = disciplina,
+    N_Escolas = nobs(med_obj$model.y),
+    N_Referencia = sum(med_obj$model.y$model[[med_obj$treat]] == 0),
+    N_Tratamento = sum(med_obj$model.y$model[[med_obj$treat]] == 1),
+    Referencia = if_else(grepl("^AREA_LOCAL", nome), "Urbana_Capital", "Publica"),
+    Ajuste = "Sem covariaveis adicionais; exploratorio",
     Efeito_Direto = extrair_seguro(med_obj, "z.avg"),
     IC95_Direto_Inferior = extrair_ci_seguro(med_obj, "z.avg.ci", 1),
     IC95_Direto_Superior = extrair_ci_seguro(med_obj, "z.avg.ci", 2),
@@ -291,6 +243,10 @@ montar_resultado <- function(nome, disciplina, med_obj) {
     IC95_Indireto_Superior = extrair_ci_seguro(med_obj, "d.avg.ci", 2),
     p_Indireto = extrair_seguro(med_obj, "d.avg.p"),
     Efeito_Total = extrair_seguro(med_obj, "tau.coef"),
+    IC95_Total_Inferior = extrair_ci_seguro(med_obj, "tau.ci", 1),
+    IC95_Total_Superior = extrair_ci_seguro(med_obj, "tau.ci", 2),
+    IC95_Proporcao_Inferior = 100 * extrair_ci_seguro(med_obj, "n.avg.ci", 1),
+    IC95_Proporcao_Superior = 100 * extrair_ci_seguro(med_obj, "n.avg.ci", 2),
     p_Total = extrair_seguro(med_obj, "tau.p"),
     Proporcao_Mediada = 100 * extrair_seguro(med_obj, "n.avg")
   )
@@ -312,6 +268,9 @@ resultados_mediacao <- bind_rows(
     across(starts_with("IC95_"), ~ round(., 3)),
     Proporcao_Mediada = round(Proporcao_Mediada, 1)
   )
+
+saveRDS(list(tipo_MT = med_tipo_mt, tipo_LP = med_tipo_lp, area_MT = med_loc_mt, area_LP = med_loc_lp),
+        caminho_saida(DIR_BASE, "modelos", "objetos_mediacao", "rds"))
 
 write_csv(resultados_mediacao, caminho_saida(DIR_BASE, "tabelas", "mediacao", "csv"))
 message("   OK mediacao_", ts_global, ".csv")
@@ -342,7 +301,7 @@ criar_diagrama_mediacao <- function(var_indep, mediador, disciplina,
   # Calcular proporcao mediada
   efeito_indireto <- efeito_a * efeito_b
   efeito_total <- efeito_indireto + efeito_cp
-  prop_med <- abs(efeito_indireto) / abs(efeito_total) * 100
+  prop_med <- if (abs(efeito_total) > 1e-10) efeito_indireto / efeito_total * 100 else NA_real_
   
   # Deteccao automatica de supressao: c' e a*b com sinais opostos.
   # Nesse caso a "proporcao mediada" pode exceder 100% ou nao ter leitura
@@ -357,7 +316,7 @@ criar_diagrama_mediacao <- function(var_indep, mediador, disciplina,
            "'Mediacao' nao e interpretavel como % (ver nota metodologica)")
   } else {
     paste0("Efeito indireto (axb) = ", round(efeito_indireto, 3),
-           " | Mediacao = ", round(prop_med, 1), "%")
+           " | Fracao indireta associativa = ", round(prop_med, 1), "%")
   }
   cor_rotulo <- if (houve_supressao) "#C0392B" else "#555555"
   
@@ -455,7 +414,7 @@ p21 <- criar_diagrama_mediacao(
   efeito_cp = coef(modelo_b_mt)["TIPO_PRIVADA"],
   r2_med = summary(modelo_a_mt)$r.squared,
   r2_dep = summary(modelo_b_mt)$r.squared,
-  fig_num = 21,
+  fig_num = 18,
   categoria_referencia = "Publica",
   nome_grupo = "Privada"
 )
@@ -475,7 +434,7 @@ p22 <- criar_diagrama_mediacao(
   efeito_cp = coef(modelo_b_lp)["TIPO_PRIVADA"],
   r2_med = summary(modelo_a_lp)$r.squared,
   r2_dep = summary(modelo_b_lp)$r.squared,
-  fig_num = 22,
+  fig_num = 19,
   categoria_referencia = "Publica",
   nome_grupo = "Privada"
 )
@@ -491,10 +450,9 @@ message("   OK Figura 22: caminhos_mediacao_LP_", ts_global, ".png")
 salvar_diagrama_area_local <- function(tratamento, nome_grupo, disciplina,
                                        fig_num) {
   resposta <- if (disciplina == "Matematica") "MEDIA_MT" else "MEDIA_LP"
-  modelo_a <- lm(as.formula(paste("INSE_MEDIO ~", tratamento)),
-                 data = metadados)
-  modelo_b <- lm(as.formula(paste(resposta, "~ INSE_MEDIO +", tratamento)),
-                 data = metadados)
+  estimativa <- if (disciplina == "Matematica") med_loc_mt[[tratamento]] else med_loc_lp[[tratamento]]
+  modelo_a <- estimativa$model.m
+  modelo_b <- estimativa$model.y
   nome_arquivo <- paste0("caminhos_mediacao_AREA_LOCAL_", nome_grupo,
                          "_", if (disciplina == "Matematica") "MT" else "LP")
   plot <- criar_diagrama_mediacao(
@@ -518,10 +476,10 @@ for (i in seq_along(tratamentos_disponiveis)) {
   tratamento <- tratamentos_disponiveis[i]
   nome_grupo <- tratamentos_area[[tratamento]]
   salvar_diagrama_area_local(
-    tratamento, nome_grupo, "Matematica", 21 + 2 * i
+    tratamento, nome_grupo, "Matematica", 18 + 2 * i
   )
   salvar_diagrama_area_local(
-    tratamento, nome_grupo, "Lingua Portuguesa", 22 + 2 * i
+    tratamento, nome_grupo, "Lingua Portuguesa", 19 + 2 * i
   )
 }
 
