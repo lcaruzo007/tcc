@@ -5,18 +5,23 @@
 .Rproj.user/
 *.Rproj
 
-# Dados locais do SAEB
-MICRODADOS_SAEB_2023/DADOS/
-MICRODADOS_SAEB_2023/INPUTS/*.csv
+# Dados SAEB: versionar somente o recorte MG/2023 do Ensino Medio
+/MICRODADOS_SAEB_2023/DADOS/*
+!/MICRODADOS_SAEB_2023/DADOS/TS_ALUNO_34EM.csv
+/MICRODADOS_SAEB_2023/INPUTS/*.csv
 
-# Resultados regeneraveis
+# Resultados regeneraveis e backups locais
 **/outputs/
+/resultados/
 
 # Auditoria local (nao versionar)
 /auditoria_tcc/
 /RELATORIO_AUDITORIA_TCC.md
 
 # Arquivos temporarios
+/tmp/
+/renv/library/
+/renv/staging/
 *.tmp
 *.log
 ~$*

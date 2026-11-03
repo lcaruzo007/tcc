@@ -76,8 +76,11 @@ Em 29/10/2026, a entrada local foi atualizada com o recorte de MG extraído de
 A atualização recuperou 250 notas e trouxe os demais campos da fonte nacional.
 O CSV anterior foi preservado em backup local; a proveniência e os hashes estão
 em `TESTE/DOCUMENTACAO/outputs/2026-10-29/metadados/atualizacao_fonte_MG_102852.json`.
-Resultados e manifestos anteriores à troca correspondem à entrada antiga;
-é necessário reexecutar o pipeline para atualizar tabelas, modelos e figuras.
+Em 02/11/2026, após novo download da base nacional, o recorte MG/2023 com
+`ID_SERIE` em 12/13 foi regenerado, preservando 173.918 registros e 117 colunas.
+O pipeline completo com auxiliares foi reexecutado com essa entrada, na execução
+`20261102_202417_3660`. A base nacional permanece em backup local ignorado pelo Git.
+Resultados históricos correspondem às fontes registradas em seus manifestos.
 
 ### 2. Conferir a instalação
 
@@ -223,7 +226,14 @@ Os leitores preservam a consulta a arquivos legados, sem alterar o histórico.
 O executor gera manifestos com hashes MD5, parâmetros, versões, logs e catálogo
 de entradas e saídas em `TESTE/DOCUMENTACAO/outputs/<data>/`.
 
-Dados brutos e `outputs/` são locais e ignorados pelo Git.
+Desde 02/11/2026, somente o recorte MG/2023 do Ensino Médio em
+`MICRODADOS_SAEB_2023/DADOS/TS_ALUNO_34EM.csv` está liberado para versionamento.
+As demais bases, os CSVs de `INPUTS/` e a auditoria continuam ignorados.
+Os resultados gerados em `outputs/` e os backups em `resultados/` permanecem
+locais e ignorados pelo Git. Em outra maquina, execute novamente o pipeline
+com a base versionada e o ambiente fixado no `renv.lock`.
+O `.gitignore` filtra caminhos; antes de substituir esse CSV, confira o recorte
+(`ID_UF = 31`, `ID_SAEB = 2023`, `ID_SERIE` em 12/13).
 
 ### Modelo principal
 
@@ -270,6 +280,28 @@ exploratórias não estabelecem identificação causal.
 Confira os resultados de verificação e as decisões na
 [análise do projeto](TESTE/DOCUMENTACAO/analise_projeto.md) e no [diário](diario.md).
 
-**Validação em 20/10/2026:** 29 scripts, casos sintéticos e metadados de
-2.338 escolas aprovados. Correlações regeneradas para 2.328 escolas, com
-10 exclusões documentadas; modelos, auxiliares e leitores também verificados.
+**Reprocessamento e validação em 02/11/2026:** 14 scripts automáticos com
+auxiliares concluídos, com 21.082 saídas e hashes registrados. Sintaxe de 29
+scripts, contratos sintéticos e metadados das 2.338 escolas aprovados.
+Correlações regeneradas para 2.328 escolas, com dez escolas sem preditores com
+variação documentadas. Regressões e mediação atualizadas; cinco dendrogramas
+adicionais do artigo também regenerados. As 50 imagens e as tabelas principais
+estao no indice local:
+`TESTE/DOCUMENTACAO/outputs/2026-11-02/metadados/indice_resultados_e_imagens_205316.md`.
+Detalhes estao no [diario](diario.md).
+
+Para retomar em outra maquina, atualize a branch `master` com `git pull --ff-only`,
+prepare R e dependencias conforme o `renv.lock` e os
+[requisitos](TESTE/DOCUMENTACAO/requisitos.md), e execute:
+
+```powershell
+Rscript executar_pipeline.r --auxiliares
+```
+
+Os scripts analiticos e o lockfile permaneceram inalterados no fechamento de
+02/11/2026. A base de entrada foi versionada com preservacao dos bytes pelo Git.
+Os resultados devem reproduzir os valores validados com os mesmos dados,
+parametros e ambiente; timestamps, caminhos e metadados da maquina podem mudar.
+O auxiliar `dendrogramas_artigo.r` deve ser executado separadamente para recriar
+as cinco figuras adicionais do artigo. Bibliotecas e caches locais nao integram
+o repositorio.

@@ -1,0 +1,3 @@
+
+# Preservar os bytes e o hash da entrada entre plataformas
+/MICRODADOS_SAEB_2023/DADOS/TS_ALUNO_34EM.csv -text

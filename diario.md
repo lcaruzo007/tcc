@@ -1,6 +1,6 @@
 # Diário de desenvolvimento · TCC SAEB 2023
 
-**Período:** 06/04/2026 a 29/10/2026 · **Organização:** registros recentes primeiro.
+**Período:** 06/04/2026 a 02/11/2026 · **Organização:** registros recentes primeiro.
 
 [README](README.md) · [Análise do projeto](TESTE/DOCUMENTACAO/analise_projeto.md) · [Modelo de registro](#modelo-para-novas-entradas)
 
@@ -13,12 +13,249 @@ as recomendações vigentes. “Concluído” em uma entrada descreve aquela ses
 
 | Mês | Registros | Assuntos principais |
 |-----|:---------:|---------------------|
+| [Novembro de 2026](#novembro-de-2026) | 5 | Recorte MG/Ensino Médio, reprocessamentos, imagens e versionamento |
 | [Outubro de 2026](#outubro-de-2026) | 7 | Auditoria científica, revisão do projeto e organização documental |
 | [Setembro de 2026](#setembro-de-2026) | 1 | Reprodutibilidade, migração e validações |
 | [Agosto de 2026](#agosto-de-2026) | 2 | Pipeline enxuto e figuras para artigo |
 | [Julho de 2026](#julho-de-2026) | 6 | Refatorações, outputs datados e remoções |
 | [Maio de 2026](#maio-de-2026) | 8 | Grupos, dendrogramas, regressões e feedback |
 | [Abril de 2026](#abril-de-2026) | 2 | Limpeza, correlações e análise por escola |
+
+## Novembro de 2026
+
+### 2026-11-02 — Fechamento do dia para retomada do trabalho
+
+**Horário:** a partir de 22h03; escopo ajustado as 22h23 (America/Sao_Paulo)
+**Fase:** Versionamento e backup local
+**Status:** Fechamento registrado; commit e envio identificados no historico do Git
+
+#### Atividades realizadas
+
+- Revisadas as alteracoes do dia no README, diario e regras do Git.
+- Incluido o novo recorte MG/2023 do Ensino Medio no commit, conforme pedido.
+- Configurado `.gitattributes` para preservar os bytes e o hash do CSV no checkout.
+- Mantidos os scripts analiticos e `renv.lock` ja validados, sem alteracoes.
+- Registradas instrucoes de retomada e reexecucao em outra maquina no README.
+- Iniciada compactacao dos resultados em sete ZIPs por modulo, em
+  `resultados/2026-11-02/`, somente como backup local, fora do commit.
+
+#### Desafios encontrados
+
+- A inclusao individual de 42 mil outputs no Git era lenta e foi interrompida.
+- O usuario esclareceu o escopo final: commit simples das atualizacoes e da
+  base nova, push e compactacao dos resultados apenas por seguranca.
+- Resultados, backups, bibliotecas, caches e instaladores permanecem ignorados.
+
+#### Resultados obtidos
+
+- Inventariados 42.207 arquivos de resultados (367,55 MiB) do dia.
+- SHA-256 do CSV conferido contra o registro da execucao, sem divergencia:
+  `9df6c1c39e1dd6dde531aba2df81079469a1f9f701ea0f6914ea31df4e0391ce`.
+- Conferidos os 60 links do indice local: todos os destinos existem.
+- Validacoes analiticas aprovadas nas sessoes anteriores, registradas abaixo.
+- Mesmos dados, parametros e ambiente fixado devem reproduzir os valores
+  analiticos; datas, caminhos e metadados da maquina podem diferir.
+- A compactacao local inclui teste de leitura dos ZIPs e manifesto SHA-256
+  ao concluir. O estado pode ser conferido em `resultados/2026-11-02/`.
+
+#### Próximos passos
+
+- [ ] Na outra maquina, atualizar `master`, preparar R e pacotes fixados e
+  executar `Rscript executar_pipeline.r --auxiliares`.
+- [ ] Executar o auxiliar do artigo separadamente, se necessario.
+- [ ] Selecionar tabelas e figuras para o texto do TCC.
+
+---
+
+### 2026-11-02 — Nova execução e índice de resultados e imagens
+
+**Horário:** 20h24 a 20h54 (America/Sao_Paulo)
+**Fase:** Geração dos resultados e suas imagens
+**Status:** Concluído; execução `20261102_202417_3660`
+
+#### Atividades realizadas
+
+- Concluída nova execução de `executar_pipeline.r --auxiliares`, conforme novo pedido.
+- Reutilizado o ambiente R 4.6.0 restaurado, com cache e bibliotecas locais.
+- Conferidas as saídas e regenerados os cinco dendrogramas do artigo, com
+  leitura estrita dos metadados novos. Criado índice Markdown das tabelas e imagens.
+
+#### Desafios encontrados
+
+- A execução completa produz milhares de arquivos por escola; o índice reúne
+  as imagens e as tabelas principais para facilitar a consulta.
+
+#### Resultados obtidos
+
+- Os 14 scripts concluíram, com 21.082 saídas existentes e não vazias. MD5 da
+  entrada e dos códigos reconferidos, sem mudanças. Saídas anteriores preservadas.
+- Metadados de 2.338 escolas e correlações para 2.328 escolas; dez escolas sem
+  preditores com variação documentadas no diagnóstico de exclusões.
+- Sintaxe de 29 scripts, contratos sintéticos e metadados reais aprovados.
+- Os quatro modelos reproduziram os tamanhos amostrais e coeficientes da
+  execução anterior (tolerância de comparação: 1e-12); coeficientes finitos.
+- Cinco PNGs e cinco CSVs adicionais do artigo, vinculados à execução principal.
+- Índice com **50 imagens** e tabelas principais, com links locais conferidos:
+  `TESTE/DOCUMENTACAO/outputs/2026-11-02/metadados/indice_resultados_e_imagens_205316.md`.
+- Inspecionada visualmente a figura principal de coeficientes, com boa legibilidade:
+  `TESTE/4_REGRESSAO_LINEAR/outputs/2026-11-02/figuras/coeficientes_TCC_PB_204624.png`.
+- Manifesto desta execução:
+  `TESTE/DOCUMENTACAO/outputs/2026-11-02/metadados/manifesto_20261102_202417_3660_202417.rds`.
+- Manifesto do artigo:
+  `TESTE/DOCUMENTACAO/outputs/2026-11-02/metadados/manifesto_20261102_202417_3660_artigo_205253_205253.rds`.
+
+#### Próximos passos
+
+- [x] Concluir os 14 scripts automáticos e os dendrogramas do artigo.
+- [x] Validar os resultados, gerar o índice e registrar seus caminhos.
+- [ ] Revisar as tabelas e figuras para selecionar as que integrarão o texto do TCC.
+
+---
+
+### 2026-11-02 — Reprocessamento completo com o recorte MG/Ensino Médio
+
+**Horário:** tarde/noite; resultados conferidos às 19h58 (America/Sao_Paulo)
+**Fase:** Restauração do ambiente, execução e validação do pipeline
+**Status:** Concluído; tabelas, modelos e figuras regenerados e conferidos
+
+#### Atividades realizadas
+
+- Instalados localmente R 4.6.0 e Rtools45; MD5 do instalador do R conferido
+  contra o CRAN. Restauradas e verificadas as versões dos pacotes do `renv.lock`.
+- Executados os 14 scripts de `executar_pipeline.r --auxiliares`: limpeza,
+  correlações, metadados, comparações, cinco dendrogramas, regressão principal,
+  referência oposta, sensibilidade OLS/WLS com HC3, itens brutos e mediação.
+- Executado também `dendrogramas_artigo.r`, com leitura estrita dos metadados
+  desta execução. Gerados cinco PNGs e cinco CSVs com as escolas selecionadas,
+  acompanhados de manifesto, catálogo e log separados.
+- Mantidas as saídas anteriores; novas saídas seguem as pastas datadas.
+- Ignorados no Git `tmp/`, `renv/library/` e `renv/staging/` para manter
+  instaladores, ferramentas, caches e bibliotecas apenas no ambiente local.
+
+#### Desafios encontrados
+
+- O ambiente disponível era R 4.5.2, com 35 diferenças de pacotes, incluindo
+  `microbenchmark` ausente. A restauração exigiu compilar versões arquivadas.
+- O resolvedor atualizou automaticamente `future` e `gargle`; instaladas
+  diretamente as versões arquivadas 1.75.0 e 1.6.1 exigidas pelo lockfile.
+  `selectr` também precisou de nova instalação após suas dependências.
+- Uma trava do cache de isolamento fora da pasta permitida retardou a
+  inicialização. Resolvido com `RENV_PATHS_ROOT`, `RENV_PATHS_CACHE` e
+  `RENV_PATHS_SANDBOX` em `tmp/`, e biblioteca local em `R_LIBS_USER`.
+- A primeira tentativa do pipeline, `20261102_192442_10888`, falhou antes do
+  processamento por falta do próprio `renv` nas sessões filhas. Disponibilizado
+  o pacote sem compilação na biblioteca local e iniciada uma nova execução.
+- Alguns binários informam compilação sob R 4.6.1; versões, carregamento,
+  contratos e execução sob R 4.6.0 foram conferidos. O ambiente registra `Built`.
+- Os scripts analíticos e o `renv.lock` permaneceram inalterados.
+
+#### Resultados obtidos
+
+- Execução principal `20261102_192527_7520` concluída: 14 etapas e **21.082
+  saídas** existentes e não vazias. Hashes registrados no manifesto; MD5 da
+  entrada e de todos os códigos reconferidos após a execução, sem divergências.
+- Manifesto principal:
+  `TESTE/DOCUMENTACAO/outputs/2026-11-02/metadados/manifesto_20261102_192527_7520_192527.rds`.
+- `validar_pipeline.r --exigir-dados` aprovado: sintaxe de 29 scripts, contratos
+  sintéticos e metadados reais das **2.338 escolas**.
+- Correlações regeneradas para **2.328 escolas**. Dez escolas sem preditores
+  com variação constam em `escolas_nao_processadas_194550.csv`; resumo em
+  `TESTE/2_ANALISE_POR_ESCOLA/outputs/2026-11-02/diagnosticos/resumo_processamento_194550.csv`.
+- Modelos principais: N=2.326, R² ajustado de 0,3450 (MT) e 0,3454 (LP).
+  Modelos de itens: N=2.325, 152 preditores, R² ajustado de 0,7398 (MT) e
+  0,6937 (LP). Os quatro objetos `lm` têm coeficientes finitos; a tabela de
+  mediação contém seis linhas de resultados.
+- O critério operacional existente de notas 150–800 registrou 83 notas abaixo
+  de 150 nos diagnósticos. O CSV de entrada foi preservado.
+- Auxiliar do artigo `20261102_192527_7520_artigo_195706` concluído com dez saídas.
+  Manifesto:
+  `TESTE/DOCUMENTACAO/outputs/2026-11-02/metadados/manifesto_20261102_192527_7520_artigo_195706_195706.rds`.
+- Inspecionados visualmente o gráfico consolidado de coeficientes e o
+  dendrograma do artigo por `AREA_LOCAL`, com texto e legendas legíveis.
+- Recorte ativo com SHA-256 `9df6c1c39e1dd6dde531aba2df81079469a1f9f701ea0f6914ea31df4e0391ce`.
+
+Para repetir no ambiente local desta sessão, a partir da raiz:
+
+```powershell
+$env:R_LIBS_USER = (Resolve-Path 'renv/library/windows/R-4.6/x86_64-w64-mingw32').Path
+$env:RENV_PATHS_CACHE = (Resolve-Path 'tmp/renv-cache').Path
+$env:RENV_PATHS_ROOT = Join-Path (Resolve-Path 'tmp').Path 'renv-state'
+$env:RENV_PATHS_SANDBOX = Join-Path (Resolve-Path 'tmp').Path 'renv-sandbox'
+& './tmp/R-4.6.0/bin/Rscript.exe' --vanilla executar_pipeline.r --auxiliares
+```
+
+A biblioteca local usa o cache em `tmp/renv-cache`; preservar esses diretórios
+para repetir esta configuração. Em outra máquina, preparar R 4.6.0 e restaurar
+as dependências conforme os requisitos do projeto.
+
+#### Próximos passos
+
+- [x] Restaurar e verificar o ambiente exigido pelo lockfile.
+- [x] Executar o pipeline, seus auxiliares e validar os resultados.
+- [ ] Revisar e incorporar as novas tabelas e figuras no texto acadêmico.
+- As etapas interativas 3 e 6 permanecem manuais, conforme o guia operacional.
+
+---
+
+### 2026-11-02 — Restricao dos dados versionaveis ao recorte MG/Ensino Medio
+
+**Horário:** nao informado (America/Sao_Paulo)
+**Fase:** Preparacao dos microdados e configuracao do Git
+**Status:** Recorte gerado e conferido; sem commit ou push
+
+#### Atividades realizadas
+
+- Restringido o `.gitignore` para permitir somente `DADOS/TS_ALUNO_34EM.csv`
+  entre os arquivos de dados; demais bases e CSVs de `INPUTS/` ficam ignorados.
+- Filtrada a nova base nacional por `ID_SAEB = 2023`, `ID_UF = 31` e
+  `ID_SERIE` em 12/13, preservando cabecalho e linhas originais sem conversao numerica.
+- Preservada a base nacional em copia local `TS_ALUNO_34EM_brasiltodo_<timestamp>.csv`.
+- Mantidas as exclusoes da auditoria, do relatorio e dos outputs.
+
+#### Desafios encontrados
+
+- O nome do arquivo nacional coincide com o esperado pelo pipeline; o `.gitignore`
+  controla nomes de arquivos e nao verifica UF ou serie dentro do CSV.
+
+#### Resultados obtidos
+
+- Recorte conferido por releitura, verificando ano, UF, series e ausencia de IDs de alunos duplicados.
+- Somente o arquivo de recorte fica elegivel ao versionamento na pasta `DADOS/`.
+
+#### Próximos passos
+
+- [ ] Reexecutar o pipeline com a nova entrada antes de atualizar os resultados.
+- [ ] Incluir o recorte no proximo commit e envio ao remoto.
+
+---
+
+### 2026-11-02 — Liberacao dos dados do SAEB no Git
+
+**Horário:** a partir de 15h40 (America/Sao_Paulo)
+**Fase:** Configuracao do Git
+**Status:** Regras de exclusao dos dados removidas
+
+#### Atividades realizadas
+
+- Removidas do `.gitignore` as regras `MICRODADOS_SAEB_2023/DADOS/` e
+  `MICRODADOS_SAEB_2023/INPUTS/*.csv`, conforme solicitado pelo usuario.
+- Mantidas as exclusoes de `auditoria_tcc/`, `RELATORIO_AUDITORIA_TCC.md`
+  e das pastas `outputs/`.
+
+#### Desafios encontrados
+
+- A nova orientacao substitui a convencao anterior de manter os microdados locais.
+
+#### Resultados obtidos
+
+- Os dados desses caminhos ficam disponiveis para inclusao no Git.
+- Nenhum commit ou push realizado nesta sessao.
+
+#### Próximos passos
+
+- [ ] Incluir os arquivos desejados no proximo commit e envio ao remoto.
+
+---
 
 ## Outubro de 2026
 
