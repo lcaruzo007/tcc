@@ -30,7 +30,7 @@ source(file.path(DIR_MODULO, "Scripts", "base_dendrograma_artigo.r"))
 
 VARS_CLUSTER <- c("MEDIA_MT", "MEDIA_LP", "INSE_MEDIO")
 N_CLUSTERS <- 2L
-N_ESCOLAS_POR_GRUPO <- 20L
+N_ESCOLAS_POR_GRUPO <- 10L
 
 PALETAS <- list(
   tipo_escola = c(Publica = "#1B4F9A", Privada = "#A23B72"),

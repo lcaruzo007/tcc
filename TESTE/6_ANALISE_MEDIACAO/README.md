@@ -19,6 +19,7 @@ entradas, saídas, ambiente e logs no manifesto.
 |---------|------------|------------|----------------|
 | Tipo | Privada | Pública | Escolas elegíveis |
 | Localização | Categoria observada de `AREA_LOCAL` | `Urbana_Capital` | Somente os dois grupos do contraste |
+| Interior | `Rural_Interior` | `Urbana_Interior` | Somente escolas rurais e urbanas do interior |
 
 A elegibilidade exige cinco notas válidas por disciplina, três valores válidos
 de INSE e contexto completo. Não há covariáveis adicionais nas fórmulas.

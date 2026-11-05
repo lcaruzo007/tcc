@@ -25,7 +25,7 @@ O projeto utiliza os microdados do SAEB 2023, transforma as respostas dos estuda
 agrega informações por escola e realiza comparações de grupos, agrupamentos,
 regressões e uma análise exploratória de mediação pelo INSE.
 
-| Recorte local conferido em 20/10/2026 | Quantidade |
+| Recorte MG/2023 versionado em 02/11/2026 | Quantidade |
 |:------------------------------------|-----------:|
 | Registros de estudantes | **173.918** |
 | Escolas distintas | **2.338** |
@@ -61,15 +61,15 @@ renv::restore(prompt = FALSE)
 O executor confere o ambiente antes de iniciar as análises. Consulte
 [requisitos.md](TESTE/DOCUMENTACAO/requisitos.md) para detalhes.
 
-Obtenha os [microdados no INEP](https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/saeb)
-e disponibilize o arquivo neste caminho relativo à raiz:
+O recorte usado pelo pipeline já está versionado neste caminho relativo à raiz:
 
 ```text
 MICRODADOS_SAEB_2023/DADOS/TS_ALUNO_34EM.csv
 ```
 
-**O arquivo deve conter o recorte desejado de MG/2023.** A leitura valida UF, ano e séries e interrompe o processamento se houver
-registros fora do recorte. Prepare o arquivo nacional antes de usá-lo.
+Para substituir a entrada, obtenha os [microdados no INEP](https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/saeb)
+e prepare novamente o recorte MG/2023. A leitura valida UF, ano e séries e
+interrompe o processamento se houver registros fora do recorte.
 
 Em 29/10/2026, a entrada local foi atualizada com o recorte de MG extraído de
 `TS_ALUNO_34EM_brasiltodo.csv`: 173.918 alunos, 2.338 escolas e 117 colunas.
@@ -194,7 +194,7 @@ tcc/
 ├── AGENTS.md                         Convenções de trabalho
 ├── refs/                             Referências bibliográficas em PDF
 ├── MICRODADOS_SAEB_2023/
-│   ├── DADOS/                        CSVs locais, fora do Git
+│   ├── DADOS/                        Recorte MG/2023 versionado; demais dados locais
 │   └── INPUTS/                       Scripts de importação do INEP
 └── TESTE/
     ├── DOCUMENTACAO/                 Helpers, validação e guias
@@ -280,15 +280,22 @@ exploratórias não estabelecem identificação causal.
 Confira os resultados de verificação e as decisões na
 [análise do projeto](TESTE/DOCUMENTACAO/analise_projeto.md) e no [diário](diario.md).
 
-**Reprocessamento e validação em 02/11/2026:** 14 scripts automáticos com
-auxiliares concluídos, com 21.082 saídas e hashes registrados. Sintaxe de 29
-scripts, contratos sintéticos e metadados das 2.338 escolas aprovados.
-Correlações regeneradas para 2.328 escolas, com dez escolas sem preditores com
-variação documentadas. Regressões e mediação atualizadas; cinco dendrogramas
-adicionais do artigo também regenerados. As 50 imagens e as tabelas principais
-estao no indice local:
-`TESTE/DOCUMENTACAO/outputs/2026-11-02/metadados/indice_resultados_e_imagens_205316.md`.
-Detalhes estao no [diario](diario.md).
+**Reprocessamento e validação em 03/11/2026:** 14 scripts automáticos com
+auxiliares concluídos na execução `20261103_125726_17952`, com 21.083
+artefatos e hashes registrados. Sintaxe de 29 scripts, contratos sintéticos e
+metadados das 2.338 escolas aprovados. Correlações regeneradas para 2.328
+escolas, com dez escolas sem preditores com variação documentadas. Os modelos
+principais usam 2.326 escolas; os modelos de itens usam 2.325. Manifesto:
+`TESTE/DOCUMENTACAO/outputs/2026-11-03/metadados/manifesto_20261103_125726_17952_125726.rds`.
+O auxiliar do artigo gerou cinco dendrogramas adicionais em 03/11, e foi
+reexecutado com dez escolas por grupo; os PNGs mais recentes estão em
+`TESTE/3_ANALISE_DE_GRUPOS/outputs/2026-11-03/figuras/dendrogramas_artigo/`.
+Esses outputs são locais e regeneráveis. Detalhes estão no [diário](diario.md).
+
+As correlações por escola são exploratórias. O limiar `|r| >= 0,30` não
+estabelece um tamanho mínimo de amostra para interpretação substantiva: por
+exemplo, `rho = 0,921` para Q10a e Matemática na escola 61400177 usa apenas
+dez pares válidos e não descreve o conjunto das escolas.
 
 Para retomar em outra maquina, atualize a branch `master` com `git pull --ff-only`,
 prepare R e dependencias conforme o `renv.lock` e os

@@ -126,8 +126,10 @@ condicionada ao INSE e ao tratamento. O bootstrap percentil usa 1.000 simulaçõ
 com semente 2023. Excluir zero do intervalo não demonstra convergência do bootstrap.
 
 - Tipo de escola: privada versus pública na amostra elegível.
-- Localização: cada categoria observada é comparada **somente** com
+- Localização: cada categoria observada é comparada com
   `Urbana_Capital`, após filtrar a base para esses dois grupos.
+- Contraste adicional: `Rural_Interior` versus `Urbana_Interior`,
+  restrito aos dois grupos do interior.
 - As fórmulas não incluem covariáveis adicionais. Essa escolha exploratória é
   explicitada nas saídas, sem confundir o ajuste com a regressão principal.
 - Tabelas registram número de escolas em cada grupo, referência e efeitos

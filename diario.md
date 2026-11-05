@@ -1,6 +1,6 @@
 # Diário de desenvolvimento · TCC SAEB 2023
 
-**Período:** 06/04/2026 a 02/11/2026 · **Organização:** registros recentes primeiro.
+**Período:** 06/04/2026 a 05/11/2026 · **Organização:** registros recentes primeiro.
 
 [README](README.md) · [Análise do projeto](TESTE/DOCUMENTACAO/analise_projeto.md) · [Modelo de registro](#modelo-para-novas-entradas)
 
@@ -13,7 +13,7 @@ as recomendações vigentes. “Concluído” em uma entrada descreve aquela ses
 
 | Mês | Registros | Assuntos principais |
 |-----|:---------:|---------------------|
-| [Novembro de 2026](#novembro-de-2026) | 5 | Recorte MG/Ensino Médio, reprocessamentos, imagens e versionamento |
+| [Novembro de 2026](#novembro-de-2026) | 9 | Recorte MG/Ensino Médio, reprocessamentos, imagens e conferência de correlações |
 | [Outubro de 2026](#outubro-de-2026) | 7 | Auditoria científica, revisão do projeto e organização documental |
 | [Setembro de 2026](#setembro-de-2026) | 1 | Reprodutibilidade, migração e validações |
 | [Agosto de 2026](#agosto-de-2026) | 2 | Pipeline enxuto e figuras para artigo |
@@ -22,6 +22,197 @@ as recomendações vigentes. “Concluído” em uma entrada descreve aquela ses
 | [Abril de 2026](#abril-de-2026) | 2 | Limpeza, correlações e análise por escola |
 
 ## Novembro de 2026
+
+### 2026-11-05 - Mediacao entre escolas rurais e urbanas do interior
+
+**Horario:** 12h38-12h41 (America/Sao_Paulo)
+**Fase:** Passo 10 - Mediacao exploratoria
+**Status:** Concluido
+
+#### Atividades realizadas
+
+- Acrescentado Rural_Interior versus Urbana_Interior para MT e LP, filtrando somente esses grupos.
+- Generalizado o helper de contrastes com referencia opcional, mantendo Urbana_Capital como padrao.
+- Exportadas referencias corretas na tabela e nos diagramas; documentacao atualizada.
+
+#### Desafios encontrados
+
+- R Portable antigo nao possui mediation; execucao concluida com R 4.6.0 local.
+- Efeitos direto e indireto tem sinais opostos: proporcao mediada nao admite leitura percentual simples.
+
+#### Resultados obtidos
+
+- Contratos sinteticos aprovados, incluindo exclusao da capital e rejeicao de grupos iguais; sintaxe de 29 scripts aprovada.
+- Bootstrap com 1000 simulacoes: 157 escolas rurais e 2030 urbanas do interior.
+- MT: total -7.814, direto 5.800, indireto -13.614 pontos.
+- LP: total -9.904, direto 3.646, indireto -13.550 pontos.
+- Tabela, modelos e figuras gravados em TESTE/6_ANALISE_MEDIACAO/outputs/2026-11-05/.
+
+#### Proximos passos
+
+- Incorporar os novos diagramas e a interpretacao exploratoria ao texto do TCC.
+
+---
+
+### 2026-11-03 — Atualizacao do README para a execucao recente
+
+**Horário:** 16h39 (America/Sao_Paulo)
+**Fase:** Documentacao e retomada do projeto
+**Status:** Concluido
+
+#### Atividades realizadas
+
+- Corrigido o README para informar que o recorte MG/2023 esta versionado.
+- Substituido o resumo de 02/11 pelo manifesto e pelas validacoes de 03/11.
+- Registradas a reexecucao dos dendrogramas com dez escolas por grupo e a
+  cautela de interpretacao das correlacoes com amostras pequenas.
+
+#### Desafios encontrados
+
+- O README apontava para um indice de outputs de 02/11 que nao existe nesta
+  maquina e descrevia incorretamente a pasta `DADOS/` como fora do Git.
+
+#### Resultados obtidos
+
+- Inicio rapido e estado de validacao alinhados com o codigo e os resultados
+  locais atuais; `git diff --check` sem erros.
+
+#### Próximos passos
+
+- [ ] Selecionar tabelas e figuras para o texto final do TCC.
+
+---
+
+### 2026-11-03 — Ajuste da amostra dos dendrogramas do artigo
+
+**Horario:** nao informado (America/Sao_Paulo)
+**Fase:** Etapa 4-7 — analise de grupos
+**Status:** Concluido; reexecucao concluida com R 4.6.0
+
+#### Atividades realizadas
+
+- Alterada a configuracao `N_ESCOLAS_POR_GRUPO` de 20 para 10 em
+  `TESTE/3_ANALISE_DE_GRUPOS/Scripts/dendrogramas_artigo.r`.
+- Executado o script com R 4.6.0 as 16h10–16h11, usando os metadados das
+  2.338 escolas gerados nesta maquina.
+
+#### Desafios encontrados
+
+- A sessao R do VS Code nao iniciou porque `Rscript` nao esta disponivel no
+  `PATH` e nao foi encontrada uma instalacao em `C:/Program Files/R`.
+- O executavel foi localizado em `AppData/Local/Programs/R/R-4.6.0/bin/` e
+  chamado diretamente para concluir a reexecucao.
+
+#### Resultados obtidos
+
+- O script agora seleciona ate 10 escolas por grupo, mantendo a selecao das
+  escolas extremas.
+- Cinco PNGs novos em `TESTE/3_ANALISE_DE_GRUPOS/outputs/2026-11-03/figuras/dendrogramas_artigo/`,
+  com horarios entre `161056` e `161101`; cinco CSVs de selecao na pasta
+  `metadados/`, todos presentes e nao vazios.
+
+#### Proximos passos
+
+- [ ] Conferir a legibilidade das cinco figuras no tamanho final do artigo.
+
+---
+
+### 2026-11-03 — Conferencia da correlacao Q10a com Matematica
+
+**Horário:** nao informado (America/Sao_Paulo)
+**Fase:** Validacao metodologica das correlacoes por escola
+**Status:** Conferencia concluida; interpretacao do TCC pendente de revisao
+
+#### Atividades realizadas
+
+- Rastreado o valor 0,921 da tabela da escola 61400177 ate os dez pares
+  validos na base transformada e o codigo de correlacao.
+- Conferida a codificacao ordinal de Q10a: A=1, B=2, C=3; o script usa
+  Spearman e mantem apenas resultados com valor absoluto de pelo menos 0,30.
+- Recalculada a correlacao diretamente dos registros e examinada sua
+  distribuicao nas escolas e no conjunto dos alunos validos.
+
+#### Desafios encontrados
+
+- O coeficiente elevado se refere a uma escola pequena; nao representa a
+  associacao geral do recorte. O limiar 0,30 seleciona resultados exploratorios,
+  sem exigir tamanho amostral suficiente para interpretacao substantiva.
+
+#### Resultados obtidos
+
+- Para a escola 61400177, dez pares validos (A=5, B=2, C=3) reproduzem
+  rho de Spearman 0,9211324; Pearson dos mesmos pares e 0,7700108.
+- Conferencia posterior da base bruta: a escola tem 13 registros; nos tres
+  restantes, Q10a e `.` (sem resposta), as proficiencias MT/LP estao vazias
+  e os indicadores de validade sao 0. Nao houve amostragem ou teto de dez.
+- Para Q10a/MT, 2.220 das 2.328 escolas com calculo tiveram mais de dez
+  pares; a mediana foi 42 e o maximo 440. O N e apurado por item e disciplina.
+- Entre 2.328 escolas com Q10a/MT calculavel, duas tem rho >= 0,90,
+  ambas com no maximo dez pares; a mediana das correlacoes e -0,00714.
+- Nos 132.727 pares validos do recorte inteiro, o Spearman calculado
+  separadamente e 0,000805. Este valor agregado nao substitui a analise
+  por escola, mas evidencia que 0,921 nao descreve o conjunto.
+- Nenhum sinal de codificacao da proficiencia como resposta de Q10a foi
+  encontrado no fluxo examinado.
+- A secao 5.1 fornecida para revisao reproduz os coeficientes do CSV, mas a
+  Tabela 4 nao esta ordenada por MT como afirma o texto. Q10b tem rho LP
+  -0,086 e nao atinge o limiar nessa disciplina. Q21d inclui trabalho fora
+  de casa com ou sem salario, segundo o questionario. As explicacoes sobre
+  aprendizado, causalidade reversa e ambiente domestico nao foram testadas
+  por essa correlacao descritiva.
+
+#### Próximos passos
+
+- [ ] Conferir o contexto exato da secao 5.1 e identificar a escola e o N
+  junto a cada correlacao destacada antes de revisar a interpretacao.
+- [ ] Considerar um criterio minimo de pares e analise de sensibilidade
+  para a apresentacao de correlacoes individuais no TCC.
+- [ ] Corrigir ordem, titulo, rotulos e alcance interpretativo da Tabela 4
+  quando a secao 5.1 for incorporada ao documento final.
+
+---
+
+### 2026-11-03 — Reexecucao do pipeline na nova maquina
+
+**Horário:** 12h57–14h49 (America/Sao_Paulo)
+**Fase:** Ambiente, reprocessamento e validacao dos resultados
+**Status:** Concluido; execucao `20261103_125726_17952`
+
+#### Atividades realizadas
+
+- Atualizado `AGENTS.md` para refletir o recorte MG/2023 versionado e as saidas locais.
+- Localizado R 4.6.0 e conferidas as dependencias do ambiente.
+- Executado `executar_pipeline.r --auxiliares`, incluindo os 14 scripts automaticos.
+- Executado `validar_pipeline.r --exigir-dados` e, separadamente,
+  `dendrogramas_artigo.r` para as cinco figuras adicionais.
+
+#### Desafios encontrados
+
+- `Rscript` nao estava no PATH, mas a instalacao R 4.6.0 estava disponivel
+  em `AppData/Local/Programs/R`; o executavel foi chamado diretamente.
+- A correlacao por escola demandou cerca de 94 minutos. Os outputs locais da
+  execucao anterior nao estavam presentes nesta maquina.
+
+#### Resultados obtidos
+
+- Manifesto principal `TESTE/DOCUMENTACAO/outputs/2026-11-03/metadados/manifesto_20261103_125726_17952_125726.rds`
+  concluido, com 14 etapas e 21.083 artefatos registrados com MD5.
+- Sintaxe de 29 scripts, contratos sinteticos e metadados reais de 2.338
+  escolas aprovados; resumo das correlacoes em
+  `TESTE/2_ANALISE_POR_ESCOLA/outputs/2026-11-03/diagnosticos/resumo_processamento_144202.csv`.
+- Regressao principal: N=2.326, R2 ajustado 0,3450 (MT) e 0,3454 (LP).
+  Modelo de itens: N=2.325, 152 preditores, R2 ajustado 0,7398 (MT)
+  e 0,6937 (LP). Mediacao em
+  `TESTE/6_ANALISE_MEDIACAO/outputs/2026-11-03/tabelas/mediacao_144638.csv`.
+- Cinco PNGs adicionais do artigo em
+  `TESTE/3_ANALISE_DE_GRUPOS/outputs/2026-11-03/figuras/dendrogramas_artigo/`.
+
+#### Próximos passos
+
+- [ ] Selecionar tabelas e figuras desta execucao para o texto do TCC.
+- [ ] Executar manualmente os passos interativos 3 e 6, se necessarios.
+
+---
 
 ### 2026-11-02 — Fechamento do dia para retomada do trabalho
 

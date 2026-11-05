@@ -2,9 +2,9 @@
 # SCRIPT: analise_mediacao.r
 # ENTRADA: Metadados escolares validos do passo 4.
 # SAIDA: Mediacao exploratoria, tamanhos de grupos, fluxo de inclusao e figuras.
-# VERSAO: 3.0 - Outubro 2026
+# VERSAO: 3.1 - Novembro 2026
 # Bootstrap percentil: 1000 simulacoes, semente 2023. Sem covariaveis adicionais.
-# AREA_LOCAL: cada categoria e comparada somente com Urbana_Capital.
+# AREA_LOCAL: cada categoria e comparada com Urbana_Capital; inclui contraste entre grupos do interior.
 # Diagramas reutilizam os modelos ajustados no respectivo contraste.
 # A decomposicao observacional nao identifica efeitos causais por si so.
 ################################################################################
@@ -91,6 +91,7 @@ metadados <- fluxo_mediacao |>
     # Capital/Interior (lacuna apontada na apresentacao do TCC)
     RURAL_INTERIOR  = as.integer(AREA_LOCAL == "Rural_Interior"),
     RURAL_CAPITAL   = as.integer(AREA_LOCAL == "Rural_Capital"),
+    RURAL_VS_URBANA_INTERIOR = as.integer(AREA_LOCAL == "Rural_Interior"),
     URBANA_INTERIOR = as.integer(AREA_LOCAL == "Urbana_Interior")
   )
 
@@ -99,12 +100,15 @@ message("Escolas validas: ", nrow(metadados))
 tratamentos_area <- c(
   RURAL_INTERIOR = "Rural_Interior",
   RURAL_CAPITAL = "Rural_Capital",
-  URBANA_INTERIOR = "Urbana_Interior"
+  URBANA_INTERIOR = "Urbana_Interior",
+  RURAL_VS_URBANA_INTERIOR = "Rural_Interior"
 )
+referencias_area <- setNames(rep("Urbana_Capital", length(tratamentos_area)), names(tratamentos_area))
+referencias_area["RURAL_VS_URBANA_INTERIOR"] <- "Urbana_Interior"
 tratamentos_disponiveis <- names(tratamentos_area)[
   vapply(
     names(tratamentos_area),
-    function(x) dplyr::n_distinct(metadados[[x]]) == 2L,
+    function(x) all(c(tratamentos_area[[x]], referencias_area[[x]]) %in% metadados$AREA_LOCAL),
     logical(1)
   )
 ]
@@ -160,9 +164,11 @@ message("\n", strrep("-", 50))
 message("MEDIACAO 2: LOCALIZACAO -> INSE -> PROFICIENCIA")
 message(strrep("-", 50))
 
-# Mediacao por dummy observada de AREA_LOCAL (ref: Urbana_Capital)
+# Mediacao por dummy observada de AREA_LOCAL com referencia por contraste
 mediar_area_local <- function(tratamento, resposta, disciplina) {
-  dados_contraste <- preparar_contraste_area_saeb(metadados, tratamentos_area[[tratamento]])
+  dados_contraste <- preparar_contraste_area_saeb(
+    metadados, tratamentos_area[[tratamento]], referencias_area[[tratamento]]
+  )
   formula_a <- reformulate(tratamento, response = "INSE_MEDIO")
   formula_b <- reformulate(c("INSE_MEDIO", tratamento), response = resposta)
   lm_a <- lm(formula_a, data = dados_contraste)
@@ -172,7 +178,7 @@ mediar_area_local <- function(tratamento, resposta, disciplina) {
   m <- mediate(lm_a, lm_b, treat = tratamento, mediator = "INSE_MEDIO",
                boot = TRUE, sims = 1000)
   message("\n>>> ", disciplina, " - Mediacao por INSE (",
-          tratamento, " vs Urbana_Capital):")
+          tratamento, " vs ", referencias_area[[tratamento]], "):")
   print(summary(m))
   m
 }
@@ -224,7 +230,7 @@ extrair_ci_seguro <- function(med_obj, campo_ci, posicao) {
   as.numeric(valor[posicao])
 }
 
-montar_resultado <- function(nome, disciplina, med_obj) {
+montar_resultado <- function(nome, disciplina, med_obj, referencia = "Publica") {
   tibble(
     Variavel_Independente = nome,
     Mediador = "INSE_MEDIO",
@@ -232,7 +238,7 @@ montar_resultado <- function(nome, disciplina, med_obj) {
     N_Escolas = nobs(med_obj$model.y),
     N_Referencia = sum(med_obj$model.y$model[[med_obj$treat]] == 0),
     N_Tratamento = sum(med_obj$model.y$model[[med_obj$treat]] == 1),
-    Referencia = if_else(grepl("^AREA_LOCAL", nome), "Urbana_Capital", "Publica"),
+    Referencia = referencia,
     Ajuste = "Sem covariaveis adicionais; exploratorio",
     Efeito_Direto = extrair_seguro(med_obj, "z.avg"),
     IC95_Direto_Inferior = extrair_ci_seguro(med_obj, "z.avg.ci", 1),
@@ -258,8 +264,8 @@ resultados_mediacao <- bind_rows(
   map_dfr(tratamentos_disponiveis, function(tratamento) {
     nome <- paste0("AREA_LOCAL: ", tratamentos_area[[tratamento]])
     bind_rows(
-      montar_resultado(nome, "MT", med_loc_mt[[tratamento]]),
-      montar_resultado(nome, "LP", med_loc_lp[[tratamento]])
+      montar_resultado(nome, "MT", med_loc_mt[[tratamento]], referencias_area[[tratamento]]),
+      montar_resultado(nome, "LP", med_loc_lp[[tratamento]], referencias_area[[tratamento]])
     )
   })
 ) %>%
@@ -454,6 +460,9 @@ salvar_diagrama_area_local <- function(tratamento, nome_grupo, disciplina,
   modelo_a <- estimativa$model.m
   modelo_b <- estimativa$model.y
   nome_arquivo <- paste0("caminhos_mediacao_AREA_LOCAL_", nome_grupo,
+                         if (referencias_area[[tratamento]] != "Urbana_Capital") {
+                           paste0("_vs_", referencias_area[[tratamento]])
+                         } else "",
                          "_", if (disciplina == "Matematica") "MT" else "LP")
   plot <- criar_diagrama_mediacao(
     paste0("AREA_LOCAL\n(", nome_grupo, "=1)"), "INSE_MEDIO", disciplina,
@@ -463,7 +472,7 @@ salvar_diagrama_area_local <- function(tratamento, nome_grupo, disciplina,
     r2_med = summary(modelo_a)$r.squared,
     r2_dep = summary(modelo_b)$r.squared,
     fig_num = fig_num,
-    categoria_referencia = "Urbana_Capital",
+    categoria_referencia = referencias_area[[tratamento]],
     nome_grupo = nome_grupo
   )
   ggsave(caminho_saida(DIR_BASE, "figuras", nome_arquivo, "png"),

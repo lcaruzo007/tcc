@@ -191,7 +191,7 @@ Efeitos direto, indireto e total.
 | p_Total | P-valor do efeito total |
 | Proporcao_Mediada | Proporção estimada × 100; interpretação exploratória |
 | N_Escolas, N_Referencia, N_Tratamento | Tamanho do contraste efetivamente ajustado |
-| Referencia | Pública ou Urbana_Capital, conforme a análise |
+| Referencia | Pública ou Urbana_Capital ou Urbana_Interior, conforme a análise |
 | Ajuste | Informa a ausência de covariáveis adicionais |
 
 ### `6_ANALISE_MEDIACAO/outputs/<YYYY-MM-DD>/figuras/caminhos_mediacao_MT_*.png`

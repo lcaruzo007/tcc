@@ -25,8 +25,10 @@ de alunos da 3a serie do Ensino Medio. Pipeline inteiramente em **R** (tidyverse
   ```
 - **Nao ha linter/formatter configurado**. Validacao se faz rodando o script OU
   carregando no RStudio. Use `parse(path)` para checar sintaxe sem executar.
-- Nao commitar arquivos de output gerados (renam o R). A regra do `.gitignore`
-  exclui pastas `outputs/` (verifique antes de forcar add).
+- Somente `MICRODADOS_SAEB_2023/DADOS/TS_ALUNO_34EM.csv`, recorte MG/2023
+  com `ID_UF = 31` e `ID_SERIE` em 12/13, e versionado entre os dados.
+  Antes de substitui-lo, confira o recorte e o hash da entrada. Os demais dados,
+  arquivos de `outputs/` e backups em `resultados/` sao ignorados pelo Git.
 
 ## Estrutura
 
@@ -136,12 +138,18 @@ categorias sem variacao em vez de ajustar coeficientes nao estimaveis.
   carregar `utils_saeb.r` e pode ser iniciado em sessao R limpa.
 - `executar_pipeline.r` executa as etapas nao interativas em sessoes R isoladas.
 - `TESTE/DOCUMENTACAO/validar_pipeline.r` verifica sintaxe e invariantes basicos.
-- Microdados CSV e pastas `outputs/` sao locais e ignorados pelo Git.
+- O recorte MG/2023 em `DADOS/TS_ALUNO_34EM.csv` e versionado desde 02/11/2026;
+  `.gitattributes` preserva seus bytes entre plataformas. Os demais microdados,
+  pastas `outputs/`, backups em `resultados/`, caches e bibliotecas R sao locais
+  e ignorados pelo Git. Em outra maquina, restaure R 4.6.0 e os pacotes do
+  `renv.lock`, execute `Rscript executar_pipeline.r --auxiliares` e rode o
+  auxiliar `dendrogramas_artigo.r` separadamente se precisar das figuras do artigo.
 - Todos os seis modulos gravam novas saidas datadas; os modulos 1 e 2 usam
   `tabelas/<ID_ESCOLA>/` dentro da pasta datada e preservam leitura legada.
 - `dados_saeb.r` centraliza recorte MG/2023, validade, dominios, agregacao e
   elegibilidade. Medias descritivas e pareadas tem denominadores explicitos.
-- Mediacao de AREA_LOCAL usa contrastes par a par com Urbana_Capital.
+- Mediacao de AREA_LOCAL usa contrastes par a par com Urbana_Capital e
+  Rural_Interior versus Urbana_Interior (somente escolas do interior).
 - `renv.lock` fixa R/pacotes; o executor confere versoes, resolve produtores e
   vincula entradas ao catalogo da execucao. Manifestos/logs ficam em
   `TESTE/DOCUMENTACAO/outputs/<data>/`.

@@ -72,6 +72,9 @@ teste <- function() {
   contraste <- preparar_contraste_area_saeb(exemplo, "Rural_Interior")
   stopifnot(nrow(contraste) == 2L, !"Urbana_Interior" %in% contraste$AREA_LOCAL)
   esperar_erro(preparar_contraste_area_saeb(exemplo, "Rural_Capital"))
+  interior <- preparar_contraste_area_saeb(exemplo, "Rural_Interior", "Urbana_Interior")
+  stopifnot(nrow(interior) == 2L, !"Urbana_Capital" %in% interior$AREA_LOCAL)
+  esperar_erro(preparar_contraste_area_saeb(exemplo, "Rural_Interior", "Rural_Interior"))
   stopifnot(correlacao_segura_saeb(c(1, 2, 3, NA), c(3, 2, 1, 10), "Pearson")$valor == -1,
             correlacao_segura_saeb(c(1, 1, 2), c(2, 3, NA), "Pearson")$status == "SEM_PARES")
   pasta <- tempfile("saeb_contratos_")

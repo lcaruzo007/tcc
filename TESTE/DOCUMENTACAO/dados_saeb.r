@@ -231,11 +231,11 @@ amostra_escolas_saeb <- function(base, minimo = 5L, minimo_inse = 3L,
     )
 }
 
-preparar_contraste_area_saeb <- function(dados, categoria) {
-  if (identical(categoria, "Urbana_Capital")) stop("Categoria deve diferir da referencia.")
+preparar_contraste_area_saeb <- function(dados, categoria, referencia = "Urbana_Capital") {
+  if (identical(categoria, referencia)) stop("Categoria deve diferir da referencia.")
   resultado <- dados |>
-    filter(AREA_LOCAL %in% c("Urbana_Capital", categoria))
-  if (!all(c("Urbana_Capital", categoria) %in% resultado$AREA_LOCAL)) {
+    filter(AREA_LOCAL %in% c(referencia, categoria))
+  if (!all(c(referencia, categoria) %in% resultado$AREA_LOCAL)) {
     stop("Contraste sem os dois grupos: ", categoria)
   }
   resultado
