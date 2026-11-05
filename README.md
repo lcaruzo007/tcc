@@ -217,7 +217,8 @@ O padrão obrigatório para novas saídas é:
 
 Use `caminho_saida()` de [utils_saeb.r](TESTE/DOCUMENTACAO/utils_saeb.r).
 O helper cria pastas e acrescenta um contador se o nome já existir.
-`encontrar_arquivo_mais_recente()` localiza CSVs nos formatos datado e legado;
+`encontrar_arquivo_mais_recente()` localiza CSVs nos formatos datado e legado
+e aceita `ext = "rds"` para ler os modelos salvos;
 a consulta manual prioriza o layout datado e ordena por data, horário e contador.
 
 **Todos os seis módulos gravam novas saídas datadas.** Nos módulos 1 e 2,
@@ -249,6 +250,45 @@ padronizado, a `TIPO_ESCOLA` e a `AREA_LOCAL`.
 permanecem para descrição. Os critérios de inclusão diferem entre os módulos:
 as 2.338 escolas do arquivo não representam o tamanho de todos os modelos.
 A base agregada mais recente do passo 8 contém **2.326 escolas**.
+
+### Novas comparações e leitura das figuras de mediação
+
+O passo 10 compara os grupos abaixo em Matemática e Língua Portuguesa,
+com o INSE médio como mediador. Em cada par de figuras, a primeira corresponde
+a Matemática e a segunda a Língua Portuguesa.
+
+| Figuras | Grupo comparado | Referência | Recorte |
+|---------|----------------|------------|---------|
+| 18–19 | Particular | Pública | Todas as escolas elegíveis |
+| 20–21 | Urbana do interior | Urbana da capital | Somente públicas |
+| 22–23 | Urbana do interior | Urbana da capital | Somente particulares |
+| 24–25 | Rural do interior | Urbana do interior | Somente escolas do interior |
+| 26–27 | Rural do interior | Urbana da capital | Somente os dois grupos |
+| 28–29 | Urbana do interior | Urbana da capital | Somente os dois grupos |
+
+As novas comparações nas públicas e nas particulares aparecem logo após
+a comparação geral entre tipos de escola. As antigas Figuras 20–25 passam
+a ser 24–29. O recorte urbano das públicas reúne 2.010 escolas do interior
+e 132 da capital; o das particulares, 20 do interior e 7 da capital.
+A leitura das particulares exige atenção à amostra pequena e aos intervalos
+de confiança. Os resultados são associações exploratórias.
+
+Há duas versões das mesmas figuras em
+`TESTE/6_ANALISE_MEDIACAO/outputs/<YYYY-MM-DD>/`:
+
+- `figuras/`: diagramas completos, com título, informações do ajuste e interpretação.
+- `figuras/sem_textos/`: somente caixas, setas e coeficientes a, b e c', sem
+  título, subtítulo ou rodapé. A caixa inicial identifica o grupo (1) e a referência (0).
+
+O script principal gera as duas versões. Para gerar somente as imagens sem
+textos externos, reutilizando os modelos RDS já salvos e sem repetir o bootstrap:
+
+```powershell
+Rscript TESTE/6_ANALISE_MEDIACAO/Scripts/gerar_figuras_sem_textos.r
+```
+
+Consulte as [legendas prontas para o TCC](TESTE/6_ANALISE_MEDIACAO/legendas_figuras.md)
+e o [guia da mediação](TESTE/6_ANALISE_MEDIACAO/README.md).
 
 ## Documentação
 

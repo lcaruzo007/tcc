@@ -2,7 +2,7 @@
 # SCRIPT: analise_mediacao.r
 # ENTRADA: Metadados escolares validos do passo 4.
 # SAIDA: Mediacao exploratoria, tamanhos de grupos, fluxo de inclusao e figuras.
-# VERSAO: 3.1 - Novembro 2026
+# VERSAO: 3.2 - Novembro 2026
 # Bootstrap percentil: 1000 simulacoes, semente 2023. Sem covariaveis adicionais.
 # AREA_LOCAL: cada categoria e comparada com Urbana_Capital; inclui contraste entre grupos do interior.
 # Diagramas reutilizam os modelos ajustados no respectivo contraste.
@@ -92,23 +92,37 @@ metadados <- fluxo_mediacao |>
     RURAL_INTERIOR  = as.integer(AREA_LOCAL == "Rural_Interior"),
     RURAL_CAPITAL   = as.integer(AREA_LOCAL == "Rural_Capital"),
     RURAL_VS_URBANA_INTERIOR = as.integer(AREA_LOCAL == "Rural_Interior"),
-    URBANA_INTERIOR = as.integer(AREA_LOCAL == "Urbana_Interior")
+    URBANA_INTERIOR = as.integer(AREA_LOCAL == "Urbana_Interior"),
+    URBANA_INTERIOR_PUBLICA = as.integer(AREA_LOCAL == "Urbana_Interior"),
+    URBANA_INTERIOR_PRIVADA = as.integer(AREA_LOCAL == "Urbana_Interior")
   )
 
 message("Escolas validas: ", nrow(metadados))
 
 tratamentos_area <- c(
+  URBANA_INTERIOR_PUBLICA = "Urbana_Interior",
+  URBANA_INTERIOR_PRIVADA = "Urbana_Interior",
+  RURAL_VS_URBANA_INTERIOR = "Rural_Interior",
   RURAL_INTERIOR = "Rural_Interior",
   RURAL_CAPITAL = "Rural_Capital",
-  URBANA_INTERIOR = "Urbana_Interior",
-  RURAL_VS_URBANA_INTERIOR = "Rural_Interior"
+  URBANA_INTERIOR = "Urbana_Interior"
 )
 referencias_area <- setNames(rep("Urbana_Capital", length(tratamentos_area)), names(tratamentos_area))
 referencias_area["RURAL_VS_URBANA_INTERIOR"] <- "Urbana_Interior"
+tipos_contraste <- setNames(rep("Todas", length(tratamentos_area)), names(tratamentos_area))
+tipos_contraste["URBANA_INTERIOR_PUBLICA"] <- "Publica"
+tipos_contraste["URBANA_INTERIOR_PRIVADA"] <- "Privada"
+dados_contraste_area <- function(tratamento) {
+  dados <- metadados
+  if (tipos_contraste[[tratamento]] != "Todas") {
+    dados <- dados |> filter(TIPO_ESCOLA == tipos_contraste[[tratamento]])
+  }
+  dados
+}
 tratamentos_disponiveis <- names(tratamentos_area)[
   vapply(
     names(tratamentos_area),
-    function(x) all(c(tratamentos_area[[x]], referencias_area[[x]]) %in% metadados$AREA_LOCAL),
+    function(x) all(c(tratamentos_area[[x]], referencias_area[[x]]) %in% dados_contraste_area(x)$AREA_LOCAL),
     logical(1)
   )
 ]
@@ -167,7 +181,7 @@ message(strrep("-", 50))
 # Mediacao por dummy observada de AREA_LOCAL com referencia por contraste
 mediar_area_local <- function(tratamento, resposta, disciplina) {
   dados_contraste <- preparar_contraste_area_saeb(
-    metadados, tratamentos_area[[tratamento]], referencias_area[[tratamento]]
+    dados_contraste_area(tratamento), tratamentos_area[[tratamento]], referencias_area[[tratamento]]
   )
   formula_a <- reformulate(tratamento, response = "INSE_MEDIO")
   formula_b <- reformulate(c("INSE_MEDIO", tratamento), response = resposta)
@@ -230,7 +244,8 @@ extrair_ci_seguro <- function(med_obj, campo_ci, posicao) {
   as.numeric(valor[posicao])
 }
 
-montar_resultado <- function(nome, disciplina, med_obj, referencia = "Publica") {
+montar_resultado <- function(nome, disciplina, med_obj, referencia = "Publica",
+                              tipo_escola_recorte = "Todas") {
   tibble(
     Variavel_Independente = nome,
     Mediador = "INSE_MEDIO",
@@ -239,6 +254,7 @@ montar_resultado <- function(nome, disciplina, med_obj, referencia = "Publica") 
     N_Referencia = sum(med_obj$model.y$model[[med_obj$treat]] == 0),
     N_Tratamento = sum(med_obj$model.y$model[[med_obj$treat]] == 1),
     Referencia = referencia,
+    Tipo_Escola_Recorte = tipo_escola_recorte,
     Ajuste = "Sem covariaveis adicionais; exploratorio",
     Efeito_Direto = extrair_seguro(med_obj, "z.avg"),
     IC95_Direto_Inferior = extrair_ci_seguro(med_obj, "z.avg.ci", 1),
@@ -264,8 +280,8 @@ resultados_mediacao <- bind_rows(
   map_dfr(tratamentos_disponiveis, function(tratamento) {
     nome <- paste0("AREA_LOCAL: ", tratamentos_area[[tratamento]])
     bind_rows(
-      montar_resultado(nome, "MT", med_loc_mt[[tratamento]], referencias_area[[tratamento]]),
-      montar_resultado(nome, "LP", med_loc_lp[[tratamento]], referencias_area[[tratamento]])
+      montar_resultado(nome, "MT", med_loc_mt[[tratamento]], referencias_area[[tratamento]], tipos_contraste[[tratamento]]),
+      montar_resultado(nome, "LP", med_loc_lp[[tratamento]], referencias_area[[tratamento]], tipos_contraste[[tratamento]])
     )
   })
 ) %>%
@@ -275,8 +291,9 @@ resultados_mediacao <- bind_rows(
     Proporcao_Mediada = round(Proporcao_Mediada, 1)
   )
 
+arquivo_modelos_mediacao <- caminho_saida(DIR_BASE, "modelos", "objetos_mediacao", "rds")
 saveRDS(list(tipo_MT = med_tipo_mt, tipo_LP = med_tipo_lp, area_MT = med_loc_mt, area_LP = med_loc_lp),
-        caminho_saida(DIR_BASE, "modelos", "objetos_mediacao", "rds"))
+        arquivo_modelos_mediacao)
 
 write_csv(resultados_mediacao, caminho_saida(DIR_BASE, "tabelas", "mediacao", "csv"))
 message("   OK mediacao_", ts_global, ".csv")
@@ -411,7 +428,7 @@ criar_diagrama_mediacao <- function(var_indep, mediador, disciplina,
 }
 
 # -------------------------------------------------------------------------
-# Figura 21: Mediacao Tipo Escola -> INSE -> MT
+# Figura 18: Mediacao Tipo Escola -> INSE -> MT
 # -------------------------------------------------------------------------
 p21 <- criar_diagrama_mediacao(
   "Tipo Escola\n(Privada=1)", "INSE_MEDIO", "Matematica",
@@ -428,10 +445,10 @@ p21 <- criar_diagrama_mediacao(
 ggsave(caminho_saida(DIR_BASE, "figuras", "caminhos_mediacao_MT", "png"),
        plot = p21, width = 14, height = 8.2, dpi = DPI_PADRAO, bg = "white")
 
-message("   OK Figura 21: caminhos_mediacao_MT_", ts_global, ".png")
+message("   OK Figura 18: caminhos_mediacao_MT_", ts_global, ".png")
 
 # -------------------------------------------------------------------------
-# Figura 22: Mediacao Tipo Escola -> INSE -> LP
+# Figura 19: Mediacao Tipo Escola -> INSE -> LP
 # -------------------------------------------------------------------------
 p22 <- criar_diagrama_mediacao(
   "Tipo Escola\n(Privada=1)", "INSE_MEDIO", "Lingua Portuguesa",
@@ -448,10 +465,10 @@ p22 <- criar_diagrama_mediacao(
 ggsave(caminho_saida(DIR_BASE, "figuras", "caminhos_mediacao_LP", "png"),
        plot = p22, width = 14, height = 8.2, dpi = DPI_PADRAO, bg = "white")
 
-message("   OK Figura 22: caminhos_mediacao_LP_", ts_global, ".png")
+message("   OK Figura 19: caminhos_mediacao_LP_", ts_global, ".png")
 
 # -------------------------------------------------------------------------
-# Figuras a partir de 23: AREA_LOCAL observado -> INSE -> proficiencia
+# Figuras a partir de 20: AREA_LOCAL observado -> INSE -> proficiencia
 # -------------------------------------------------------------------------
 salvar_diagrama_area_local <- function(tratamento, nome_grupo, disciplina,
                                        fig_num) {
@@ -459,21 +476,27 @@ salvar_diagrama_area_local <- function(tratamento, nome_grupo, disciplina,
   estimativa <- if (disciplina == "Matematica") med_loc_mt[[tratamento]] else med_loc_lp[[tratamento]]
   modelo_a <- estimativa$model.m
   modelo_b <- estimativa$model.y
+  tipo <- tipos_contraste[[tratamento]]
+  sufixo_tipo <- if (tipo != "Todas") paste0("_", tipo) else ""
+  rotulo_grupo <- paste0(nome_grupo, if (tipo != "Todas") paste0(" / ", tipo) else "")
+  rotulo_referencia <- paste0(referencias_area[[tratamento]],
+                              if (tipo != "Todas") paste0(" / ", tipo) else "")
   nome_arquivo <- paste0("caminhos_mediacao_AREA_LOCAL_", nome_grupo,
                          if (referencias_area[[tratamento]] != "Urbana_Capital") {
                            paste0("_vs_", referencias_area[[tratamento]])
                          } else "",
-                         "_", if (disciplina == "Matematica") "MT" else "LP")
+                         sufixo_tipo, "_", if (disciplina == "Matematica") "MT" else "LP")
   plot <- criar_diagrama_mediacao(
-    paste0("AREA_LOCAL\n(", nome_grupo, "=1)"), "INSE_MEDIO", disciplina,
+    paste0("AREA_LOCAL\n(", nome_grupo, "=1)",
+           if (tipo != "Todas") paste0("\n", tipo) else ""), "INSE_MEDIO", disciplina,
     efeito_a = coef(modelo_a)[tratamento],
     efeito_b = coef(modelo_b)["INSE_MEDIO"],
     efeito_cp = coef(modelo_b)[tratamento],
     r2_med = summary(modelo_a)$r.squared,
     r2_dep = summary(modelo_b)$r.squared,
     fig_num = fig_num,
-    categoria_referencia = referencias_area[[tratamento]],
-    nome_grupo = nome_grupo
+    categoria_referencia = rotulo_referencia,
+    nome_grupo = rotulo_grupo
   )
   ggsave(caminho_saida(DIR_BASE, "figuras", nome_arquivo, "png"),
          plot = plot, width = 14, height = 8.2,
@@ -496,6 +519,8 @@ for (i in seq_along(tratamentos_disponiveis)) {
 # RESUMO
 # =========================================================================
 
+source(file.path(DIR_BASE, "Scripts", "gerar_figuras_sem_textos.r"))
+
 message("\n", strrep("=", 70))
 message("ANALISE DE MEDIACAO CONCLUIDA")
 message(strrep("=", 70))
@@ -503,8 +528,8 @@ message("Escolas analisadas: ", nrow(metadados))
 message("\nResultados:")
 print(resultados_mediacao)
 message("\nFiguras geradas:")
-message("  ? Figura 21: caminhos_mediacao_MT_", ts_global, ".png")
-message("  ? Figura 22: caminhos_mediacao_LP_", ts_global, ".png")
+message("  ? Figura 18: caminhos_mediacao_MT_", ts_global, ".png")
+message("  ? Figura 19: caminhos_mediacao_LP_", ts_global, ".png")
 message(
   "  ? Figuras AREA_LOCAL: ", 2 * length(tratamentos_disponiveis),
   " arquivo(s) caminhos_mediacao_AREA_LOCAL_*_", ts_global, ".png"

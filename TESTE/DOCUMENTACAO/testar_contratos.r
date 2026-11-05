@@ -99,6 +99,12 @@ teste <- function() {
   writeLines("x", copia9)
   writeLines("x", copia10)
   stopifnot(normalizePath(encontrar_arquivo_mais_recente(file.path(pasta, "outputs"), "base", "tabelas")) == normalizePath(copia10))
+  modelo <- file.path(pasta, "outputs", "2026-01-01", "modelos", "base_010102.rds")
+  dir.create(dirname(modelo))
+  saveRDS(list(coeficiente = 1), modelo)
+  stopifnot(normalizePath(encontrar_arquivo_mais_recente(
+    file.path(pasta, "outputs"), "base", "modelos", ext = "rds"
+  )) == normalizePath(modelo))
   escolar <- file.path(dirname(datado), "123", "dados_escola_em_numeros_010101.csv")
   dir.create(dirname(escolar))
   writeLines("x", escolar)

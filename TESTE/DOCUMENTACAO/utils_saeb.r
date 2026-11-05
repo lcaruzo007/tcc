@@ -61,7 +61,8 @@ caminho_saida <- function(DIR_BASE_MODULO, subpasta, nome, ext = "csv") {
 #   <nome_base>_<HHMMSS>.<ext>                   (padrao novo, pasta datada)
 #   <nome_base>.<ext>                            (sem timestamp)
 # -------------------------------------------------------------------------
-encontrar_arquivo_mais_recente <- function(pasta, nome_base, tipo = NULL) {
+encontrar_arquivo_mais_recente <- function(pasta, nome_base, tipo = NULL, ext = "csv") {
+  if (!grepl("^[A-Za-z0-9]+$", ext)) stop("Extensao de arquivo invalida.")
   if (Sys.getenv("SAEB_LEITURA_ESTRITA", "0") == "1") {
     arquivo <- resolver_artefato_execucao_saeb(pasta, nome_base, tipo)
     registrar_entrada_saeb(arquivo)
@@ -80,7 +81,7 @@ encontrar_arquivo_mais_recente <- function(pasta, nome_base, tipo = NULL) {
         pasta_datas <- file.path(pasta_datas, tipo)
         pasta_datas <- pasta_datas[dir.exists(pasta_datas)]
       }
-      padrao <- paste0("^", nome_base, "(_[0-9]{6}(_[0-9]+)?)?\\.[Cc][Ss][Vv]$")
+      padrao <- paste0("(?i)^", nome_base, "(_[0-9]{6}(_[0-9]+)?)?\\.", ext, "$")
       arqs <- unlist(lapply(pasta_datas, function(p) {
         list.files(p, pattern = padrao, full.names = TRUE)
       }))
@@ -89,7 +90,7 @@ encontrar_arquivo_mais_recente <- function(pasta, nome_base, tipo = NULL) {
   }
 
   # 2) Compatibilidade: pasta direta ou subpasta de tipo no padrao antigo
-  padrao_antigo <- paste0("^", nome_base, "(_[0-9]{8}_[0-9]{6}(_[0-9]+)?)?\\.[Cc][Ss][Vv]$")
+  padrao_antigo <- paste0("(?i)^", nome_base, "(_[0-9]{8}_[0-9]{6}(_[0-9]+)?)?\\.", ext, "$")
   pastas_antigas <- pasta
   if (!is.null(tipo)) {
     pasta_tipo_antiga <- file.path(pasta, tipo)
@@ -111,7 +112,7 @@ encontrar_arquivo_mais_recente <- function(pasta, nome_base, tipo = NULL) {
   nomes <- basename(candidatos)
   antigos <- datas == "0000-00-00" & grepl("_[0-9]{8}_[0-9]{6}", nomes)
   datas[antigos] <- sub(".*_([0-9]{4})([0-9]{2})([0-9]{2})_[0-9]{6}.*", "\\1-\\2-\\3", nomes[antigos])
-  horarios <- sub(".*_([0-9]{6})(_[0-9]+)?[.][Cc][Ss][Vv]$", "\\1", nomes)
+  horarios <- sub(".*_([0-9]{6})(_[0-9]+)?[.][^.]+$", "\\1", nomes)
   horarios[!grepl("^[0-9]{6}$", horarios)] <- "000000"
   contador <- rep(0, length(nomes))
   colisoes <- grepl("_[0-9]{6}_[0-9]+[.]", nomes)

@@ -13,7 +13,7 @@ as recomendações vigentes. “Concluído” em uma entrada descreve aquela ses
 
 | Mês | Registros | Assuntos principais |
 |-----|:---------:|---------------------|
-| [Novembro de 2026](#novembro-de-2026) | 9 | Recorte MG/Ensino Médio, reprocessamentos, imagens e conferência de correlações |
+| [Novembro de 2026](#novembro-de-2026) | 11 | Recorte MG/Ensino Médio, reprocessamentos, imagens e conferência de correlações |
 | [Outubro de 2026](#outubro-de-2026) | 7 | Auditoria científica, revisão do projeto e organização documental |
 | [Setembro de 2026](#setembro-de-2026) | 1 | Reprodutibilidade, migração e validações |
 | [Agosto de 2026](#agosto-de-2026) | 2 | Pipeline enxuto e figuras para artigo |
@@ -22,6 +22,70 @@ as recomendações vigentes. “Concluído” em uma entrada descreve aquela ses
 | [Abril de 2026](#abril-de-2026) | 2 | Limpeza, correlações e análise por escola |
 
 ## Novembro de 2026
+
+### 2026-11-05 - Segunda versao dos diagramas de mediacao
+
+**Horario:** 18h53-18h56 (America/Sao_Paulo)
+**Fase:** Passo 10 - Figuras para o TCC
+**Status:** Concluido; geracao e validacoes aprovadas
+
+#### Atividades realizadas
+
+- Criado gerar_figuras_sem_textos.r para reutilizar os modelos RDS, sem repetir ajustes ou bootstrap.
+- Gerados diagramas somente com caixas, setas e coeficientes a, b e c', sem titulos, subtitulos, rodapes ou proporcao mediada.
+- Mantidos grupo (1), referencia (0) e tipo de escola dentro da caixa inicial; seta direta posicionada abaixo das caixas.
+- Integrada a segunda versao ao script principal e preservado o caminho do RDS da propria execucao para a leitura estrita do pipeline.
+- Adicionada extensao opcional ao helper de arquivo mais recente, mantendo CSV como padrao; incluido contrato para RDS.
+
+#### Desafios encontrados
+
+- O helper de leitura aceitava somente CSV; leitura RDS passou a usar ext = "rds".
+
+#### Resultados obtidos
+
+- Imagens geradas em TESTE/6_ANALISE_MEDIACAO/outputs/2026-11-05/figuras/sem_textos/.
+- Revisao visual confirmou ausencia dos textos externos e legibilidade dos grupos e coeficientes.
+- Verificada integridade dos 12 PNGs de 7200x2040 pixels; scripts de mediacao em ASCII.
+- Validacao aprovada: sintaxe de 30 scripts, contratos sinteticos (incluindo leitura RDS) e metadados reais de 2338 escolas; git diff --check sem erros.
+
+#### Proximos passos
+
+- Selecionar a versao visual adequada para o documento do TCC.
+
+---
+
+### 2026-11-05 - Mediacao capital-interior por tipo de escola
+
+**Horario:** 18h36-18h52 (America/Sao_Paulo)
+**Fase:** Passo 10 - Mediacao exploratoria e legendas do TCC
+**Status:** Concluido; reexecucao e revisao visual realizadas
+
+#### Atividades realizadas
+
+- Adicionados contrastes Urbana_Interior versus Urbana_Capital, separadamente nas publicas e nas particulares, para MT e LP.
+- Mantidos os criterios de elegibilidade e o bootstrap percentil com 1000 simulacoes.
+- Exportado Tipo_Escola_Recorte na tabela e separados os nomes dos PNGs por tipo de escola.
+- Reordenadas as figuras: tipo geral 18-19, publicas 20-21, particulares 22-23, rural versus urbana do interior 24-25, rural do interior versus capital 26-27 e urbana do interior versus capital 28-29.
+- Criado TESTE/6_ANALISE_MEDIACAO/legendas_figuras.md e atualizadas as fontes metodologica e de outputs.
+
+#### Desafios encontrados
+
+- O contraste privado tem poucos estabelecimentos; a decomposicao permanece exploratoria e nao testa interacao entre redes.
+- R 4.6.0 localizado em tmp/R-4.6.0, com biblioteca local do renv.
+
+#### Resultados obtidos
+
+- Sintaxe dos 29 scripts aprovada; git diff --check sem erros e script de mediacao sem caracteres fora de ASCII.
+- Execucao completa com 1000 simulacoes por ajuste: 12 linhas na tabela e 12 diagramas (Figuras 18-29).
+- Novos recortes conferidos na tabela: publicas com 132 escolas da capital e 2010 do interior; particulares com 7 da capital e 20 do interior, em ambas as disciplinas.
+- Verificados efeitos e intervalos finitos dos quatro novos ajustes; PNGs das Figuras 20-23 inspecionados visualmente.
+- Saidas em TESTE/6_ANALISE_MEDIACAO/outputs/2026-11-05/; tabela mediacao_185013.csv e modelos preservados no padrao datado.
+
+#### Proximos passos
+
+- Inserir as figuras e legendas no documento do TCC e atualizar referencias cruzadas.
+
+---
 
 ### 2026-11-05 - Mediacao entre escolas rurais e urbanas do interior
 

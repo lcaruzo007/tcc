@@ -192,10 +192,24 @@ Efeitos direto, indireto e total.
 | Proporcao_Mediada | Proporção estimada × 100; interpretação exploratória |
 | N_Escolas, N_Referencia, N_Tratamento | Tamanho do contraste efetivamente ajustado |
 | Referencia | Pública ou Urbana_Capital ou Urbana_Interior, conforme a análise |
+| Tipo_Escola_Recorte | Publica, Privada ou Todas; restrição da amostra do contraste |
 | Ajuste | Informa a ausência de covariáveis adicionais |
 
 ### `6_ANALISE_MEDIACAO/outputs/<YYYY-MM-DD>/figuras/caminhos_mediacao_MT_*.png`
-Figura 21: Diagrama de caminhos (MT).
+Figura 18: Diagrama de caminhos (MT), particular versus pública.
 
 ### `6_ANALISE_MEDIACAO/outputs/<YYYY-MM-DD>/figuras/caminhos_mediacao_LP_*.png`
-Figura 22: Diagrama de caminhos (LP).
+Figura 19: Diagrama de caminhos (LP), particular versus pública.
+
+Os arquivos `caminhos_mediacao_AREA_LOCAL_Urbana_Interior_Publica_*.png`
+correspondem às Figuras 20–21, e os terminados em `Privada_*.png`, às
+Figuras 22–23: interior versus capital, somente escolas urbanas do tipo indicado.
+Os contrastes gerais de localização passam às Figuras 24–29.
+
+### `6_ANALISE_MEDIACAO/outputs/<YYYY-MM-DD>/figuras/sem_textos/figura_*.png`
+
+Segunda versão das mesmas comparações, somente com caixas, setas e coeficientes
+a, b e c'. Sem título, subtítulo, R², proporção mediada ou rodapé. O grupo (1),
+a referência (0) e o tipo de escola do recorte aparecem dentro da primeira caixa.
+Gerada pelo passo 10 ou pelo auxiliar `gerar_figuras_sem_textos.r`, reutilizando
+os objetos RDS, sem novo ajuste ou bootstrap.
