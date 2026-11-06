@@ -17,6 +17,7 @@
 # Auditoria local (nao versionar)
 /auditoria_tcc/
 /RELATORIO_AUDITORIA_TCC.md
+/diario.md
 
 # Arquivos temporarios
 /tmp/
